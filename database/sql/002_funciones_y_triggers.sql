@@ -136,7 +136,9 @@ begin
     raise exception 'Usuario no autenticado.';
   end if;
 
-  if jsonb_typeof(p_items) <> 'array' or jsonb_array_length(p_items) = 0 then
+  if p_items is null
+     or jsonb_typeof(p_items) <> 'array'
+     or jsonb_array_length(p_items) = 0 then
     raise exception 'La venta debe contener al menos un producto.';
   end if;
 
