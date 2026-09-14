@@ -49,9 +49,9 @@ revoke all on function public.create_sale_draft(uuid, text, text, text, text, te
 
 grant usage on schema public to authenticated;
 
-grant select on public.organizations to authenticated;
-grant select on public.branches to authenticated;
-grant select on public.organization_members to authenticated;
+grant select, update on public.organizations to authenticated;
+grant select, insert, update on public.branches to authenticated;
+grant select, insert, update on public.organization_members to authenticated;
 grant select, insert, update on public.products to authenticated;
 grant select on public.document_sequences to authenticated;
 grant select on public.sales to authenticated;
@@ -65,80 +65,52 @@ grant execute on function public.is_org_owner(uuid) to authenticated;
 grant execute on function public.can_access_branch(uuid, uuid) to authenticated;
 grant execute on function public.create_sale_draft(uuid, text, text, text, text, text, jsonb) to authenticated;
 
-create policy organizations_select_members
-on public.organizations
-for select
-to authenticated
-using (public.is_org_member(id));
+create policy organizations_select_members on public.organizations
+for select to authenticated using (public.is_org_member(id));
 
-create policy organizations_update_owner
-on public.organizations
-for update
-to authenticated
+create policy organizations_update_owner on public.organizations
+for update to authenticated
 using (public.is_org_owner(id))
 with check (public.is_org_owner(id));
 
-create policy branches_select_members
-on public.branches
-for select
-to authenticated
-using (public.is_org_member(organization_id));
+create policy branches_select_members on public.branches
+for select to authenticated using (public.is_org_member(organization_id));
 
-create policy branches_write_owner
-on public.branches
-for all
-to authenticated
+create policy branches_write_owner on public.branches
+for all to authenticated
 using (public.is_org_owner(organization_id))
 with check (public.is_org_owner(organization_id));
 
-create policy organization_members_select_self_or_owner
-on public.organization_members
-for select
-to authenticated
+create policy organization_members_select_self_or_owner on public.organization_members
+for select to authenticated
 using (user_id = auth.uid() or public.is_org_owner(organization_id));
 
-create policy organization_members_write_owner
-on public.organization_members
-for all
-to authenticated
+create policy organization_members_write_owner on public.organization_members
+for all to authenticated
 using (public.is_org_owner(organization_id))
 with check (public.is_org_owner(organization_id));
 
-create policy products_select_members
-on public.products
-for select
-to authenticated
-using (public.is_org_member(organization_id));
+create policy products_select_members on public.products
+for select to authenticated using (public.is_org_member(organization_id));
 
-create policy products_insert_owner
-on public.products
-for insert
-to authenticated
+create policy products_insert_owner on public.products
+for insert to authenticated
 with check (public.is_org_owner(organization_id) and created_by = auth.uid());
 
-create policy products_update_owner
-on public.products
-for update
-to authenticated
+create policy products_update_owner on public.products
+for update to authenticated
 using (public.is_org_owner(organization_id))
 with check (public.is_org_owner(organization_id));
 
-create policy document_sequences_select_owner
-on public.document_sequences
-for select
-to authenticated
-using (public.is_org_owner(organization_id));
+create policy document_sequences_select_owner on public.document_sequences
+for select to authenticated using (public.is_org_owner(organization_id));
 
-create policy sales_select_branch_members
-on public.sales
-for select
-to authenticated
+create policy sales_select_branch_members on public.sales
+for select to authenticated
 using (public.can_access_branch(organization_id, branch_id));
 
-create policy sale_items_select_branch_members
-on public.sale_items
-for select
-to authenticated
+create policy sale_items_select_branch_members on public.sale_items
+for select to authenticated
 using (
   exists (
     select 1
@@ -148,33 +120,25 @@ using (
   )
 );
 
-create policy expenses_select_branch_members
-on public.expenses
-for select
-to authenticated
+create policy expenses_select_branch_members on public.expenses
+for select to authenticated
 using (public.can_access_branch(organization_id, branch_id));
 
-create policy expenses_insert_owner
-on public.expenses
-for insert
-to authenticated
+create policy expenses_insert_owner on public.expenses
+for insert to authenticated
 with check (
   public.is_org_owner(organization_id)
   and created_by = auth.uid()
   and public.can_access_branch(organization_id, branch_id)
 );
 
-create policy expenses_update_owner
-on public.expenses
-for update
-to authenticated
+create policy expenses_update_owner on public.expenses
+for update to authenticated
 using (public.is_org_owner(organization_id))
 with check (public.is_org_owner(organization_id));
 
-create policy audit_logs_select_owner
-on public.audit_logs
-for select
-to authenticated
+create policy audit_logs_select_owner on public.audit_logs
+for select to authenticated
 using (organization_id is not null and public.is_org_owner(organization_id));
 
 insert into public.schema_change_log (script_code, script_name, description)

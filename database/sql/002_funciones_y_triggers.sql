@@ -25,29 +25,12 @@ begin
 end;
 $$;
 
-create trigger organizations_set_updated_at
-before update on public.organizations
-for each row execute function public.set_updated_at();
-
-create trigger branches_set_updated_at
-before update on public.branches
-for each row execute function public.set_updated_at();
-
-create trigger products_set_updated_at
-before update on public.products
-for each row execute function public.set_updated_at();
-
-create trigger document_sequences_set_updated_at
-before update on public.document_sequences
-for each row execute function public.set_updated_at();
-
-create trigger sales_set_updated_at
-before update on public.sales
-for each row execute function public.set_updated_at();
-
-create trigger expenses_set_updated_at
-before update on public.expenses
-for each row execute function public.set_updated_at();
+create trigger organizations_set_updated_at before update on public.organizations for each row execute function public.set_updated_at();
+create trigger branches_set_updated_at before update on public.branches for each row execute function public.set_updated_at();
+create trigger products_set_updated_at before update on public.products for each row execute function public.set_updated_at();
+create trigger document_sequences_set_updated_at before update on public.document_sequences for each row execute function public.set_updated_at();
+create trigger sales_set_updated_at before update on public.sales for each row execute function public.set_updated_at();
+create trigger expenses_set_updated_at before update on public.expenses for each row execute function public.set_updated_at();
 
 create or replace function public.current_user_role(p_organization_id uuid)
 returns text
@@ -181,23 +164,10 @@ begin
   end if;
 
   insert into public.sales (
-    id,
-    organization_id,
-    branch_id,
-    document_type,
-    series,
-    correlative,
-    customer_document_type,
-    customer_document_number,
-    customer_name,
-    created_by
+    id, organization_id, branch_id, document_type, series, correlative,
+    customer_document_type, customer_document_number, customer_name, created_by
   ) values (
-    v_sale_id,
-    v_organization_id,
-    p_branch_id,
-    p_document_type,
-    upper(p_series),
-    v_correlative,
+    v_sale_id, v_organization_id, p_branch_id, p_document_type, upper(p_series), v_correlative,
     nullif(trim(p_customer_document_type), ''),
     nullif(trim(p_customer_document_number), ''),
     nullif(trim(p_customer_name), ''),
@@ -207,16 +177,8 @@ begin
   v_expected_items := jsonb_array_length(p_items);
 
   insert into public.sale_items (
-    sale_id,
-    organization_id,
-    product_id,
-    description,
-    unit_code,
-    quantity,
-    unit_price,
-    line_subtotal,
-    line_igv,
-    line_total
+    sale_id, organization_id, product_id, description, unit_code,
+    quantity, unit_price, line_subtotal, line_igv, line_total
   )
   select
     v_sale_id,
@@ -226,20 +188,8 @@ begin
     p.unit_code,
     x.quantity,
     p.price,
-    round(
-      case when p.tax_affectation_code = '10'
-        then (p.price * x.quantity) / 1.18
-        else p.price * x.quantity
-      end,
-      2
-    ),
-    round(
-      case when p.tax_affectation_code = '10'
-        then (p.price * x.quantity) - ((p.price * x.quantity) / 1.18)
-        else 0
-      end,
-      2
-    ),
+    round(case when p.tax_affectation_code = '10' then (p.price * x.quantity) / 1.18 else p.price * x.quantity end, 2),
+    round(case when p.tax_affectation_code = '10' then (p.price * x.quantity) - ((p.price * x.quantity) / 1.18) else 0 end, 2),
     round(p.price * x.quantity, 2)
   from jsonb_to_recordset(p_items) as x(product_id uuid, quantity numeric)
   join public.products p
@@ -282,13 +232,8 @@ begin
 end;
 $$;
 
-create trigger sales_prevent_delete
-before delete on public.sales
-for each row execute function public.prevent_financial_delete();
-
-create trigger expenses_prevent_delete
-before delete on public.expenses
-for each row execute function public.prevent_financial_delete();
+create trigger sales_prevent_delete before delete on public.sales for each row execute function public.prevent_financial_delete();
+create trigger expenses_prevent_delete before delete on public.expenses for each row execute function public.prevent_financial_delete();
 
 create or replace function public.audit_row_change()
 returns trigger
@@ -319,50 +264,25 @@ begin
   v_entity_id := coalesce(v_new ->> 'id', v_old ->> 'id');
 
   insert into public.audit_logs (
-    organization_id,
-    actor_user_id,
-    action,
-    entity_type,
-    entity_id,
-    old_data,
-    new_data
+    organization_id, actor_user_id, action, entity_type, entity_id, old_data, new_data
   ) values (
-    v_organization_id,
-    auth.uid(),
-    lower(tg_op),
-    tg_table_name,
-    v_entity_id,
-    v_old,
-    v_new
+    v_organization_id, auth.uid(), lower(tg_op), tg_table_name, v_entity_id, v_old, v_new
   );
 
-  return coalesce(new, old);
+  if tg_op = 'DELETE' then
+    return old;
+  end if;
+
+  return new;
 end;
 $$;
 
-create trigger organizations_audit
-after insert or update or delete on public.organizations
-for each row execute function public.audit_row_change();
-
-create trigger branches_audit
-after insert or update or delete on public.branches
-for each row execute function public.audit_row_change();
-
-create trigger organization_members_audit
-after insert or update or delete on public.organization_members
-for each row execute function public.audit_row_change();
-
-create trigger products_audit
-after insert or update or delete on public.products
-for each row execute function public.audit_row_change();
-
-create trigger sales_audit
-after insert or update or delete on public.sales
-for each row execute function public.audit_row_change();
-
-create trigger expenses_audit
-after insert or update or delete on public.expenses
-for each row execute function public.audit_row_change();
+create trigger organizations_audit after insert or update or delete on public.organizations for each row execute function public.audit_row_change();
+create trigger branches_audit after insert or update or delete on public.branches for each row execute function public.audit_row_change();
+create trigger organization_members_audit after insert or update or delete on public.organization_members for each row execute function public.audit_row_change();
+create trigger products_audit after insert or update or delete on public.products for each row execute function public.audit_row_change();
+create trigger sales_audit after insert or update or delete on public.sales for each row execute function public.audit_row_change();
+create trigger expenses_audit after insert or update or delete on public.expenses for each row execute function public.audit_row_change();
 
 insert into public.schema_change_log (script_code, script_name, description)
 values ('002', 'funciones_y_triggers', 'Funciones de autorización, timestamps, creación atómica de ventas, protección de borrado y auditoría.');
