@@ -18,7 +18,7 @@ Aplicación web para emisión y control de boletas de un restaurante pequeño. E
 git clone https://github.com/moudevos/facturador_restaurant.git
 cd facturador_restaurant
 corepack enable
-pnpm install
+pnpm install --frozen-lockfile
 cp .env.example .env.local
 pnpm dev
 ```
@@ -29,13 +29,15 @@ El proyecto Supabase ya dispone de URL y publishable key. Copiar los valores de 
 
 No utilizamos el sistema automático de migraciones de Supabase. Los cambios de esquema se versionan como SQL manual en `database/sql/` y se ejecutan en orden desde Supabase SQL Editor.
 
-Ejemplo:
+Secuencia actual:
 
 ```text
 001_esquema_inicial.sql
 002_funciones_y_triggers.sql
 003_seguridad_rls.sql
 004_indices.sql
+005_vistas_reportes_iniciales.sql
+006_estandar_fechas_y_horas.sql
 ```
 
 Cada script registra su ejecución en `public.schema_change_log`. No renombrar, reordenar ni modificar un script ya aplicado en producción: cualquier cambio posterior debe crear el siguiente archivo numerado.
@@ -50,6 +52,8 @@ Ver `docs/BASE_DATOS.md` antes de ejecutar SQL.
 - No se implementa inventario, kardex, recetas ni costo de venta en esta fase.
 - Los comprobantes fiscales no se eliminan físicamente.
 - Las credenciales de Intifact se usan únicamente del lado servidor.
+- Los instantes se almacenan como `timestamptz`; PostgreSQL/backend es la fuente de verdad del reloj.
+- La zona de negocio inicial es `America/Lima`; se convierte al mostrar o calcular el día de negocio, no se duplica el timestamp en otra columna.
 
 ## Comandos
 
@@ -66,6 +70,7 @@ pnpm check        # lint + typecheck
 
 - `docs/ARQUITECTURA.md`: decisiones y límites de arquitectura.
 - `docs/BASE_DATOS.md`: orden de scripts SQL y reglas de datos.
+- `docs/FECHAS_Y_HORAS.md`: UTC, `timestamptz`, zona Perú y fecha de negocio.
 - `docs/SEGURIDAD.md`: RLS, secretos y permisos.
 - `docs/INTIFACT.md`: diseño de integración fiscal.
 - `docs/CONVENCIONES.md`: nombres, commits y estructura del código.
