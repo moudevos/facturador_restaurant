@@ -48,10 +48,40 @@ function Fade({ children }: { children: ReactNode }) {
 
 function Spinner() {
   return (
-    <svg className="size-12 animate-spin" viewBox="0 0 48 48" fill="none" aria-hidden="true">
-      <circle cx="24" cy="24" r="20" className="stroke-neutral-200" strokeWidth="4" />
-      <path d="M44 24a20 20 0 0 0-20-20" className="stroke-neutral-950" strokeWidth="4" strokeLinecap="round" />
-    </svg>
+    <>
+      <svg
+        className="feedback-loading-spinner size-12"
+        viewBox="0 0 48 48"
+        fill="none"
+        aria-hidden="true"
+      >
+        <circle cx="24" cy="24" r="20" className="stroke-[#e8e3d7]" strokeWidth="4" />
+        <path
+          d="M44 24a20 20 0 0 0-20-20"
+          className="stroke-orange-500"
+          strokeWidth="4"
+          strokeLinecap="round"
+        />
+      </svg>
+      <style>{`
+        @keyframes feedback-loading-spin {
+          to { transform: rotate(360deg); }
+        }
+
+        .feedback-loading-spinner {
+          animation: feedback-loading-spin 0.85s linear infinite !important;
+          transform-origin: center;
+          will-change: transform;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .feedback-loading-spinner {
+            animation-duration: 1.2s !important;
+            animation-iteration-count: infinite !important;
+          }
+        }
+      `}</style>
+    </>
   );
 }
 
