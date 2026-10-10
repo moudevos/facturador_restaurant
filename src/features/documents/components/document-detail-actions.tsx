@@ -12,16 +12,20 @@ import {
 export function DocumentDetailActions({
   saleId,
   status,
+  commercialStatus,
   isOwner,
 }: {
   saleId: string;
   status: string;
+  commercialStatus: string;
   isOwner: boolean;
 }) {
   const router = useRouter();
   const { toast, confirm, withLoading } = useFeedback();
 
-  const canSync = ["draft", "queued", "processing"].includes(status);
+  const canSync =
+    ["draft", "queued", "processing"].includes(status) ||
+    (status === "error" && commercialStatus === "pending");
   const canRetry = isOwner && status === "queue_failed";
 
   async function sync() {

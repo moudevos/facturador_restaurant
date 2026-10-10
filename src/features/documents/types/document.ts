@@ -30,6 +30,7 @@ export type FiscalDocumentListItem = {
   document_type: "01" | "03";
   series: string;
   correlative: number;
+  commercial_status: "pending" | "completed" | "failed" | "voided";
   status:
     | "draft"
     | "queued"
@@ -88,6 +89,7 @@ export type FiscalDocumentDetail = FiscalDocumentListItem & {
   payments: Array<{
     id: string;
     payment_method: PaymentMethod;
+    status: "pending" | "completed" | "reversed";
     amount: string | number;
     received_amount: string | number | null;
     change_amount: string | number;

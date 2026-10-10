@@ -1,12 +1,17 @@
-import { getDocument } from "@/lib/intifact/client";
+import {
+  findDocumentByFiscalIdentity,
+  getDocument,
+} from "@/lib/intifact/client";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import type { SalesContext } from "./context";
+import { applyFiscalCommercialOutcome } from "./commercial-state";
 import { mapIntifactStatus } from "./intifact-emission";
 
 export type SaleFiscalStatus = {
   saleId: string;
   status: string;
+  commercialStatus: string;
   intifactStatus: string | null;
   intifactDocumentId: string | null;
   pdfReady: boolean;
@@ -20,39 +25,88 @@ export async function syncSaleIntifactStatus(
   saleId: string,
 ): Promise<SaleFiscalStatus> {
   const supabase = await createClient();
-  const { data: sale, error } = await supabase
-    .from("sales")
-    .select(
-      "id, organization_id, status, intifact_status, intifact_document_id, intifact_last_checked_at, intifact_sunat_code, intifact_sunat_description, intifact_error_message",
-    )
-    .eq("id", saleId)
-    .eq("organization_id", context.organizationId)
-    .maybeSingle();
 
-  if (error || !sale) {
+  const [{ data: sale, error }, { data: organization }] =
+    await Promise.all([
+      supabase
+        .from("sales")
+        .select(
+          "id, organization_id, document_type, series, correlative, status, commercial_status, intifact_status, intifact_document_id, intifact_last_checked_at, intifact_sunat_code, intifact_sunat_description, intifact_error_message",
+        )
+        .eq("id", saleId)
+        .eq("organization_id", context.organizationId)
+        .maybeSingle(),
+      supabase
+        .from("organizations")
+        .select("ruc")
+        .eq("id", context.organizationId)
+        .maybeSingle(),
+    ]);
+
+  if (error || !sale || !organization) {
     throw new Error("No se encontró la venta.");
   }
 
-  if (!sale.intifact_document_id) {
+  let documentId = sale.intifact_document_id;
+
+  if (!documentId) {
+    try {
+      const recovered = await findDocumentByFiscalIdentity({
+        ruc: organization.ruc,
+        documentType: sale.document_type,
+        series: sale.series,
+        correlative: sale.correlative,
+      });
+
+      if (recovered) {
+        documentId = recovered.id;
+
+        const admin = createAdminClient();
+        await admin
+          .from("sales")
+          .update({
+            intifact_document_id: recovered.id,
+            intifact_status: recovered.estado,
+            intifact_last_checked_at: new Date().toISOString(),
+          })
+          .eq("id", saleId)
+          .eq("organization_id", context.organizationId);
+      }
+    } catch {
+      // Una consulta de reconciliación fallida no debe crear otro correlativo.
+    }
+  }
+
+  if (!documentId) {
     return {
       saleId,
       status: sale.status,
+      commercialStatus: sale.commercial_status,
       intifactStatus: sale.intifact_status,
       intifactDocumentId: null,
       pdfReady: false,
       sunatCode: sale.intifact_sunat_code,
       sunatDescription: sale.intifact_sunat_description,
-      errorMessage: sale.intifact_error_message,
+      errorMessage:
+        sale.intifact_error_message ||
+        "No se encontró todavía el documento en Intifact. La operación sigue pendiente y no impacta caja.",
     };
   }
 
-  if (sale.status === "accepted" || sale.status === "rejected" || sale.status === "voided") {
+  if (
+    sale.status === "accepted" ||
+    sale.status === "rejected" ||
+    sale.status === "voided"
+  ) {
     return {
       saleId,
       status: sale.status,
+      commercialStatus: sale.commercial_status,
       intifactStatus: sale.intifact_status,
-      intifactDocumentId: sale.intifact_document_id,
-      pdfReady: sale.status === "accepted",
+      intifactDocumentId: documentId,
+      pdfReady:
+        sale.status === "accepted" &&
+        sale.commercial_status === "completed",
       sunatCode: sale.intifact_sunat_code,
       sunatDescription: sale.intifact_sunat_description,
       errorMessage: sale.intifact_error_message,
@@ -67,8 +121,9 @@ export async function syncSaleIntifactStatus(
     return {
       saleId,
       status: sale.status,
+      commercialStatus: sale.commercial_status,
       intifactStatus: sale.intifact_status,
-      intifactDocumentId: sale.intifact_document_id,
+      intifactDocumentId: documentId,
       pdfReady: false,
       sunatCode: sale.intifact_sunat_code,
       sunatDescription: sale.intifact_sunat_description,
@@ -76,20 +131,24 @@ export async function syncSaleIntifactStatus(
     };
   }
 
-  const snapshot = await getDocument(sale.intifact_document_id);
+  const snapshot = await getDocument(documentId);
   const localStatus = mapIntifactStatus(snapshot.estado);
   const now = new Date().toISOString();
+
+  const fiscalError =
+    localStatus === "rejected" || localStatus === "queue_failed"
+      ? snapshot.sunatDescription ||
+        "Intifact reportó " + snapshot.estado + "."
+      : null;
 
   const update: Record<string, unknown> = {
     status: localStatus,
     intifact_status: snapshot.estado,
+    intifact_document_id: documentId,
     intifact_last_checked_at: now,
     intifact_sunat_code: snapshot.sunatCode,
     intifact_sunat_description: snapshot.sunatDescription,
-    intifact_error_message:
-      localStatus === "rejected" || localStatus === "queue_failed"
-        ? snapshot.sunatDescription ?? `Intifact reportó ${snapshot.estado}.`
-        : null,
+    intifact_error_message: fiscalError,
   };
 
   if (localStatus === "accepted") {
@@ -107,17 +166,23 @@ export async function syncSaleIntifactStatus(
     throw new Error("No se pudo persistir el estado fiscal.");
   }
 
+  const commercialStatus = await applyFiscalCommercialOutcome(
+    saleId,
+    localStatus,
+    fiscalError || snapshot.sunatDescription,
+  );
+
   return {
     saleId,
     status: localStatus,
+    commercialStatus,
     intifactStatus: snapshot.estado,
-    intifactDocumentId: sale.intifact_document_id,
-    pdfReady: localStatus === "accepted",
+    intifactDocumentId: documentId,
+    pdfReady:
+      localStatus === "accepted" &&
+      commercialStatus === "completed",
     sunatCode: snapshot.sunatCode,
     sunatDescription: snapshot.sunatDescription,
-    errorMessage:
-      typeof update.intifact_error_message === "string"
-        ? update.intifact_error_message
-        : null,
+    errorMessage: fiscalError,
   };
 }

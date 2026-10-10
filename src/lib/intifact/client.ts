@@ -205,3 +205,150 @@ export function getInvoiceXml(documentId: string) {
 export function getInvoiceCdr(documentId: string) {
   return getInvoiceArtifact(documentId, "cdr");
 }
+
+
+export type IntifactCompany = {
+  id: string;
+  ruc: string;
+  razonSocial: string | null;
+};
+
+export type IntifactCompanyBranch = {
+  id: string | null;
+  codigo: string;
+  nombre: string | null;
+  direccion: string | null;
+  ubigeo: string | null;
+  active: boolean;
+};
+
+function rowsFromUnknownData(value: unknown): unknown[] {
+  if (Array.isArray(value)) return value;
+  if (!value || typeof value !== "object") return [];
+
+  const row = value as Record<string, unknown>;
+  for (const key of ["items", "companies", "branches", "data"]) {
+    if (Array.isArray(row[key])) return row[key] as unknown[];
+  }
+
+  return [];
+}
+
+export async function listCompanies(): Promise<IntifactCompany[]> {
+  const response = await requestJson<IntifactEnvelope<unknown>>(
+    "/api/v1/companies",
+  );
+
+  return rowsFromUnknownData(response.data).flatMap((value) => {
+    if (!value || typeof value !== "object") return [];
+    const row = value as Record<string, unknown>;
+
+    const id =
+      typeof row.id === "string"
+        ? row.id
+        : typeof row.companyId === "string"
+          ? row.companyId
+          : null;
+    const ruc = typeof row.ruc === "string" ? row.ruc : null;
+
+    if (!id || !ruc) return [];
+
+    const razonSocial =
+      typeof row.razonSocial === "string"
+        ? row.razonSocial
+        : typeof row.razon_social === "string"
+          ? row.razon_social
+          : typeof row.legalName === "string"
+            ? row.legalName
+            : null;
+
+    return [{ id, ruc, razonSocial }];
+  });
+}
+
+export async function listCompanyBranches(
+  companyId: string,
+): Promise<IntifactCompanyBranch[]> {
+  const response = await requestJson<IntifactEnvelope<unknown>>(
+    `/api/v1/companies/${encodeURIComponent(companyId)}/branches`,
+  );
+
+  return rowsFromUnknownData(response.data).flatMap((value) => {
+    if (!value || typeof value !== "object") return [];
+    const row = value as Record<string, unknown>;
+
+    const codigo =
+      typeof row.codigo === "string"
+        ? row.codigo
+        : typeof row.code === "string"
+          ? row.code
+          : null;
+
+    if (!codigo) return [];
+
+    return [{
+      id: typeof row.id === "string" ? row.id : null,
+      codigo,
+      nombre:
+        typeof row.nombre === "string"
+          ? row.nombre
+          : typeof row.name === "string"
+            ? row.name
+            : null,
+      direccion:
+        typeof row.direccion === "string"
+          ? row.direccion
+          : typeof row.address === "string"
+            ? row.address
+            : null,
+      ubigeo: typeof row.ubigeo === "string" ? row.ubigeo : null,
+      active:
+        row.active === false || row.isActive === false
+          ? false
+          : true,
+    }];
+  });
+}
+
+export async function findDocumentByFiscalIdentity(input: {
+  ruc: string;
+  documentType: string;
+  series: string;
+  correlative: number | string;
+}): Promise<{ id: string; estado: string } | null> {
+  const params = new URLSearchParams({
+    ruc: input.ruc,
+    tipoDoc: input.documentType,
+    serie: input.series,
+    page: "1",
+    limit: "20",
+  });
+
+  const response = await requestJson<
+    IntifactEnvelope<unknown> & { pagination?: unknown }
+  >(`/api/v1/documents?${params.toString()}`);
+
+  const expectedCorrelative = String(input.correlative).replace(/^0+/, "") || "0";
+
+  for (const value of rowsFromUnknownData(response.data)) {
+    if (!value || typeof value !== "object") continue;
+    const row = value as Record<string, unknown>;
+    const id = typeof row.id === "string" ? row.id : null;
+    const estado =
+      typeof row.estadoSunat === "string"
+        ? row.estadoSunat
+        : typeof row.estado === "string"
+          ? row.estado
+          : "PENDIENTE";
+    const correlative =
+      typeof row.correlativo === "string" || typeof row.correlativo === "number"
+        ? String(row.correlativo).replace(/^0+/, "") || "0"
+        : null;
+
+    if (id && correlative === expectedCorrelative) {
+      return { id, estado };
+    }
+  }
+
+  return null;
+}

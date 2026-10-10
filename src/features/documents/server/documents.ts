@@ -9,7 +9,7 @@ import {
 } from "../types/document";
 
 const DOCUMENT_SELECT =
-  "id, branch_id, document_type, series, correlative, status, fiscal_issue_date, customer_document_number, customer_name, total_amount, intifact_document_id, intifact_status, intifact_sunat_code, intifact_sunat_description, intifact_error_message, intifact_last_checked_at, created_at";
+  "id, branch_id, document_type, series, correlative, status, commercial_status, fiscal_issue_date, customer_document_number, customer_name, total_amount, intifact_document_id, intifact_status, intifact_sunat_code, intifact_sunat_description, intifact_error_message, intifact_last_checked_at, created_at";
 
 function normalizeSearch(value: string) {
   return value.replace(/[,()%]/g, " ").trim().slice(0, 120);
@@ -145,7 +145,7 @@ export async function getDocumentDetail(
       .order("created_at"),
     supabase
       .from("sale_payments")
-      .select("id, payment_method, amount, received_amount, change_amount, created_at")
+      .select("id, payment_method, status, amount, received_amount, change_amount, created_at")
       .eq("sale_id", saleId)
       .eq("organization_id", context.organizationId)
       .order("created_at"),

@@ -75,7 +75,7 @@ export async function getDashboardData(context: SalesContext): Promise<Dashboard
       supabase
         .from("sales")
         .select("id, series, correlative, customer_name, total_amount, created_at, sale_payments(payment_method)")
-        .neq("status", "voided")
+        .eq("commercial_status", "completed")
         .order("created_at", { ascending: false })
         .limit(6)
         .abortSignal(newSignal()),

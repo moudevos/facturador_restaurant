@@ -1,4 +1,12 @@
-export const TAB_IDS = ["empresa", "locales", "series", "usuarios", "integraciones"] as const;
+export const TAB_IDS = [
+  "empresa",
+  "locales",
+  "series",
+  "comprobante",
+  "usuarios",
+  "integraciones",
+] as const;
+
 export type TabId = (typeof TAB_IDS)[number];
 
 export function parseTab(value: unknown): TabId {

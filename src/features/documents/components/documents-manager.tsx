@@ -80,8 +80,12 @@ export function DocumentsManager({
 
   const data = documentsQuery.data;
   const pendingIds = data.documents
-    .filter((document) =>
-      ["draft", "queued", "processing"].includes(document.status),
+    .filter(
+      (document) =>
+        document.commercial_status === "pending" &&
+        ["draft", "queued", "processing", "error"].includes(
+          document.status,
+        ),
     )
     .slice(0, 10)
     .map((document) => document.id);

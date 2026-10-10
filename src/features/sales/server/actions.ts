@@ -123,8 +123,16 @@ export async function closeSalesSessionAction(input: {
   });
 
   if (error) {
-    if (error.message.toLowerCase().includes("observación")) {
+    const message = error.message.toLowerCase();
+    if (message.includes("observación")) {
       return { success: false, message: "Explica la diferencia de caja antes de cerrar." };
+    }
+    if (message.includes("pendientes de confirmación fiscal")) {
+      return {
+        success: false,
+        message:
+          "Hay ventas pendientes de confirmación fiscal. Actualiza sus estados antes de cerrar la sesión.",
+      };
     }
     return { success: false, message: "No pudimos cerrar la sesión." };
   }
@@ -286,6 +294,8 @@ export async function createPosSaleAction(input: {
   totalAmount: number;
   changeAmount: number;
   fiscalStatus: string;
+  commercialStatus: string;
+  paymentMethod: PaymentMethod;
   intifactDocumentId: string | null;
   pdfReady: boolean;
   fiscalMessage: string | null;
@@ -324,6 +334,65 @@ export async function createPosSaleAction(input: {
   }
 
   const supabase = await createClient();
+
+  const isTest = process.env.INTIFACT_API_KEY?.startsWith("fact_test_") ?? false;
+
+  if (!isTest) {
+    const [
+      { data: organization },
+      { data: session },
+    ] = await Promise.all([
+      supabase
+        .from("organizations")
+        .select(
+          "fiscal_verified, intifact_company_id, sunat_status, sunat_condition",
+        )
+        .eq("id", context.organizationId)
+        .maybeSingle(),
+      supabase
+        .from("sales_sessions")
+        .select("branch_id, status")
+        .eq("id", parsed.data.sessionId)
+        .eq("organization_id", context.organizationId)
+        .maybeSingle(),
+    ]);
+
+    if (
+      !organization?.fiscal_verified ||
+      !organization.intifact_company_id ||
+      organization.sunat_status?.toUpperCase() !== "ACTIVO" ||
+      organization.sunat_condition?.toUpperCase() !== "HABIDO"
+    ) {
+      return {
+        success: false,
+        message:
+          "Antes de emitir en producción verifica el RUC ACTIVO/HABIDO y vincúlalo con Intifact en Configuración > Comprobante.",
+      };
+    }
+
+    if (!session || session.status !== "open") {
+      return {
+        success: false,
+        message: "La sesión de caja ya no está disponible.",
+      };
+    }
+
+    const { data: branch } = await supabase
+      .from("branches")
+      .select("sunat_establishment_code")
+      .eq("id", session.branch_id)
+      .eq("organization_id", context.organizationId)
+      .maybeSingle();
+
+    if (!branch?.sunat_establishment_code) {
+      return {
+        success: false,
+        message:
+          "El local no tiene código de establecimiento SUNAT. Impórtalo desde Configuración > Comprobante.",
+      };
+    }
+  }
+
   const { data, error } = await supabase.rpc("create_pos_sale", {
     p_session_id: parsed.data.sessionId,
     p_document_type: parsed.data.documentType,
@@ -371,7 +440,10 @@ export async function createPosSaleAction(input: {
 
     return {
       success: true,
-      message: "Venta cobrada y enviada a Intifact.",
+      message:
+        emission.localStatus === "accepted"
+          ? "Venta aceptada y completada."
+          : "Operación enviada a Intifact. No impactará caja hasta la aceptación fiscal.",
       data: {
         saleId: row.sale_id,
         series: row.series,
@@ -379,8 +451,12 @@ export async function createPosSaleAction(input: {
         totalAmount: Number(row.total_amount),
         changeAmount: Number(row.change_amount),
         fiscalStatus: emission.localStatus,
+        commercialStatus: emission.commercialStatus,
+        paymentMethod: parsed.data.paymentMethod,
         intifactDocumentId: emission.documentId,
-        pdfReady: emission.localStatus === "accepted",
+        pdfReady:
+          emission.localStatus === "accepted" &&
+          emission.commercialStatus === "completed",
         fiscalMessage: null,
       },
     };
@@ -388,21 +464,40 @@ export async function createPosSaleAction(input: {
     const fiscalMessage =
       error instanceof Error
         ? error.message
-        : "La venta fue cobrada, pero no se pudo completar el envío fiscal.";
+        : "No se pudo determinar el resultado fiscal.";
+
+    const { data: saleState } = await supabase
+      .from("sales")
+      .select(
+        "status, commercial_status, intifact_document_id, intifact_error_message",
+      )
+      .eq("id", row.sale_id)
+      .eq("organization_id", context.organizationId)
+      .maybeSingle();
+
+    const commercialStatus =
+      saleState?.commercial_status ?? "pending";
+    const fiscalStatus = saleState?.status ?? "error";
 
     return {
       success: true,
-      message: "Venta cobrada. La emisión fiscal requiere revisión.",
+      message:
+        commercialStatus === "failed"
+          ? "El comprobante no fue emitido. La operación fue revertida y no se contabiliza como venta."
+          : "La operación quedó pendiente de reconciliación fiscal y no se contabiliza en caja.",
       data: {
         saleId: row.sale_id,
         series: row.series,
         correlative: Number(row.correlative),
         totalAmount: Number(row.total_amount),
         changeAmount: Number(row.change_amount),
-        fiscalStatus: "error",
-        intifactDocumentId: null,
+        fiscalStatus,
+        commercialStatus,
+        paymentMethod: parsed.data.paymentMethod,
+        intifactDocumentId: saleState?.intifact_document_id ?? null,
         pdfReady: false,
-        fiscalMessage,
+        fiscalMessage:
+          saleState?.intifact_error_message || fiscalMessage,
       },
     };
   }

@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import {
+  AlertTriangle,
   ArrowDown,
   ArrowUp,
   Banknote,
@@ -912,7 +913,11 @@ function CloseSessionModal({
   const expected = Number(session.current_expected_cash);
   const difference = Math.round((counted - expected) * 100) / 100;
   const requiresNote = counted > 0 && Math.abs(difference) >= 0.01;
-  const valid = counted >= 0 && (!requiresNote || note.trim().length >= 3);
+  const hasPendingSales = Number(session.pending_sales_count ?? 0) > 0;
+  const valid =
+    !hasPendingSales &&
+    counted >= 0 &&
+    (!requiresNote || note.trim().length >= 3);
 
   function changeCount(value: number, delta: number) {
     const key = String(value);
@@ -933,6 +938,20 @@ function CloseSessionModal({
       size="lg"
     >
       <div className="space-y-5">
+        {hasPendingSales ? (
+          <div className="flex items-start gap-3 rounded-[16px] border border-amber-200 bg-amber-50 p-3.5 text-amber-900">
+            <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+            <div>
+              <p className="text-sm font-extrabold">
+                No puedes cerrar la sesión todavía
+              </p>
+              <p className="mt-1 text-xs leading-relaxed">
+                Hay {session.pending_sales_count} operación(es) por {formatMoney(session.pending_sales_amount)} pendientes de confirmación fiscal. No están incluidas en ventas ni caja.
+              </p>
+            </div>
+          </div>
+        ) : null}
+
         <div>
           <p className="mb-2 text-[10px] font-extrabold uppercase tracking-[0.1em] text-[#7b8680]">
             Resumen de ventas

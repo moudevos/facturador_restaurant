@@ -77,6 +77,7 @@ export default async function DocumentDetailPage({
           <DocumentDetailActions
             saleId={document.id}
             status={document.status}
+            commercialStatus={document.commercial_status}
             isOwner={context.role === "owner"}
           />
         </div>
@@ -93,7 +94,7 @@ export default async function DocumentDetailPage({
         </div>
       ) : null}
 
-      <div className="grid grid-cols-2 gap-2.5 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2.5 xl:grid-cols-5">
         <Metric label="Total" value={formatMoney(document.total_amount)} />
         <Metric label="IGV" value={formatMoney(document.igv_amount)} />
         <Metric
@@ -104,6 +105,19 @@ export default async function DocumentDetailPage({
         <Metric
           label="Estado Intifact"
           value={document.intifact_status || "Sin estado"}
+          mono={false}
+        />
+        <Metric
+          label="Estado comercial"
+          value={
+            document.commercial_status === "completed"
+              ? "Completada"
+              : document.commercial_status === "failed"
+                ? "Revertida"
+                : document.commercial_status === "voided"
+                  ? "Anulada"
+                  : "Pendiente"
+          }
           mono={false}
         />
       </div>
@@ -239,9 +253,18 @@ export default async function DocumentDetailPage({
                   <span className="text-sm font-semibold text-[#59665f]">
                     {PAYMENT_LABELS[payment.payment_method]}
                   </span>
-                  <span className="erp-mono text-sm font-bold text-[#14201b]">
-                    {formatMoney(payment.amount)}
-                  </span>
+                  <div className="text-right">
+                    <span className="erp-mono block text-sm font-bold text-[#14201b]">
+                      {formatMoney(payment.amount)}
+                    </span>
+                    <span className="text-[10px] font-bold uppercase text-[#7b8680]">
+                      {payment.status === "completed"
+                        ? "Confirmado"
+                        : payment.status === "reversed"
+                          ? "Revertido"
+                          : "Pendiente"}
+                    </span>
+                  </div>
                 </div>
               ))}
             </InfoCard>
@@ -276,6 +299,11 @@ export default async function DocumentDetailPage({
           <div className="mt-4 flex flex-wrap gap-2 border-t border-[#eee9df] pt-4">
             {accepted ? (
               <>
+                <ArtifactLink
+                  href={`/print/comprobantes/${document.id}`}
+                  label="Representación personalizada"
+                  icon={ReceiptText}
+                />
                 <ArtifactLink
                   href={`/api/intifact/sales/${document.id}/pdf?format=a4`}
                   label="PDF A4"

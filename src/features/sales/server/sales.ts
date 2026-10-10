@@ -53,7 +53,7 @@ export async function listRecentSessionSales(sessionId: string) {
     .from("sales")
     .select("id, series, correlative, customer_name, total_amount, created_at, sale_payments(payment_method)")
     .eq("session_id", sessionId)
-    .neq("status", "voided")
+    .eq("commercial_status", "completed")
     .order("created_at", { ascending: false })
     .limit(12);
 

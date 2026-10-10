@@ -29,6 +29,17 @@ type RucData = {
   es_buen_contribuyente?: string;
 };
 
+export type ApiPeruEstablishment = {
+  codigo: string;
+  tipo_de_establecimiento: string;
+  actividad_economica?: string;
+  direccion_completa: string;
+  departamento?: string;
+  provincia?: string;
+  distrito?: string;
+  ubigeo_sunat?: string;
+};
+
 export type ApiPeruIdentityResult = {
   documentType: "1" | "6";
   documentNumber: string;
@@ -36,6 +47,16 @@ export type ApiPeruIdentityResult = {
   address: string | null;
   taxpayerStatus: string | null;
   taxpayerCondition: string | null;
+};
+
+export type ApiPeruIssuerProfile = {
+  ruc: string;
+  legalName: string;
+  taxpayerStatus: string | null;
+  taxpayerCondition: string | null;
+  fiscalAddress: string | null;
+  fiscalUbigeo: string | null;
+  establishments: ApiPeruEstablishment[];
 };
 
 export class ApiPeruError extends Error {
@@ -93,7 +114,7 @@ async function post<T>(path: string, body: Record<string, string>) {
     );
   }
 
-  if (!response.ok || !payload.success || !payload.data) {
+  if (!response.ok || !payload.success || payload.data === undefined) {
     throw new ApiPeruError(
       payload.message || `ApiPeru respondió HTTP ${response.status}.`,
       response.status,
@@ -142,4 +163,51 @@ export async function lookupIdentityDocument(
     "invalid_input",
     false,
   );
+}
+
+export async function lookupIssuerRuc(ruc: string): Promise<ApiPeruIssuerProfile> {
+  const normalized = ruc.trim();
+
+  if (!/^\d{11}$/.test(normalized)) {
+    throw new ApiPeruError(
+      "El RUC debe tener 11 dígitos.",
+      400,
+      "invalid_input",
+      false,
+    );
+  }
+
+  const identity = await post<RucData>("/ruc", { ruc: normalized });
+  const fiscal = await post<ApiPeruEstablishment>(
+    "/ruc-domicilio-fiscal",
+    { ruc: normalized },
+  );
+
+  let annexes: ApiPeruEstablishment[] = [];
+  try {
+    annexes = await post<ApiPeruEstablishment[]>(
+      "/ruc-establecimientos-anexos",
+      { ruc: normalized },
+    );
+  } catch (error) {
+    if (!(error instanceof ApiPeruError) || error.code !== "document_not_found") {
+      throw error;
+    }
+  }
+
+  return {
+    ruc: identity.ruc,
+    legalName: identity.nombre_o_razon_social.trim(),
+    taxpayerStatus: identity.estado?.trim() || null,
+    taxpayerCondition: identity.condicion?.trim() || null,
+    fiscalAddress:
+      fiscal.direccion_completa?.trim() ||
+      identity.direccion?.trim() ||
+      null,
+    fiscalUbigeo: fiscal.ubigeo_sunat?.trim() || null,
+    establishments: [
+      fiscal,
+      ...annexes.filter((item) => item.codigo !== fiscal.codigo),
+    ],
+  };
 }

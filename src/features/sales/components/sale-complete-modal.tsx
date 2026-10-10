@@ -12,6 +12,8 @@ import {
 
 import { Modal } from "@/components/modal";
 import { useFeedback } from "@/components/feedback";
+import { printSaleReceipt } from "@/lib/printing";
+import type { PaymentMethod } from "../types/sales";
 import { formatMoney } from "../utils/format";
 
 type FiscalSaleResult = {
@@ -21,6 +23,8 @@ type FiscalSaleResult = {
   totalAmount: number;
   changeAmount: number;
   fiscalStatus: string;
+  commercialStatus: string;
+  paymentMethod: PaymentMethod;
   intifactDocumentId: string | null;
   pdfReady: boolean;
   fiscalMessage: string | null;
@@ -29,6 +33,7 @@ type FiscalSaleResult = {
 type FiscalStatusResponse = {
   saleId: string;
   status: string;
+  commercialStatus: string;
   intifactStatus: string | null;
   intifactDocumentId: string | null;
   pdfReady: boolean;
@@ -53,6 +58,7 @@ export function SaleCompleteModal({
   const [format, setFormat] = useState<PdfFormat>("ticket58");
   const [sharing, setSharing] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const autoPrintedSaleRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!sale) {
@@ -63,6 +69,7 @@ export function SaleCompleteModal({
     setStatus({
       saleId: sale.saleId,
       status: sale.fiscalStatus,
+      commercialStatus: sale.commercialStatus,
       intifactStatus: sale.intifactDocumentId ? "ENCOLADO" : null,
       intifactDocumentId: sale.intifactDocumentId,
       pdfReady: sale.pdfReady,
@@ -128,6 +135,33 @@ export function SaleCompleteModal({
     };
   }, [sale, status?.intifactDocumentId, status?.status]);
 
+  useEffect(() => {
+    if (
+      !sale ||
+      status?.status !== "accepted" ||
+      status.commercialStatus !== "completed" ||
+      autoPrintedSaleRef.current === sale.saleId
+    ) {
+      return;
+    }
+
+    autoPrintedSaleRef.current = sale.saleId;
+
+    void printSaleReceipt(sale.saleId, { requireAutoPrint: true })
+      .then((printed) => {
+        if (printed) {
+          toast.success("Comprobante enviado a la impresora configurada.");
+        }
+      })
+      .catch((error) => {
+        toast.warning(
+          error instanceof Error
+            ? error.message
+            : "La venta fue aceptada, pero la autoimpresión no pudo ejecutarse.",
+        );
+      });
+  }, [sale, status?.commercialStatus, status?.status, toast]);
+
   const number = sale
     ? `${sale.series}-${String(sale.correlative).padStart(8, "0")}`
     : "";
@@ -192,9 +226,21 @@ export function SaleCompleteModal({
       open={Boolean(sale)}
       onClose={() => undefined}
       dismissible={false}
-      title={status?.status === "accepted" ? "Venta completada" : "Venta registrada"}
+      title={
+        status?.commercialStatus === "completed"
+          ? "Venta completada"
+          : status?.commercialStatus === "failed"
+            ? "Venta no completada"
+            : "Operación pendiente"
+      }
       description={number || undefined}
-      icon={status?.status === "accepted" ? CheckCircle2 : FileText}
+      icon={
+        status?.commercialStatus === "completed"
+          ? CheckCircle2
+          : status?.commercialStatus === "failed"
+            ? TriangleAlert
+            : FileText
+      }
       size="md"
     >
       {sale ? (
@@ -218,7 +264,10 @@ export function SaleCompleteModal({
             </div>
           </div>
 
-          <FiscalState status={status} />
+          <FiscalState
+            status={status}
+            paymentMethod={sale.paymentMethod}
+          />
 
           {pdfReady ? (
             <div className="rounded-[18px] border border-[#e8e3d7] bg-white p-4">
@@ -266,14 +315,30 @@ export function SaleCompleteModal({
                 />
               </div>
 
-              <div className="mt-4 grid gap-2 sm:grid-cols-2">
+              <div className="mt-4 grid gap-2 sm:grid-cols-3">
+                <button
+                  type="button"
+                  onClick={() =>
+                    void printSaleReceipt(sale.saleId).catch((error) =>
+                      toast.error(
+                        error instanceof Error
+                          ? error.message
+                          : "No se pudo imprimir el ticket.",
+                      ),
+                    )
+                  }
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-[15px] bg-orange-500 text-sm font-extrabold text-white"
+                >
+                  <Printer className="size-4" />
+                  Imprimir ticket
+                </button>
                 <button
                   type="button"
                   onClick={openPdf}
                   className="inline-flex h-12 items-center justify-center gap-2 rounded-[15px] border border-[#e8e3d7] bg-white text-sm font-extrabold text-[#14201b]"
                 >
-                  <Printer className="size-4" />
-                  Ver / imprimir PDF
+                  <FileText className="size-4" />
+                  PDF Intifact
                 </button>
                 <button
                   type="button"
@@ -282,7 +347,7 @@ export function SaleCompleteModal({
                   className="inline-flex h-12 items-center justify-center gap-2 rounded-[15px] bg-emerald-600 text-sm font-extrabold text-white disabled:opacity-60"
                 >
                   <MessageCircle className="size-4" />
-                  {sharing ? "Preparando..." : "Enviar por WhatsApp"}
+                  {sharing ? "Preparando..." : "WhatsApp"}
                 </button>
               </div>
             </div>
@@ -293,7 +358,9 @@ export function SaleCompleteModal({
             onClick={onNewSale}
             className="h-[52px] w-full rounded-[16px] bg-orange-500 text-sm font-extrabold text-white shadow-[0_8px_20px_-8px_#e86400]"
           >
-            Nueva venta
+            {status?.commercialStatus === "failed"
+              ? "Corregir y volver al POS"
+              : "Nueva venta"}
           </button>
         </div>
       ) : null}
@@ -301,35 +368,75 @@ export function SaleCompleteModal({
   );
 }
 
-function FiscalState({ status }: { status: FiscalStatusResponse | null }) {
+function FiscalState({
+  status,
+  paymentMethod,
+}: {
+  status: FiscalStatusResponse | null;
+  paymentMethod: PaymentMethod;
+}) {
   if (!status) return null;
 
-  if (status.status === "accepted") {
+  if (
+    status.status === "accepted" &&
+    status.commercialStatus === "completed"
+  ) {
     return (
       <div className="flex items-start gap-3 rounded-[16px] bg-[#dff5e9] p-3.5 text-[#176b45]">
         <CheckCircle2 className="mt-0.5 size-5 shrink-0" />
         <div>
-          <p className="text-sm font-extrabold">Aceptado por SUNAT</p>
+          <p className="text-sm font-extrabold">
+            Aceptado por SUNAT · venta completada
+          </p>
           <p className="mt-0.5 text-xs leading-relaxed">
-            El comprobante oficial ya está disponible para imprimir o compartir.
+            El pago ya impacta caja y el comprobante está disponible para imprimir o compartir.
           </p>
         </div>
       </div>
     );
   }
 
-  if (status.status === "rejected" || status.status === "queue_failed" || status.status === "error") {
+  if (status.commercialStatus === "failed") {
     return (
       <div className="flex items-start gap-3 rounded-[16px] bg-[#fde8e8] p-3.5 text-[#a93232]">
         <TriangleAlert className="mt-0.5 size-5 shrink-0" />
         <div>
           <p className="text-sm font-extrabold">
-            {status.status === "rejected" ? "Comprobante rechazado" : "Emisión requiere revisión"}
+            Venta no completada
           </p>
           <p className="mt-0.5 text-xs leading-relaxed">
             {status.errorMessage ||
               status.sunatDescription ||
-              "La venta quedó cobrada. No generes otro correlativo para la misma operación."}
+              "SUNAT/Intifact rechazó la operación."}
+          </p>
+          <p className="mt-2 text-xs font-bold">
+            El pago fue revertido contablemente y no suma ventas ni caja.
+            {paymentMethod === "cash"
+              ? " Si ya recibiste el efectivo, devuélvelo al cliente."
+              : " Si el cliente ya pagó por un medio externo, gestiona la devolución fuera del sistema antes de repetir la venta."}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (
+    status.status === "queue_failed" ||
+    status.status === "error"
+  ) {
+    return (
+      <div className="flex items-start gap-3 rounded-[16px] bg-amber-50 p-3.5 text-amber-900">
+        <TriangleAlert className="mt-0.5 size-5 shrink-0" />
+        <div>
+          <p className="text-sm font-extrabold">
+            Operación fiscal pendiente de resolución
+          </p>
+          <p className="mt-0.5 text-xs leading-relaxed">
+            {status.errorMessage ||
+              "El resultado fiscal todavía no es concluyente."}
+          </p>
+          <p className="mt-2 text-xs font-bold">
+            No se contabiliza como venta ni como cobro hasta resolver el comprobante. No generes otro correlativo para esta misma operación.
           </p>
         </div>
       </div>
@@ -340,9 +447,11 @@ function FiscalState({ status }: { status: FiscalStatusResponse | null }) {
     <div className="flex items-start gap-3 rounded-[16px] bg-blue-50 p-3.5 text-blue-800">
       <Clock3 className="mt-0.5 size-5 shrink-0 animate-pulse" />
       <div>
-        <p className="text-sm font-extrabold">Procesando con Intifact / SUNAT</p>
+        <p className="text-sm font-extrabold">
+          Procesando con Intifact / SUNAT
+        </p>
         <p className="mt-0.5 text-xs leading-relaxed">
-          Estado: {status.intifactStatus || "ENCOLADO"}. Puedes continuar vendiendo; el estado se consulta por polling porque este plan no usa webhooks.
+          Estado: {status.intifactStatus || "ENCOLADO"}. La operación permanece pendiente y no impacta caja hasta ser aceptada.
         </p>
       </div>
     </div>

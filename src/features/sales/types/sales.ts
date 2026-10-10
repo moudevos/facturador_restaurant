@@ -41,6 +41,8 @@ export type SalesSessionSummary = {
   plin_sales: string | number;
   card_sales: string | number;
   transfer_sales: string | number;
+  pending_sales_count: number;
+  pending_sales_amount: string | number;
   cash_in: string | number;
   cash_out: string | number;
   current_expected_cash: string | number;

@@ -1,10 +1,11 @@
 import { createHash } from "node:crypto";
 
-import { computeInvoice, IntifactApiError, sendInvoice } from "@/lib/intifact/client";
+import { computeInvoice, findDocumentByFiscalIdentity, IntifactApiError, sendInvoice } from "@/lib/intifact/client";
 import type { IntifactComputeData } from "@/lib/intifact/types";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import type { SalesContext } from "./context";
+import { applyFiscalCommercialOutcome, reverseFailedSale } from "./commercial-state";
 import { buildIntifactDetailItem } from "./intifact-detail";
 
 type RequestedItem = { productId: string; quantity: number };
@@ -92,13 +93,28 @@ export async function emitPersistedSaleToIntifact(
         .maybeSingle(),
       supabase
         .from("organizations")
-        .select("ruc")
+        .select("ruc, fiscal_verified, intifact_company_id, sunat_status, sunat_condition")
         .eq("id", context.organizationId)
         .maybeSingle(),
     ]);
 
   if (saleError || !sale || orgError || !organization) {
     throw new Error("No se pudo reconstruir la venta para emitirla.");
+  }
+
+  const isTest = process.env.INTIFACT_API_KEY?.startsWith("fact_test_") ?? false;
+  if (
+    !isTest &&
+    (
+      !organization.fiscal_verified ||
+      !organization.intifact_company_id ||
+      organization.sunat_status?.toUpperCase() !== "ACTIVO" ||
+      organization.sunat_condition?.toUpperCase() !== "HABIDO"
+    )
+  ) {
+    throw new Error(
+      "El emisor debe estar verificado ACTIVO/HABIDO con ApiPeru y vinculado con Intifact antes de emitir en producción.",
+    );
   }
 
   const [
@@ -232,11 +248,12 @@ export async function emitPersistedSaleToIntifact(
 
   try {
     const sent = await sendInvoice(payload);
+    const localStatus = mapIntifactStatus(sent.estado);
 
-    await admin
+    const { error: persistError } = await admin
       .from("sales")
       .update({
-        status: mapIntifactStatus(sent.estado),
+        status: localStatus,
         intifact_document_id: sent.id,
         intifact_status: sent.estado,
         intifact_hash: sent.hash ?? null,
@@ -245,21 +262,81 @@ export async function emitPersistedSaleToIntifact(
         intifact_last_checked_at: attemptAt,
         intifact_error_message: null,
         issued_at: attemptAt,
+        ...(localStatus === "accepted" ? { accepted_at: attemptAt } : {}),
       })
       .eq("id", saleId);
+
+    if (persistError) {
+      throw new Error("No se pudo persistir la respuesta inicial de Intifact.");
+    }
+
+    const commercialStatus = await applyFiscalCommercialOutcome(
+      saleId,
+      localStatus,
+      localStatus === "rejected" ? "Comprobante rechazado por SUNAT." : null,
+    );
 
     return {
       documentId: sent.id,
       intifactStatus: sent.estado,
-      localStatus: mapIntifactStatus(sent.estado),
+      localStatus,
+      commercialStatus,
     };
   } catch (error) {
     const message =
       error instanceof IntifactApiError
-        ? `${error.message}${error.status === 409 ? " El comprobante ya puede estar en proceso; no genere otro correlativo." : ""}`
+        ? error.message +
+          (error.status === 409
+            ? " El comprobante puede estar en proceso; se conservará el mismo correlativo."
+            : "")
         : error instanceof Error
           ? error.message
           : "Error desconocido al enviar a Intifact.";
+
+    if (error instanceof IntifactApiError && error.status === 409) {
+      try {
+        const recovered = await findDocumentByFiscalIdentity({
+          ruc: organization.ruc,
+          documentType: sale.document_type,
+          series: sale.series,
+          correlative: sale.correlative,
+        });
+
+        if (recovered) {
+          const localStatus = mapIntifactStatus(recovered.estado);
+
+          await admin
+            .from("sales")
+            .update({
+              status: localStatus,
+              intifact_document_id: recovered.id,
+              intifact_status: recovered.estado,
+              intifact_last_checked_at: attemptAt,
+              intifact_error_message: null,
+              ...(localStatus === "accepted" ? { accepted_at: attemptAt } : {}),
+            })
+            .eq("id", saleId);
+
+          const commercialStatus = await applyFiscalCommercialOutcome(
+            saleId,
+            localStatus,
+          );
+
+          return {
+            documentId: recovered.id,
+            intifactStatus: recovered.estado,
+            localStatus,
+            commercialStatus,
+          };
+        }
+      } catch {
+        // No crear otro correlativo: la venta queda pendiente de reconciliación.
+      }
+    }
+
+    const definitiveHttpFailure =
+      error instanceof IntifactApiError &&
+      [400, 401, 403, 404].includes(error.status);
 
     await admin
       .from("sales")
@@ -269,6 +346,10 @@ export async function emitPersistedSaleToIntifact(
         intifact_last_attempt_at: attemptAt,
       })
       .eq("id", saleId);
+
+    if (definitiveHttpFailure) {
+      await reverseFailedSale(saleId, message);
+    }
 
     throw error;
   }

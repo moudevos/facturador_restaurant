@@ -115,16 +115,12 @@ export async function updateOrganizationAction(formData: FormData) {
   if (!owner.ok) return go("error", owner.message);
 
   const schema = z.object({
-    legalName: z.string().trim().min(2, "Ingresa la razón social."),
     tradeName: optionalText,
-    ruc,
     timezone: z.string().trim().min(1, "Selecciona una zona horaria."),
   });
 
   const parsed = schema.safeParse({
-    legalName: formData.get("legalName"),
     tradeName: formData.get("tradeName"),
-    ruc: formData.get("ruc"),
     timezone: formData.get("timezone"),
   });
 
@@ -134,16 +130,20 @@ export async function updateOrganizationAction(formData: FormData) {
   const { error } = await supabase
     .from("organizations")
     .update({
-      legal_name: parsed.data.legalName,
       trade_name: parsed.data.tradeName,
-      ruc: parsed.data.ruc,
       timezone: parsed.data.timezone,
     })
     .eq("id", owner.organizationId);
 
-  if (error) go("error", "No pudimos actualizar los datos de la empresa.");
+  if (error) {
+    go(
+      "error",
+      "No pudimos actualizar la empresa. Si acabas de actualizar el código, verifica SQL 014.",
+    );
+  }
+
   revalidatePath("/configuracion");
-  go("success", "Datos de la empresa actualizados.");
+  go("success", "Nombre comercial y zona horaria actualizados.");
 }
 
 export async function createBranchAction(formData: FormData): Promise<SettingsActionResult> {
