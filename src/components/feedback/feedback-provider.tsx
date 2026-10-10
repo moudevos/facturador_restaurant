@@ -12,7 +12,7 @@ import {
   type ReactNode,
 } from "react";
 import { Bell, Check, TriangleAlert, X, type LucideIcon } from "lucide-react";
-   import { LoadingView, type LoadingControls, type LoadingOptions } from "./loading-view";
+import { LoadingView, type LoadingControls, type LoadingOptions } from "./loading-view";
 
 
 /* ───────────── Tipos públicos ───────────── */
@@ -156,6 +156,12 @@ type DialogRequest = DialogOptions & {
 
 const FeedbackContext = createContext<FeedbackApi | null>(null);
 
+let feedbackIdSequence = 0;
+function nextFeedbackId() {
+  feedbackIdSequence += 1;
+  return feedbackIdSequence;
+}
+
 export function useFeedback(): FeedbackApi {
   const ctx = useContext(FeedbackContext);
   if (!ctx) throw new Error("useFeedback debe usarse dentro de <FeedbackProvider>.");
@@ -171,7 +177,6 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
     count: 0,
     options: {},
   });
-  const nextId = useRef(0);
 
   /* Toasts */
   const dismissToast = useCallback((id: number) => {
@@ -180,7 +185,7 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
 
   const toast = useMemo<ToastFn>(() => {
     const base = (title: string, options: ToastOptions = {}) => {
-      const id = ++nextId.current;
+      const id = nextFeedbackId();
       setToasts((prev) => [
         ...prev.slice(-4),
         {
@@ -206,7 +211,7 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
   const confirm = useCallback(
     (options: DialogOptions) =>
       new Promise<boolean>((resolve) => {
-        const id = ++nextId.current;
+        const id = nextFeedbackId();
         setQueue((q) => [...q, { ...options, id, kind: "confirm", resolve }]);
       }),
     [],
@@ -215,7 +220,7 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
   const alert = useMemo<AlertFn>(() => {
     const base = (options: DialogOptions) =>
       new Promise<void>((resolve) => {
-        const id = ++nextId.current;
+        const id = nextFeedbackId();
         setQueue((q) => [...q, { ...options, id, kind: "alert", resolve: () => resolve() }]);
       });
 
