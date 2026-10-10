@@ -4,7 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Power } from "lucide-react";
 
-import { AppModal } from "@/components/ui/app-modal";
+import { Modal } from "@/components/modal";
 import { useFeedback } from "@/components/feedback";
 import { createSequenceAction, toggleSequenceAction } from "@/app/(dashboard)/configuracion/actions";
 import { listBranchesAction, listSequencesAction } from "../server/list-actions";
@@ -173,13 +173,13 @@ export function SequencesManager({
         </>
       )}
 
-      <AppModal
+      <Modal
         open={modalOpen}
         onClose={() => !createMutation.isPending && setModalOpen(false)}
-        isBusy={createMutation.isPending}
+        dismissible={!createMutation.isPending}
         title="Agregar serie"
         description="Crea una nueva serie para un local. Serie, tipo y correlativo no se editan después."
-        maxWidth="lg"
+        size="md"
       >
         <SequenceForm
           branches={activeBranches}
@@ -187,7 +187,7 @@ export function SequencesManager({
           onSubmit={createSequence}
           onCancel={() => setModalOpen(false)}
         />
-      </AppModal>
+      </Modal>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { AppModal } from "@/components/ui/app-modal";
+import { Modal } from "@/components/modal";
 import { ProductForm } from "./product-form";
 import type { ProductActionResult } from "../server/actions";
 
@@ -18,10 +18,11 @@ export function ProductCreateModal({
   onCreated: (message: string) => void;
 }) {
   return (
-    <AppModal
+    <Modal
       open={open}
       onClose={onClose}
-      isBusy={isSaving}
+      dismissible={!isSaving}
+      size="lg"
       title="Nuevo producto"
       description="Registra un producto para tus ventas y comprobantes."
     >
@@ -31,6 +32,6 @@ export function ProductCreateModal({
         onCancel={onClose}
         isSaving={isSaving}
       />
-    </AppModal>
+    </Modal>
   );
 }

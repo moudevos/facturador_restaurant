@@ -4,7 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Plus, Power } from "lucide-react";
 
-import { AppModal } from "@/components/ui/app-modal";
+import { Modal } from "@/components/modal";
 import { useFeedback } from "@/components/feedback";
 import { createBranchAction, updateBranchAction } from "@/app/(dashboard)/configuracion/actions";
 import { listBranchesAction } from "../server/list-actions";
@@ -202,7 +202,7 @@ export function BranchesManager({
         </>
       )}
 
-      <AppModal
+      <Modal
         open={modalOpen}
         onClose={() => {
           if (!saveMutation.isPending) {
@@ -210,12 +210,13 @@ export function BranchesManager({
             setEditing(null);
           }
         }}
-        isBusy={saveMutation.isPending}
+        dismissible={!saveMutation.isPending}
         title={editing ? "Editar local" : "Agregar local"}
         description={editing ? "Actualiza los datos operativos del local." : "Registra una nueva sucursal o punto de emisión."}
+        size="lg"
       >
         <BranchForm branch={editing} isSaving={saveMutation.isPending} onSubmit={saveBranch} onCancel={() => setModalOpen(false)} />
-      </AppModal>
+      </Modal>
     </div>
   );
 }

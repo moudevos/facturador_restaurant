@@ -4,7 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Plus } from "lucide-react";
 
-import { AppModal } from "@/components/ui/app-modal";
+import { Modal } from "@/components/modal";
 import { useFeedback } from "@/components/feedback";
 import { addMemberAction, updateMemberAction } from "@/app/(dashboard)/configuracion/actions";
 import { listBranchesAction, listMembersAction } from "../server/list-actions";
@@ -154,7 +154,7 @@ export function MembersManager({
         </>
       )}
 
-      <AppModal
+      <Modal
         open={modalOpen}
         onClose={() => {
           if (!saveMutation.isPending) {
@@ -162,14 +162,14 @@ export function MembersManager({
             setEditing(null);
           }
         }}
-        isBusy={saveMutation.isPending}
+        dismissible={!saveMutation.isPending}
         title={editing ? "Editar usuario" : "Agregar usuario"}
         description={
           editing
             ? "Actualiza el rol, local asignado y estado del usuario."
             : "El correo debe existir previamente en Supabase Auth."
         }
-        maxWidth="lg"
+        size="md"
       >
         <MemberForm
           member={editing}
@@ -178,7 +178,7 @@ export function MembersManager({
           onSubmit={saveMember}
           onCancel={() => setModalOpen(false)}
         />
-      </AppModal>
+      </Modal>
     </div>
   );
 }
