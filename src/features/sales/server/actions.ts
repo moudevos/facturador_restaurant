@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 
+import { lookupIdentityDocument, ApiPeruError } from "@/lib/apiperu/client";
 import { assertIntifactConfigured } from "@/lib/intifact/client";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -138,6 +139,88 @@ export async function closeSalesSessionAction(input: {
       difference: Number(row?.cash_difference ?? 0),
     },
   };
+}
+
+export async function lookupCustomerDocumentAction(input: {
+  documentNumber: string;
+}): Promise<SalesActionResult<{
+  documentType: "1" | "6";
+  documentNumber: string;
+  name: string;
+  address: string | null;
+  taxpayerStatus: string | null;
+  taxpayerCondition: string | null;
+}>> {
+  const context = await requireContext();
+  if (!context) {
+    return { success: false, message: "Tu sesión de usuario no es válida." };
+  }
+
+  const parsed = z.object({
+    documentNumber: z.string().trim().regex(/^(\d{8}|\d{11})$/),
+  }).safeParse(input);
+
+  if (!parsed.success) {
+    return {
+      success: false,
+      message: "Ingresa un DNI de 8 dígitos o un RUC de 11 dígitos.",
+    };
+  }
+
+  try {
+    const result = await lookupIdentityDocument(parsed.data.documentNumber);
+
+    return {
+      success: true,
+      message: "Documento verificado con ApiPeru.",
+      data: result,
+    };
+  } catch (error) {
+    if (error instanceof ApiPeruError) {
+      if (error.code === "document_not_found") {
+        return {
+          success: false,
+          message:
+            parsed.data.documentNumber.length === 8
+              ? "ApiPeru no encontró este DNI en sus fuentes públicas. No lo guardaremos como verificado."
+              : "El RUC no fue encontrado en ApiPeru/SUNAT.",
+        };
+      }
+
+      if (error.code === "invalid_input") {
+        return { success: false, message: "El número de documento no es válido." };
+      }
+
+      if (error.retryable) {
+        return {
+          success: false,
+          message: "ApiPeru no está disponible temporalmente. Intenta nuevamente en unos segundos.",
+        };
+      }
+
+      if (error.status === 401 || error.status === 403) {
+        return {
+          success: false,
+          message: "La integración ApiPeru no está autorizada. Revisa el token del servidor.",
+        };
+      }
+
+      if (error.status === 429) {
+        return {
+          success: false,
+          message: "Se alcanzó el límite de consultas de ApiPeru.",
+        };
+      }
+    }
+
+    return {
+      success: false,
+      message:
+        error instanceof Error
+          ? error.message
+          : "No pudimos verificar el documento.",
+    };
+  }
 }
 
 export async function createCustomerAction(input: {
