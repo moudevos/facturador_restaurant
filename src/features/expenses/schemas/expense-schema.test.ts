@@ -4,7 +4,7 @@ import { expenseFormSchema } from "./expense-schema";
 
 const valid = {
   expenseDate: "2026-10-10",
-  branchId: "00000000-0000-0000-0000-000000000001",
+  branchId: "11111111-1111-4111-8111-111111111111",
   category: "compras",
   description: "Compra de gas",
   amount: "85.50",
