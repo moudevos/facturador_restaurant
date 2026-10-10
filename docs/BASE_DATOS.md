@@ -18,61 +18,29 @@ Secuencia actual:
 009_egresos_financieros.sql
 010_pos_sesiones_clientes_pagos.sql
 011_intifact_emision.sql
+012_catalogo_productos_normalizado.sql
 ```
 
 ## Regla inmutable
 
 Después de aplicar un archivo en un entorno compartido o producción, no se modifica. Si hay que corregir algo, se crea el siguiente SQL numerado.
 
-## Verificación
+## Productos
 
-```sql
-select script_code, script_name, executed_at, executed_by
-from public.schema_change_log
-order by script_code;
+El catálogo distingue:
+
+```text
+product_code       P000001      código interno estable
+sku                HAMB-CLA     código comercial opcional
+sunat_product_code 50192701     UNSPSC SUNAT (8 dígitos)
 ```
 
-## Configuración inicial
+`product_code` se genera en PostgreSQL y es inmutable. El UUID de `products.id` sigue siendo la clave técnica interna, pero no se envía como código de producto a SUNAT/Intifact.
 
-Desde `007_configuracion_administrable.sql`, un usuario autenticado que todavía no pertenezca a una organización puede crear empresa, local principal, owner y serie B001 desde `/configuracion`.
+`product_categories` organiza el catálogo y el POS. SQL 012 crea categorías iniciales para restaurante y asigna los productos existentes a `Otros` para que el owner los reclasifique deliberadamente.
+
+Al crear una venta, `sale_items` congela código interno, código UNSPSC y afectación IGV además del nombre/precio.
 
 ## Correlativos y ventas
 
 `create_sale_draft` obtiene productos/precios desde PostgreSQL y reserva el correlativo en la misma transacción. `create_pos_sale` añade la validación de sesión abierta, cliente y pago, y reutiliza `create_sale_draft`. El frontend nunca genera correlativos ni confía en precios enviados por el navegador.
-
-Una venta cobrada por el POS queda inicialmente en estado local `draft` hasta que la fase fiscal la envíe a Intifact. Cualquier retry fiscal debe reutilizar exactamente RUC + tipo + serie + correlativo.
-
-## Sesiones de caja
-
-`sales_sessions` modela la apertura y cierre físico de caja. Existe como máximo una sesión abierta por local.
-
-Efectivo esperado:
-
-```text
-fondo inicial
-+ ventas cobradas en efectivo
-+ ingresos de caja
-- salidas de caja
-```
-
-El cierre persiste efectivo esperado, contado, diferencia y observación. Si existe diferencia, la observación es obligatoria.
-
-`cash_movements` representa movimientos físicos de efectivo y no equivale automáticamente a `expenses`. Por ejemplo, retirar efectivo a una caja fuerte reduce el efectivo del cajón, pero no es un egreso financiero.
-
-## Pagos
-
-`sale_payments` guarda el medio y monto cobrado. El MVP registra un método principal por venta, pero la tabla admite varias filas por venta para soportar pago mixto más adelante.
-
-Métodos iniciales: efectivo, Yape, Plin, tarjeta y transferencia.
-
-## Clientes
-
-`customers` contiene personas DNI y empresas RUC reutilizables en el POS. La venta conserva además el snapshot de nombre/documento en `sales` para que cambios futuros del cliente no alteren comprobantes históricos.
-
-## Productos
-
-`products.price` es el precio final mostrado al cliente. No hay inventario, costos ni recetas en este MVP.
-
-## Egresos
-
-`expense_date` es fecha de negocio. Los datos financieros de un egreso son inmutables; si hubo un error se anula mediante `void_expense` y se registra otro.

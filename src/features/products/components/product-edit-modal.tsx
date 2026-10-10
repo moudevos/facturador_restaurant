@@ -5,16 +5,18 @@ import { Package } from "lucide-react";
 import { Modal } from "@/components/modal";
 import { ProductForm } from "./product-form";
 import type { ProductActionResult } from "../server/actions";
-import type { Product } from "../types/product";
+import type { Product, ProductCategory } from "../types/product";
 
 export function ProductEditModal({
   product,
+  categories,
   open,
   isSaving,
   onClose,
   onUpdate,
 }: {
   product: Product;
+  categories: ProductCategory[];
   open: boolean;
   isSaving: boolean;
   onClose: () => void;
@@ -28,10 +30,11 @@ export function ProductEditModal({
       size="lg"
       icon={Package}
       title="Editar producto"
-      description={`Actualiza los datos de «${product.name}» en el catálogo comercial.`}
+      description={`Actualiza «${product.name}». El código ${product.product_code} no cambia.`}
     >
       <ProductForm
         product={product}
+        categories={categories}
         onUpdate={onUpdate}
         onSuccess={() => undefined}
         onCancel={onClose}

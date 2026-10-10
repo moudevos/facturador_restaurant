@@ -11,6 +11,8 @@ type RequestedItem = { productId: string; quantity: number };
 
 type PersistedSaleItem = {
   product_id: string | null;
+  product_code: string;
+  sunat_product_code: string | null;
   description: string;
   unit_code: string;
   tax_affectation_code: "10" | "20" | "30";
@@ -113,7 +115,7 @@ export async function emitPersistedSaleToIntifact(
     supabase
       .from("sale_items")
       .select(
-        "product_id, description, unit_code, tax_affectation_code, quantity, unit_price, line_subtotal, line_igv, line_total",
+        "product_id, product_code, sunat_product_code, description, unit_code, tax_affectation_code, quantity, unit_price, line_subtotal, line_igv, line_total",
       )
       .eq("sale_id", saleId)
       .eq("organization_id", context.organizationId)
@@ -168,7 +170,8 @@ export async function emitPersistedSaleToIntifact(
       const lineIgv = Number(item.line_igv);
       const lineTotal = Number(item.line_total);
       return buildIntifactDetailItem({
-        productId: item.product_id,
+        productCode: item.product_code,
+        sunatProductCode: item.sunat_product_code,
         description: item.description,
         unitCode: item.unit_code,
         affectation: item.tax_affectation_code,
@@ -298,7 +301,8 @@ function round(value: number, decimals = 2) {
 
 
 export function buildIntifactDetailItem(input: {
-  productId: string | null;
+  productCode: string;
+  sunatProductCode: string | null;
   description: string;
   unitCode: string;
   affectation: "10" | "20" | "30";
@@ -308,7 +312,8 @@ export function buildIntifactDetailItem(input: {
   lineTotal: number;
 }) {
   const {
-    productId,
+    productCode,
+    sunatProductCode,
     description,
     unitCode,
     affectation,
@@ -329,7 +334,8 @@ export function buildIntifactDetailItem(input: {
   return {
     unidad: unitCode,
     cantidad: quantity,
-    ...(productId ? { codProducto: productId } : {}),
+    codProducto: productCode,
+    ...(sunatProductCode ? { codProdSunat: sunatProductCode } : {}),
     descripcion,
     montoValorUnitario: round(lineSubtotal / quantity, 6),
     montoBaseIgv: round(lineSubtotal),

@@ -2,11 +2,25 @@
 
 import { useTransition, type ReactNode } from "react";
 import { useForm } from "react-hook-form";
-import { AlertCircle, ChevronDown, LoaderCircle, Receipt, Tag, type LucideIcon } from "lucide-react";
+import {
+  AlertCircle,
+  Barcode,
+  ChevronDown,
+  Hash,
+  LoaderCircle,
+  Receipt,
+  Shapes,
+  Tag,
+  type LucideIcon,
+} from "lucide-react";
 
 import { useFeedback } from "@/components/feedback";
 import { productFormSchema, type ProductFormInput } from "../schemas/product-schema";
-import type { Product, ProductFormValues } from "../types/product";
+import type {
+  Product,
+  ProductCategory,
+  ProductFormValues,
+} from "../types/product";
 import { productFormDefaults } from "../utils/product-form-defaults";
 import {
   createProductAction,
@@ -16,7 +30,7 @@ import {
 
 const baseInput =
   "block w-full rounded-[13px] border-[1.5px] border-[#e8e3d7] bg-white px-3.5 text-sm text-[#14201b] outline-none transition placeholder:text-[#9b9f99] focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 disabled:cursor-not-allowed disabled:bg-[#f6f3ec] disabled:text-[#7b8680] aria-[invalid=true]:border-red-400 aria-[invalid=true]:bg-red-50/40 aria-[invalid=true]:focus:ring-red-500/10";
-const inputClass = `${baseInput} h-11`;
+const inputClass = `${baseInput} h-12`;
 const textareaClass = `${baseInput} min-h-24 resize-y py-2.5 leading-relaxed`;
 const selectClass = `${inputClass} appearance-none pr-10`;
 
@@ -37,7 +51,7 @@ function Field({
 }) {
   return (
     <div>
-      <label htmlFor={id} className="text-sm font-medium text-[#1e2d27]">
+      <label htmlFor={id} className="text-sm font-bold text-[#1e2d27]">
         {label}
         {required ? (
           <span className="ml-0.5 text-red-500" aria-hidden="true">
@@ -47,12 +61,12 @@ function Field({
       </label>
       <div className="mt-1.5">{children}</div>
       {error ? (
-        <p className="mt-1.5 flex items-center gap-1.5 text-xs font-medium text-red-600">
+        <p className="mt-1.5 flex items-center gap-1.5 text-xs font-semibold text-red-600">
           <AlertCircle className="size-3.5 shrink-0" aria-hidden="true" />
           {error}
         </p>
       ) : hint ? (
-        <p className="mt-1.5 text-xs text-[#7b8680]">{hint}</p>
+        <p className="mt-1.5 text-xs leading-relaxed text-[#7b8680]">{hint}</p>
       ) : null}
     </div>
   );
@@ -84,12 +98,12 @@ function Section({
   return (
     <section className="space-y-5">
       <header className="flex items-start gap-3">
-        <div className="flex size-8 shrink-0 items-center justify-center rounded-[13px] bg-[#fff0e2] text-orange-600">
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-[13px] bg-[#fff0e2] text-orange-600">
           <Icon className="size-4" aria-hidden="true" />
         </div>
         <div>
-          <h2 className="text-sm font-bold text-[#14201b]">{title}</h2>
-          <p className="mt-0.5 text-xs text-[#7b8680]">{description}</p>
+          <h2 className="text-sm font-extrabold text-[#14201b]">{title}</h2>
+          <p className="mt-0.5 text-xs leading-relaxed text-[#7b8680]">{description}</p>
         </div>
       </header>
       {children}
@@ -99,6 +113,7 @@ function Section({
 
 export function ProductForm({
   product,
+  categories,
   onCreate,
   onUpdate,
   onSuccess,
@@ -106,6 +121,7 @@ export function ProductForm({
   isSaving = false,
 }: {
   product?: Product;
+  categories: ProductCategory[];
   onCreate?: (formData: FormData) => Promise<ProductActionResult>;
   onUpdate?: (formData: FormData) => Promise<ProductActionResult>;
   onSuccess?: (message: string) => void;
@@ -114,6 +130,11 @@ export function ProductForm({
 }) {
   const { toast } = useFeedback();
   const [isPending, startTransition] = useTransition();
+  const defaultCategoryId =
+    product?.category_id ??
+    categories.find((category) => category.code === "OTROS")?.id ??
+    categories[0]?.id ??
+    "";
 
   const {
     register,
@@ -121,14 +142,18 @@ export function ProductForm({
     setError,
     formState: { errors },
     reset,
-  } = useForm<ProductFormInput>({ defaultValues: productFormDefaults(product) });
+  } = useForm<ProductFormInput>({
+    defaultValues: productFormDefaults(product, defaultCategoryId),
+  });
 
   const onSubmit = (values: ProductFormInput) => {
     const parsed = productFormSchema.safeParse(values);
 
     if (!parsed.success) {
       parsed.error.issues.forEach((issue) =>
-        setError(issue.path[0] as keyof ProductFormInput, { message: issue.message }),
+        setError(issue.path[0] as keyof ProductFormInput, {
+          message: issue.message,
+        }),
       );
       return;
     }
@@ -140,7 +165,9 @@ export function ProductForm({
 
     startTransition(async () => {
       const result = product
-        ? await (onUpdate ?? ((data: FormData) => updateProductAction(product.id, data)))(formData)
+        ? await (onUpdate ?? ((data: FormData) => updateProductAction(product.id, data)))(
+            formData,
+          )
         : await (onCreate ?? createProductAction)(formData);
 
       if (!result.success) {
@@ -148,13 +175,10 @@ export function ProductForm({
         return;
       }
 
-      reset(productFormDefaults(product));
+      reset(productFormDefaults(product, defaultCategoryId));
 
-      if (onSuccess) {
-        onSuccess(result.message);
-      } else {
-        toast.success(result.message);
-      }
+      if (onSuccess) onSuccess(result.message);
+      else toast.success(result.message);
     });
   };
 
@@ -165,9 +189,44 @@ export function ProductForm({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8" noValidate>
       <Section
         icon={Tag}
-        title="Información general"
-        description="Cómo se identificará el producto en ventas y comprobantes."
+        title="Identificación"
+        description="Código interno, categoría y nombre que verá el equipo en el POS."
       >
+        {product ? (
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="rounded-[15px] border border-[#e8e3d7] bg-[#f6f3ec] p-3.5">
+              <div className="flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-[0.1em] text-[#7b8680]">
+                <Hash className="size-3.5" />
+                Código interno
+              </div>
+              <p className="erp-mono mt-2 text-lg font-bold text-[#14201b]">
+                {product.product_code}
+              </p>
+              <p className="mt-1 text-[10px] text-[#7b8680]">
+                Estable e inmutable. Se envía como codProducto.
+              </p>
+            </div>
+            <div className="rounded-[15px] border border-[#e8e3d7] bg-white p-3.5">
+              <div className="flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-[0.1em] text-[#7b8680]">
+                <Barcode className="size-3.5" />
+                SKU comercial
+              </div>
+              <p className="erp-mono mt-2 text-sm font-bold text-[#14201b]">
+                {product.sku || "Sin SKU"}
+              </p>
+              <p className="mt-1 text-[10px] text-[#7b8680]">
+                Puede representar tu código de cocina o carta.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-[15px] border border-dashed border-[#d8d2c0] bg-[#fbfaf6] p-3.5 text-xs leading-relaxed text-[#59665f]">
+            El código interno se generará automáticamente al guardar, por ejemplo{" "}
+            <span className="erp-mono font-extrabold text-[#14201b]">P000001</span>.
+            No usamos el UUID de Supabase en el comprobante.
+          </div>
+        )}
+
         <Field id="name" label="Nombre" required error={fieldError("name")}>
           <input
             id="name"
@@ -180,152 +239,170 @@ export function ProductForm({
           />
         </Field>
 
-        <Field
-          id="sku"
-          label="SKU"
-          error={fieldError("sku")}
-          hint="Código interno opcional para identificar el producto."
-        >
-          <input
-            id="sku"
-            className={`${inputClass} font-mono uppercase placeholder:font-sans placeholder:normal-case`}
-            aria-invalid={Boolean(fieldError("sku"))}
-            placeholder="HAM001"
-            disabled={busy}
-            {...register("sku")}
-          />
-        </Field>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field
+            id="categoryId"
+            label="Categoría"
+            required
+            error={fieldError("categoryId")}
+            hint="Se usa para ordenar y filtrar el catálogo y el POS."
+          >
+            <SelectWrap>
+              <select
+                id="categoryId"
+                className={selectClass}
+                aria-invalid={Boolean(fieldError("categoryId"))}
+                disabled={busy}
+                {...register("categoryId")}
+              >
+                <option value="">Selecciona una categoría</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+            </SelectWrap>
+          </Field>
 
-        <Field id="description" label="Descripción" error={fieldError("description")}>
+          <Field
+            id="sku"
+            label="SKU comercial"
+            error={fieldError("sku")}
+            hint="Opcional. Ej.: BRO-P01, HAMB-CLA, BEB-COCA500."
+          >
+            <input
+              id="sku"
+              className={`${inputClass} erp-mono uppercase`}
+              aria-invalid={Boolean(fieldError("sku"))}
+              placeholder="HAMB-CLA"
+              disabled={busy}
+              {...register("sku")}
+            />
+          </Field>
+        </div>
+
+        <Field
+          id="description"
+          label="Descripción"
+          error={fieldError("description")}
+          hint="Opcional. Útil para diferenciar tamaños, ingredientes o presentaciones."
+        >
           <textarea
             id="description"
             className={textareaClass}
-            rows={3}
             aria-invalid={Boolean(fieldError("description"))}
-            placeholder="Detalles que ayuden a distinguir este producto (opcional)"
+            placeholder="Carne, queso, papas y salsas."
             disabled={busy}
             {...register("description")}
           />
         </Field>
       </Section>
 
-      <div className="h-px bg-[#e9e4d6]" />
+      <div className="h-px bg-[#eee9df]" />
 
       <Section
         icon={Receipt}
-        title="Precio y tributación"
-        description="Datos que se usarán al emitir boletas y facturas."
+        title="Venta y tributación"
+        description="Precio final, afectación IGV y código SUNAT del producto."
       >
-        <div className="grid gap-5 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2">
           <Field id="price" label="Precio de venta" required error={fieldError("price")}>
             <div className="relative">
-              <span
-                className="pointer-events-none absolute inset-y-px left-px flex w-10 items-center justify-center rounded-l-[7px] border-r border-[#e8e3d7] bg-[#f6f3ec] text-sm font-medium text-[#7b8680]"
-                aria-hidden="true"
-              >
+              <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-bold text-[#7b8680]">
                 S/
               </span>
               <input
                 id="price"
+                className={`${inputClass} erp-mono pl-9`}
                 inputMode="decimal"
-                className={`${inputClass} pl-[3.25rem] tabular-nums`}
                 aria-invalid={Boolean(fieldError("price"))}
-                placeholder="15.00"
+                placeholder="0.00"
                 disabled={busy}
                 {...register("price")}
               />
             </div>
           </Field>
 
-          <Field id="unitCode" label="Unidad SUNAT" required>
+          <Field
+            id="taxAffectationCode"
+            label="Afectación IGV"
+            required
+            error={fieldError("taxAffectationCode")}
+          >
             <SelectWrap>
-              <select id="unitCode" className={selectClass} disabled={busy} {...register("unitCode")}>
-                <option value="NIU">NIU - Unidad</option>
+              <select
+                id="taxAffectationCode"
+                className={selectClass}
+                aria-invalid={Boolean(fieldError("taxAffectationCode"))}
+                disabled={busy}
+                {...register("taxAffectationCode")}
+              >
+                <option value="10">10 · Gravado</option>
+                <option value="20">20 · Exonerado</option>
+                <option value="30">30 · Inafecto</option>
               </select>
             </SelectWrap>
           </Field>
         </div>
 
+        <input type="hidden" value="NIU" {...register("unitCode")} />
+
         <Field
-          id="taxAffectationCode"
-          label="Afectación IGV"
-          required
-          hint="Define cómo se calcula el impuesto en el comprobante."
+          id="sunatProductCode"
+          label="Código SUNAT / UNSPSC"
+          error={fieldError("sunatProductCode")}
+          hint="Opcional por ahora. Debe tener 8 dígitos y es distinto del código interno/SKU."
         >
-          <SelectWrap>
-            <select
-              id="taxAffectationCode"
-              className={selectClass}
+          <div className="relative">
+            <Shapes className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-[#9b9f99]" />
+            <input
+              id="sunatProductCode"
+              className={`${inputClass} erp-mono pl-10`}
+              inputMode="numeric"
+              maxLength={8}
+              aria-invalid={Boolean(fieldError("sunatProductCode"))}
+              placeholder="Ej. 50192701"
               disabled={busy}
-              {...register("taxAffectationCode")}
-            >
-              <option value="10">10 - Gravado</option>
-              <option value="20">20 - Exonerado</option>
-              <option value="30">30 - Inafecto</option>
-            </select>
-          </SelectWrap>
+              {...register("sunatProductCode")}
+            />
+          </div>
         </Field>
       </Section>
 
       {product ? (
-        <>
-          <div className="h-px bg-[#e9e4d6]" />
-          <label
-            className={`flex cursor-pointer items-center justify-between gap-4 rounded-[16px] border border-[#e8e3d7] bg-[#f6f3ec]/60 p-4 transition-colors hover:bg-[#f6f3ec] ${
-              busy ? "cursor-not-allowed opacity-60" : ""
-            }`}
-          >
-            <span>
-              <span className="block text-sm font-medium text-[#14201b]">Producto activo</span>
-              <span className="mt-0.5 block text-xs text-[#7b8680]">
-                Los productos inactivos no están disponibles para nuevas ventas.
-              </span>
-            </span>
-            <span className="relative inline-flex shrink-0">
-              <input
-                type="checkbox"
-                value="true"
-                className="peer sr-only"
-                disabled={busy}
-                {...register("active")}
-              />
-              <span
-                className="h-6 w-11 rounded-full bg-neutral-300 transition-colors peer-checked:bg-emerald-500 peer-focus-visible:ring-4 peer-focus-visible:ring-neutral-900/10"
-                aria-hidden="true"
-              />
-              <span
-                className="pointer-events-none absolute left-0.5 top-0.5 size-5 rounded-full bg-white shadow-sm transition-transform peer-checked:translate-x-5"
-                aria-hidden="true"
-              />
-            </span>
-          </label>
-        </>
-      ) : null}
-
-      <div className="sticky bottom-0 z-10 -mx-5 -mb-5 flex flex-col-reverse gap-3 border-t border-[#e8e3d7] bg-[#f6f3ec]/95 px-5 py-4 backdrop-blur sm:-mx-6 sm:-mb-6 sm:px-6 sm:flex-row sm:items-center sm:justify-between">
-        <p className="hidden text-xs text-[#9b9f99] sm:block">
-          <span className="text-red-500">*</span> Campo obligatorio
-        </p>
-        <div className="flex flex-col-reverse gap-3 sm:flex-row">
-          {onCancel ? (
-            <button
-              type="button"
-              onClick={onCancel}
-              disabled={busy}
-              className="inline-flex h-12 items-center justify-center rounded-[15px] border border-[#e8e3d7] bg-white px-5 text-sm font-bold text-[#14201b] transition hover:bg-[#fbfaf6] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              Cancelar
-            </button>
-          ) : null}
-          <button
-            type="submit"
+        <label className="flex items-center gap-3 rounded-[15px] border border-[#e8e3d7] bg-white p-3.5 text-sm font-bold text-[#35423c]">
+          <input
+            type="checkbox"
+            className="size-4 accent-orange-500"
             disabled={busy}
-            className="inline-flex h-12 items-center justify-center gap-2 rounded-[15px] bg-orange-500 px-5 text-sm font-extrabold text-white shadow-[0_8px_20px_-10px_#e86400] transition hover:bg-orange-600 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-300/50 disabled:cursor-not-allowed disabled:opacity-60"
+            {...register("active")}
+          />
+          Producto activo y visible en el POS
+        </label>
+      ) : (
+        <input type="hidden" value="true" {...register("active")} />
+      )}
+
+      <div className="sticky bottom-0 z-10 -mx-5 -mb-5 flex flex-col-reverse gap-2 border-t border-[#e8e3d7] bg-[#f6f3ec]/95 px-5 py-4 backdrop-blur sm:-mx-6 sm:-mb-6 sm:flex-row sm:justify-end sm:px-6">
+        {onCancel ? (
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={busy}
+            className="h-12 rounded-[15px] border border-[#e8e3d7] bg-white px-5 text-sm font-bold text-[#14201b] disabled:opacity-50"
           >
-            {busy ? <LoaderCircle className="size-4 animate-spin" aria-hidden="true" /> : null}
-            {busy ? "Guardando..." : product ? "Guardar cambios" : "Guardar producto"}
+            Cancelar
           </button>
-        </div>
+        ) : null}
+        <button
+          type="submit"
+          disabled={busy || categories.length === 0}
+          className="inline-flex h-12 items-center justify-center gap-2 rounded-[15px] bg-orange-500 px-5 text-sm font-extrabold text-white shadow-[0_8px_20px_-10px_#e86400] disabled:opacity-50"
+        >
+          {busy ? <LoaderCircle className="size-4 animate-spin" /> : null}
+          {busy ? "Guardando..." : product ? "Guardar cambios" : "Crear producto"}
+        </button>
       </div>
     </form>
   );

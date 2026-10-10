@@ -78,7 +78,7 @@ export async function listActiveProducts(context: SalesContext): Promise<Product
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("products")
-    .select("id, sku, name, description, unit_code, price, tax_affectation_code, active, updated_at")
+    .select("id, product_code, sku, name, description, category_id, sunat_product_code, unit_code, price, tax_affectation_code, active, updated_at, category:product_categories!products_category_fk(id, code, name, active, sort_order)")
     .eq("organization_id", context.organizationId)
     .eq("active", true)
     .order("name")

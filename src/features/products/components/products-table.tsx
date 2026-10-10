@@ -10,16 +10,13 @@ import { ProductStatusButton } from "./product-status-button";
 function StatusBadge({ active }: { active: boolean }) {
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${
+      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold ${
         active
-          ? "bg-emerald-50 text-emerald-700 ring-emerald-600/15"
-          : "bg-[#e9e4d6] text-[#7b8680] ring-neutral-500/10"
+          ? "bg-emerald-50 text-emerald-700"
+          : "bg-[#e9e4d6] text-[#7b8680]"
       }`}
     >
-      <span
-        className={`size-1.5 rounded-full ${active ? "bg-emerald-500" : "bg-neutral-400"}`}
-        aria-hidden="true"
-      />
+      <span className={`size-1.5 rounded-full ${active ? "bg-emerald-500" : "bg-[#9b9f99]"}`} />
       {active ? "Activo" : "Inactivo"}
     </span>
   );
@@ -28,22 +25,22 @@ function StatusBadge({ active }: { active: boolean }) {
 function ProductAvatar({ product }: { product: Product }) {
   const initial = product.name.trim().charAt(0).toUpperCase() || "?";
   return (
-    <div
-      aria-hidden="true"
-      className={`flex size-9 shrink-0 items-center justify-center rounded-[13px] text-sm font-bold ${
-        product.active ? "bg-[#e9e4d6] text-[#35423c]" : "bg-[#f6f3ec] text-[#9b9f99]"
-      }`}
-    >
+    <div className="flex size-10 shrink-0 items-center justify-center rounded-[13px] bg-[#fff0e2] text-sm font-extrabold text-orange-600">
       {initial}
     </div>
   );
 }
 
-function Sku({ sku }: { sku: Product["sku"] }) {
-  return sku ? (
-    <p className="mt-0.5 font-mono text-xs text-[#7b8680]">{sku}</p>
-  ) : (
-    <p className="mt-0.5 text-xs italic text-[#9b9f99]">Sin SKU</p>
+function ProductCodes({ product }: { product: Product }) {
+  return (
+    <div className="mt-1 flex flex-wrap items-center gap-1.5">
+      <span className="erp-mono rounded-[6px] bg-[#14201b] px-1.5 py-0.5 text-[10px] font-bold text-white">
+        {product.product_code}
+      </span>
+      {product.sku ? (
+        <span className="erp-mono text-[10px] font-bold text-[#7b8680]">{product.sku}</span>
+      ) : null}
+    </div>
   );
 }
 
@@ -57,19 +54,13 @@ function RowActions({
   block?: boolean;
 }) {
   return (
-    <div
-      className={
-        block
-          ? "grid grid-cols-2 gap-2 [&>button]:justify-center [&>button]:border [&>button]:border-[#e8e3d7] [&>button]:bg-white"
-          : "flex items-center gap-1"
-      }
-    >
+    <div className={block ? "grid grid-cols-2 gap-2" : "flex items-center gap-1"}>
       <button
         type="button"
         onClick={() => onEdit(product)}
-        className="inline-flex h-9 items-center gap-1.5 rounded-[13px] px-3 text-sm font-medium text-[#59665f] transition-colors hover:bg-[#e9e4d6] hover:text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900/20"
+        className="inline-flex h-9 items-center justify-center gap-1.5 rounded-[12px] border border-[#e8e3d7] bg-white px-3 text-sm font-bold text-[#59665f]"
       >
-        <Pencil className="size-3.5" aria-hidden="true" />
+        <Pencil className="size-3.5" />
         Editar
       </button>
       <ProductStatusButton id={product.id} active={product.active} />
@@ -88,58 +79,54 @@ export function ProductsTable({
 }) {
   return (
     <>
-      <div className="hidden overflow-hidden rounded-[18px] border border-[#e8e3d7] bg-white  md:block">
+      <div className="hidden overflow-hidden rounded-[18px] border border-[#e8e3d7] bg-white md:block">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
-            <thead className="border-b border-[#e8e3d7] bg-[#f6f3ec]/80 text-[11px] font-bold uppercase tracking-wider text-[#7b8680]">
+            <thead className="border-b border-[#e8e3d7] bg-[#f6f3ec] text-[10px] font-extrabold uppercase tracking-[0.08em] text-[#7b8680]">
               <tr>
-                <th scope="col" className="px-5 py-3">Producto</th>
-                <th scope="col" className="px-5 py-3 text-right">Precio</th>
-                <th scope="col" className="px-5 py-3">Unidad</th>
-                <th scope="col" className="px-5 py-3">IGV</th>
-                <th scope="col" className="px-5 py-3">Estado</th>
-                <th scope="col" className="px-5 py-3">Actualizado</th>
-                <th scope="col" className="px-5 py-3 text-right">Acciones</th>
+                <th className="px-5 py-3">Producto</th>
+                <th className="px-5 py-3">Categoría</th>
+                <th className="px-5 py-3 text-right">Precio</th>
+                <th className="px-5 py-3">IGV</th>
+                <th className="px-5 py-3">SUNAT</th>
+                <th className="px-5 py-3">Estado</th>
+                <th className="px-5 py-3 text-right">Acciones</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-100">
+            <tbody className="divide-y divide-[#eee9df]">
               {products.map((product) => (
-                <tr key={product.id} className="transition-colors hover:bg-[#f6f3ec]/70">
+                <tr key={product.id} className="hover:bg-[#fbfaf6]">
                   <td className="px-5 py-3.5">
                     <div className="flex items-center gap-3">
                       <ProductAvatar product={product} />
                       <div className="min-w-0 max-w-xs">
-                        <p
-                          className={`truncate font-medium ${
-                            product.active ? "text-[#14201b]" : "text-[#7b8680]"
-                          }`}
-                        >
-                          {product.name}
-                        </p>
-                        <Sku sku={product.sku} />
+                        <p className="truncate font-bold text-[#14201b]">{product.name}</p>
+                        <ProductCodes product={product} />
                       </div>
                     </div>
                   </td>
-                  <td
-                    className={`px-5 py-3.5 text-right font-bold tabular-nums ${
-                      product.active ? "text-[#14201b]" : "text-[#7b8680]"
-                    }`}
-                  >
-                    {formatProductPrice(product.price)}
-                  </td>
                   <td className="px-5 py-3.5">
-                    <span className="inline-flex rounded-md bg-[#e9e4d6] px-2 py-0.5 text-xs font-medium text-[#59665f]">
-                      {product.unit_code}
+                    <span className="rounded-full bg-[#fff0e2] px-2.5 py-1 text-[11px] font-bold text-orange-700">
+                      {product.category?.name || "Sin categoría"}
                     </span>
                   </td>
-                  <td className="px-5 py-3.5 text-[#59665f]">
+                  <td className="erp-mono px-5 py-3.5 text-right font-bold text-[#14201b]">
+                    {formatProductPrice(product.price)}
+                  </td>
+                  <td className="px-5 py-3.5 text-xs text-[#59665f]">
                     {TAX_AFFECTATION_LABELS[product.tax_affectation_code]}
                   </td>
                   <td className="px-5 py-3.5">
-                    <StatusBadge active={product.active} />
+                    {product.sunat_product_code ? (
+                      <span className="erp-mono text-xs font-bold text-emerald-700">
+                        {product.sunat_product_code}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-amber-600">Pendiente</span>
+                    )}
                   </td>
-                  <td className="whitespace-nowrap px-5 py-3.5 text-xs text-[#7b8680]">
-                    {formatBusinessDateTime(product.updated_at)}
+                  <td className="px-5 py-3.5">
+                    <StatusBadge active={product.active} />
                   </td>
                   <td className="px-5 py-3.5">
                     {isOwner ? (
@@ -161,49 +148,44 @@ export function ProductsTable({
         {products.map((product) => (
           <article
             key={product.id}
-            className="rounded-[18px] border border-[#e8e3d7] bg-white p-4 "
+            className="rounded-[18px] border border-[#e8e3d7] bg-white p-4"
           >
             <div className="flex items-start gap-3">
               <ProductAvatar product={product} />
               <div className="min-w-0 flex-1">
-                <h2
-                  className={`truncate font-medium ${
-                    product.active ? "text-[#14201b]" : "text-[#7b8680]"
-                  }`}
-                >
-                  {product.name}
-                </h2>
-                <Sku sku={product.sku} />
+                <h2 className="truncate font-extrabold text-[#14201b]">{product.name}</h2>
+                <ProductCodes product={product} />
               </div>
               <StatusBadge active={product.active} />
             </div>
 
-            <div className="mt-4 flex items-end justify-between gap-3 rounded-[13px] bg-[#f6f3ec] px-3.5 py-3">
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              <span className="rounded-full bg-[#fff0e2] px-2.5 py-1 text-[11px] font-bold text-orange-700">
+                {product.category?.name || "Sin categoría"}
+              </span>
+              <span className="rounded-full bg-[#f6f3ec] px-2.5 py-1 text-[11px] font-bold text-[#59665f]">
+                {TAX_AFFECTATION_LABELS[product.tax_affectation_code]}
+              </span>
+              {product.sunat_product_code ? (
+                <span className="erp-mono rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700">
+                  SUNAT {product.sunat_product_code}
+                </span>
+              ) : null}
+            </div>
+
+            <div className="mt-4 flex items-end justify-between rounded-[13px] bg-[#f6f3ec] px-3.5 py-3">
               <div>
-                <p className="text-[11px] font-medium uppercase tracking-wide text-[#9b9f99]">
+                <p className="text-[10px] font-extrabold uppercase tracking-[0.08em] text-[#9b9f99]">
                   Precio
                 </p>
-                <p
-                  className={`text-lg font-bold tabular-nums ${
-                    product.active ? "text-[#14201b]" : "text-[#7b8680]"
-                  }`}
-                >
+                <p className="erp-mono mt-1 text-lg font-bold text-[#14201b]">
                   {formatProductPrice(product.price)}
                 </p>
               </div>
-              <div className="flex flex-wrap justify-end gap-1.5 text-xs">
-                <span className="rounded-md bg-white px-2 py-0.5 font-medium text-[#59665f] ring-1 ring-neutral-200">
-                  {product.unit_code}
-                </span>
-                <span className="rounded-md bg-white px-2 py-0.5 font-medium text-[#59665f] ring-1 ring-neutral-200">
-                  {TAX_AFFECTATION_LABELS[product.tax_affectation_code]}
-                </span>
-              </div>
+              <p className="text-[10px] text-[#9b9f99]">
+                {formatBusinessDateTime(product.updated_at)}
+              </p>
             </div>
-
-            <p className="mt-3 text-xs text-[#9b9f99]">
-              Actualizado {formatBusinessDateTime(product.updated_at)}
-            </p>
 
             {isOwner ? (
               <div className="mt-3 border-t border-[#eee9df] pt-3">
