@@ -91,7 +91,7 @@ export async function initializeOrganizationAction(formData: FormData) {
     branchUbigeo: formData.get("branchUbigeo"),
   });
 
-  if (!parsed.success) go("error", firstIssue(parsed.error));
+  if (!parsed.success) return go("error", firstIssue(parsed.error));
 
   const supabase = await createClient();
   const { error } = await supabase.rpc("initialize_organization", {
@@ -112,7 +112,7 @@ export async function initializeOrganizationAction(formData: FormData) {
 export async function updateOrganizationAction(formData: FormData) {
   const go = goFor(formData);
   const owner = await requireOwner();
-  if (!owner.ok) go("error", owner.message);
+  if (!owner.ok) return go("error", owner.message);
 
   const schema = z.object({
     legalName: z.string().trim().min(2, "Ingresa la razón social."),
