@@ -35,6 +35,24 @@ export function formatBusinessDate(
   }).format(toValidDate(value));
 }
 
+export function formatBusinessDateOnly(value: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) throw new RangeError("Fecha de negocio inválida.");
+
+  const [, year, month, day] = match;
+  const date = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
+
+  if (
+    date.getUTCFullYear() !== Number(year) ||
+    date.getUTCMonth() !== Number(month) - 1 ||
+    date.getUTCDate() !== Number(day)
+  ) {
+    throw new RangeError("Fecha de negocio inválida.");
+  }
+
+  return `${day}/${month}/${year}`;
+}
+
 export function getBusinessDateISO(
   value: DateInput,
   timeZone = DEFAULT_BUSINESS_TIME_ZONE,

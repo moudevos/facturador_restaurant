@@ -12,8 +12,8 @@
 ## Fase 1 — administración mínima
 
 - [x] Alta/edición de productos.
-- [ ] Configuración visual de empresa/local.
-- [ ] Gestión básica de usuarios owner/cashier.
+- [x] Configuración visual de empresa/local.
+- [x] Gestión básica de usuarios owner/cashier.
 - [ ] Dashboard conectado a vistas SQL.
 
 ## Fase 2 — venta y boleta
@@ -29,7 +29,7 @@
 
 - [ ] Historial y filtros de comprobantes.
 - [ ] Anulación de boletas.
-- [ ] Registro/anulación de egresos.
+- [x] Registro/anulación de egresos.
 - [ ] Facturado, egresos y resultado simple por período.
 
 ## Fase 4 — endurecimiento para producción

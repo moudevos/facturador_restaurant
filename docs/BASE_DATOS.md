@@ -15,11 +15,12 @@ Secuencia actual:
 006_estandar_fechas_y_horas.sql
 007_configuracion_administrable.sql
 008_productos_catalogo.sql
+009_egresos_financieros.sql
 ```
 
 ## Regla inmutable
 
-Después de aplicar un archivo en un entorno compartido o producción, no se modifica. Si hay que corregir algo, se crea `008_correccion_...sql`. Así el historial representa lo que realmente ocurrió.
+Después de aplicar un archivo en un entorno compartido o producción, no se modifica. Si hay que corregir algo, se crea el siguiente SQL numerado. Así el historial representa lo que realmente ocurrió.
 
 Cada script debe:
 
@@ -63,3 +64,9 @@ Los usuarios pertenecientes a una organización se administran mediante RPCs `se
 ## Productos
 
 `products.price` es el precio final de venta mostrado al cliente; no se guarda precio base más IGV. No hay inventario, costos ni recetas. Los productos se desactivan lógicamente con `active = false`; el SKU es opcional y único por organización sin distinguir mayúsculas ni espacios extremos. Owner administra el catálogo y cashier solo lo consulta.
+
+## Egresos
+
+`expense_date` es una fecha de negocio independiente de `created_at`. El owner registra egresos y, una vez creados, sus datos financieros son inmutables. Si existe un error operativo, se anula mediante `void_expense` y se registra uno nuevo. La anulación conserva el historial con `is_voided`, `voided_at` y `voided_by`; no existe delete físico ni reactivación.
+
+Las categorías iniciales son códigos estables: `compras`, `servicios`, `personal`, `transporte`, `mantenimiento` y `otros`.
