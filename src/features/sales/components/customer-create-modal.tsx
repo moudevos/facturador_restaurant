@@ -392,7 +392,7 @@ export function CustomerCreateModal({
             </button>
           </div>
         </div>
-      ) : (
+      ) : verified ? (
         <div className="space-y-4">
           <div className="rounded-[18px] border border-emerald-200 bg-emerald-50 p-4">
             <div className="flex items-start gap-3">
@@ -492,7 +492,7 @@ export function CustomerCreateModal({
             </button>
           </div>
         </div>
-      )}
+      ) : null}
     </Modal>
   );
 }
