@@ -14,6 +14,7 @@ Secuencia actual:
 005_vistas_reportes_iniciales.sql
 006_estandar_fechas_y_horas.sql
 007_configuracion_administrable.sql
+008_productos_catalogo.sql
 ```
 
 ## Regla inmutable
@@ -58,3 +59,7 @@ Una vez creado un comprobante, cualquier retry contra Intifact debe reutilizar e
 ## Usuarios
 
 Los usuarios pertenecientes a una organización se administran mediante RPCs `security definer` que verifican que el actor sea `owner`. El alta por correo requiere que la cuenta ya exista en Supabase Auth; nunca se insertan filas directamente en `auth.users` desde el frontend.
+
+## Productos
+
+`products.price` es el precio final de venta mostrado al cliente; no se guarda precio base más IGV. No hay inventario, costos ni recetas. Los productos se desactivan lógicamente con `active = false`; el SKU es opcional y único por organización sin distinguir mayúsculas ni espacios extremos. Owner administra el catálogo y cashier solo lo consulta.

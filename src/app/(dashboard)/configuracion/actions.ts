@@ -5,13 +5,19 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { createClient } from "@/lib/supabase/server";
+import { parseTab } from "./tab-ids";
 
 const uuid = z.string().uuid("Identificador inválido.");
 const ruc = z.string().regex(/^\d{11}$/, "El RUC debe contener 11 dígitos.");
 const optionalText = z.string().trim().optional().transform((value) => value || null);
 
-function go(kind: "success" | "error", message: string): never {
-  redirect(`/configuracion?${kind}=${encodeURIComponent(message)}`);
+type Go = (kind: "success" | "error", message: string) => never;
+
+/** Redirige conservando la pestaña activa que viene en el formulario. */
+function goFor(formData: FormData): Go {
+  const tab = parseTab(formData.get("tab"));
+  return (kind, message) =>
+    redirect(`/configuracion?tab=${tab}&${kind}=${encodeURIComponent(message)}`);
 }
 
 function firstIssue(error: z.ZodError) {
@@ -19,6 +25,10 @@ function firstIssue(error: z.ZodError) {
 }
 
 export async function initializeOrganizationAction(formData: FormData) {
+  // Aquí aún no existen tabs: se redirige a la pantalla base.
+  const go: Go = (kind, message) =>
+    redirect(`/configuracion?${kind}=${encodeURIComponent(message)}`);
+
   const schema = z.object({
     legalName: z.string().trim().min(2, "Ingresa la razón social."),
     tradeName: optionalText,
@@ -56,6 +66,8 @@ export async function initializeOrganizationAction(formData: FormData) {
 }
 
 export async function updateOrganizationAction(formData: FormData) {
+  const go = goFor(formData);
+
   const schema = z.object({
     organizationId: uuid,
     legalName: z.string().trim().min(2, "Ingresa la razón social."),
@@ -91,6 +103,8 @@ export async function updateOrganizationAction(formData: FormData) {
 }
 
 export async function createBranchAction(formData: FormData) {
+  const go = goFor(formData);
+
   const schema = z.object({
     organizationId: uuid,
     code: z.string().trim().min(1, "Ingresa un código.").max(20).transform((value) => value.toUpperCase()),
@@ -125,6 +139,8 @@ export async function createBranchAction(formData: FormData) {
 }
 
 export async function updateBranchAction(formData: FormData) {
+  const go = goFor(formData);
+
   const schema = z.object({
     organizationId: uuid,
     branchId: uuid,
@@ -166,6 +182,8 @@ export async function updateBranchAction(formData: FormData) {
 }
 
 export async function createSequenceAction(formData: FormData) {
+  const go = goFor(formData);
+
   const schema = z.object({
     organizationId: uuid,
     branchId: uuid,
@@ -196,6 +214,8 @@ export async function createSequenceAction(formData: FormData) {
 }
 
 export async function toggleSequenceAction(formData: FormData) {
+  const go = goFor(formData);
+
   const schema = z.object({
     organizationId: uuid,
     sequenceId: uuid,
@@ -223,6 +243,8 @@ export async function toggleSequenceAction(formData: FormData) {
 }
 
 export async function addMemberAction(formData: FormData) {
+  const go = goFor(formData);
+
   const schema = z.object({
     organizationId: uuid,
     email: z.string().trim().email("Correo inválido."),
@@ -253,6 +275,8 @@ export async function addMemberAction(formData: FormData) {
 }
 
 export async function updateMemberAction(formData: FormData) {
+  const go = goFor(formData);
+
   const schema = z.object({
     organizationId: uuid,
     memberId: uuid,

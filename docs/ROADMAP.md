@@ -11,7 +11,7 @@
 
 ## Fase 1 — administración mínima
 
-- [ ] Alta/edición de productos.
+- [x] Alta/edición de productos.
 - [ ] Configuración visual de empresa/local.
 - [ ] Gestión básica de usuarios owner/cashier.
 - [ ] Dashboard conectado a vistas SQL.

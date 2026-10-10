@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, LoaderCircle, LogIn, TriangleAlert } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -9,24 +9,18 @@ const REMEMBER_KEY = "ara-burger:remembered-email";
 
 export function LoginForm({ nextPath }: { nextPath: string }) {
   const router = useRouter();
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(() => {
+    if (typeof window === "undefined") return "";
+    try { return localStorage.getItem(REMEMBER_KEY) ?? ""; } catch { return ""; }
+  });
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [remember, setRemember] = useState(false);
+  const [remember, setRemember] = useState(() => {
+    if (typeof window === "undefined") return false;
+    try { return Boolean(localStorage.getItem(REMEMBER_KEY)); } catch { return false; }
+  });
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(REMEMBER_KEY);
-      if (saved) {
-        setEmail(saved);
-        setRemember(true);
-      }
-    } catch {
-      /* almacenamiento no disponible */
-    }
-  }, []);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

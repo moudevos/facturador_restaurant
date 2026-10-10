@@ -51,16 +51,10 @@ const STORAGE_KEY = "ara-burger:sidebar-collapsed";
 
 export function AppSidebar() {
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState(false);
-
-  // Recupera la preferencia guardada
-  useEffect(() => {
-    try {
-      setCollapsed(localStorage.getItem(STORAGE_KEY) === "1");
-    } catch {
-      /* almacenamiento no disponible */
-    }
-  }, []);
+  const [collapsed, setCollapsed] = useState(() => {
+    if (typeof window === "undefined") return false;
+    try { return localStorage.getItem(STORAGE_KEY) === "1"; } catch { return false; }
+  });
 
   function toggle() {
     setCollapsed((current) => {

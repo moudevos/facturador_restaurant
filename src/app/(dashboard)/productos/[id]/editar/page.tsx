@@ -1,0 +1,5 @@
+import Link from "next/link";
+import { notFound, redirect } from "next/navigation";
+import { ProductForm } from "@/features/products/components/product-form";
+import { getProduct, getProductContext } from "@/features/products/server/products";
+export default async function EditProductPage({ params }: { params: Promise<{ id: string }> }) { const context = await getProductContext(); if (context?.role !== "owner") redirect("/productos"); const { id } = await params; const product = await getProduct(id, context.organizationId); if (!product) notFound(); return <section className="mx-auto max-w-2xl space-y-6"><div><Link href="/productos" className="text-sm font-medium text-neutral-600">← Volver a productos</Link><h1 className="mt-3 text-2xl font-semibold">Editar producto</h1><p className="mt-1 text-sm text-neutral-600">Actualiza los datos del catálogo comercial.</p></div><div className="rounded-xl border border-neutral-200 bg-white p-5 sm:p-6"><ProductForm product={product} /></div></section>; }
