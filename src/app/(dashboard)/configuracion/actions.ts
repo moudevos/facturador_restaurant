@@ -128,7 +128,7 @@ export async function updateOrganizationAction(formData: FormData) {
     timezone: formData.get("timezone"),
   });
 
-  if (!parsed.success) go("error", firstIssue(parsed.error));
+  if (!parsed.success) return go("error", firstIssue(parsed.error));
 
   const supabase = await createClient();
   const { error } = await supabase
