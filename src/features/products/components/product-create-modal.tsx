@@ -1,5 +1,7 @@
 "use client";
 
+import { PackagePlus } from "lucide-react";
+
 import { Modal } from "@/components/modal";
 import { ProductForm } from "./product-form";
 import type { ProductActionResult } from "../server/actions";
@@ -23,6 +25,7 @@ export function ProductCreateModal({
       onClose={onClose}
       dismissible={!isSaving}
       size="lg"
+      icon={PackagePlus}
       title="Nuevo producto"
       description="Registra un producto para tus ventas y comprobantes."
     >

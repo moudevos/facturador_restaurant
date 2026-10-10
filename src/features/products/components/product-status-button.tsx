@@ -2,6 +2,7 @@
 
 import { useTransition } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { LoaderCircle, Power, PowerOff } from "lucide-react";
 
 import { useFeedback } from "@/components/feedback";
 import { setProductActiveAction } from "../server/actions";
@@ -40,12 +41,20 @@ export function ProductStatusButton({ id, active }: { id: string; active: boolea
       type="button"
       onClick={() => void changeStatus()}
       disabled={isPending}
-      className={`inline-flex h-9 items-center rounded-lg px-3 text-sm font-medium text-neutral-600 transition-colors focus-visible:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${
+      aria-busy={isPending}
+      className={`inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-neutral-600 transition-colors focus-visible:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${
         active
           ? "hover:bg-red-50 hover:text-red-700 focus-visible:ring-red-500/30"
           : "hover:bg-emerald-50 hover:text-emerald-700 focus-visible:ring-emerald-500/30"
       }`}
     >
+      {isPending ? (
+        <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
+      ) : active ? (
+        <PowerOff className="size-3.5" aria-hidden="true" />
+      ) : (
+        <Power className="size-3.5" aria-hidden="true" />
+      )}
       {isPending ? "Guardando..." : active ? "Desactivar" : "Activar"}
     </button>
   );

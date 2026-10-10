@@ -1,5 +1,7 @@
 "use client";
 
+import { Package } from "lucide-react";
+
 import { Modal } from "@/components/modal";
 import { ProductForm } from "./product-form";
 import type { ProductActionResult } from "../server/actions";
@@ -24,8 +26,9 @@ export function ProductEditModal({
       onClose={onClose}
       dismissible={!isSaving}
       size="lg"
+      icon={Package}
       title="Editar producto"
-      description="Actualiza los datos del catálogo comercial."
+      description={`Actualiza los datos de «${product.name}» en el catálogo comercial.`}
     >
       <ProductForm
         product={product}
