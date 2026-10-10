@@ -16,7 +16,7 @@ import {
 import { useFeedback } from "@/components/feedback";
 import type { Product } from "@/features/products/types/product";
 import { createPosSaleAction } from "../server/actions";
-import type { Customer, DocumentType, PaymentMethod } from "../types/sales";
+import type { Customer, PaymentMethod } from "../types/sales";
 import { formatMoney, sessionCode } from "../utils/format";
 import { usePosStore } from "../store/pos-store";
 import { CustomerCreateModal } from "./customer-create-modal";

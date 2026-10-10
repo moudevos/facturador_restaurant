@@ -76,13 +76,14 @@ export function SaleCompleteModal({
     if (!sale || !status?.intifactDocumentId) return;
     if (isTerminal(status.status)) return;
 
+    const saleId = sale.saleId;
     let cancelled = false;
     let attempt = 0;
 
     async function poll() {
       try {
         const response = await fetch(
-          `/api/intifact/sales/${encodeURIComponent(sale.saleId)}/status`,
+          `/api/intifact/sales/${encodeURIComponent(saleId)}/status`,
           { cache: "no-store" },
         );
         const payload = (await response.json()) as FiscalStatusResponse & { error?: string };

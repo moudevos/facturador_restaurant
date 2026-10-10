@@ -167,7 +167,6 @@ export async function emitPersistedSaleToIntifact(
       const lineSubtotal = Number(item.line_subtotal);
       const lineIgv = Number(item.line_igv);
       const lineTotal = Number(item.line_total);
-      const unitPrice = Number(item.unit_price);
       const affectation = item.tax_affectation_code;
 
       return {
