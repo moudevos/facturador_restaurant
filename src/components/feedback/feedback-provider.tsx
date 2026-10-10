@@ -314,7 +314,7 @@ function ToastViewport({ toasts, onDismiss }: { toasts: ToastData[]; onDismiss: 
     <>
       <div
         aria-live="polite"
-        className="pointer-events-none fixed left-4 top-4 z-[100] flex w-[calc(100vw-2rem)] max-w-sm flex-col gap-2"
+        className="pointer-events-none fixed left-4 top-4 z-[130] flex w-[calc(100vw-2rem)] max-w-sm flex-col gap-2"
       >
         {topLeft.map((t) => (
           <ToastItem key={t.id} data={t} onDismiss={onDismiss} />
@@ -322,7 +322,7 @@ function ToastViewport({ toasts, onDismiss }: { toasts: ToastData[]; onDismiss: 
       </div>
       <div
         aria-live="polite"
-        className="pointer-events-none fixed bottom-4 left-1/2 z-[100] flex w-[calc(100vw-2rem)] max-w-sm -translate-x-1/2 flex-col gap-2"
+        className="pointer-events-none fixed bottom-4 left-1/2 z-[130] flex w-[calc(100vw-2rem)] max-w-sm -translate-x-1/2 flex-col gap-2"
       >
         {bottomCenter.map((t) => (
           <ToastItem key={t.id} data={t} onDismiss={onDismiss} />

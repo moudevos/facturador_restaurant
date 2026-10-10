@@ -6,13 +6,22 @@ import Link from "next/link";
 import { AlertCircle, ChevronLeft, ChevronRight, PackageSearch, Plus } from "lucide-react";
 
 import { useFeedback } from "@/components/feedback";
-import { createProductAction, type ProductActionResult } from "../server/actions";
+import {
+  createProductAction,
+  updateProductAction,
+  type ProductActionResult,
+} from "../server/actions";
 import { listProductsAction } from "../server/list-action";
 import { PRODUCTS_PER_PAGE, type Product, type ProductStatusFilter } from "../types/product";
 import { ProductCreateModal } from "./product-create-modal";
+import { ProductEditModal } from "./product-edit-modal";
 import { ProductsTable } from "./products-table";
 
-type ProductsData = { products: Product[]; count: number; errorMessage: string | null };
+type ProductsData = {
+  products: Product[];
+  count: number;
+  errorMessage: string | null;
+};
 
 export function ProductsManager({
   query,
@@ -29,7 +38,8 @@ export function ProductsManager({
 }) {
   const queryClient = useQueryClient();
   const { toast } = useFeedback();
-  const [open, setOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
   const productsQuery = useQuery({
     queryKey: ["products", { q: query, status, page }],
@@ -42,7 +52,18 @@ export function ProductsManager({
     onSuccess: async (result) => {
       if (!result.success) return;
       await queryClient.invalidateQueries({ queryKey: ["products"] });
-      setOpen(false);
+      setCreateOpen(false);
+      toast.success(result.message);
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, formData }: { id: string; formData: FormData }) =>
+      updateProductAction(id, formData),
+    onSuccess: async (result) => {
+      if (!result.success) return;
+      await queryClient.invalidateQueries({ queryKey: ["products"] });
+      setEditingProduct(null);
       toast.success(result.message);
     },
   });
@@ -62,13 +83,21 @@ export function ProductsManager({
   const create = async (formData: FormData): Promise<ProductActionResult> =>
     createMutation.mutateAsync(formData);
 
+  const update = async (formData: FormData): Promise<ProductActionResult> => {
+    if (!editingProduct) {
+      return { success: false, message: "No se encontró el producto a editar." };
+    }
+
+    return updateMutation.mutateAsync({ id: editingProduct.id, formData });
+  };
+
   return (
     <div className="space-y-4">
       {isOwner ? (
         <div className="flex justify-end">
           <button
             type="button"
-            onClick={() => setOpen(true)}
+            onClick={() => setCreateOpen(true)}
             className="inline-flex h-10 items-center gap-2 rounded-lg bg-neutral-900 px-4 text-sm font-medium text-white transition hover:bg-neutral-800"
           >
             <Plus className="size-4" aria-hidden="true" />
@@ -84,7 +113,11 @@ export function ProductsManager({
         </div>
       ) : data.products.length ? (
         <>
-          <ProductsTable products={data.products} isOwner={isOwner} />
+          <ProductsTable
+            products={data.products}
+            isOwner={isOwner}
+            onEdit={setEditingProduct}
+          />
           <nav aria-label="Paginación" className="flex flex-wrap items-center justify-between gap-3 text-sm">
             <p className="text-neutral-500">
               Mostrando <span className="font-medium text-neutral-900">{from}–{to}</span> de{" "}
@@ -92,13 +125,21 @@ export function ProductsManager({
             </p>
             <div className="flex gap-2">
               {page > 1 ? (
-                <Link href={href(page - 1)} className="inline-flex h-9 items-center gap-1 rounded-lg border border-neutral-200 bg-white pl-2 pr-3 font-medium text-neutral-700">
-                  <ChevronLeft className="size-4" aria-hidden="true" />Anterior
+                <Link
+                  href={href(page - 1)}
+                  className="inline-flex h-9 items-center gap-1 rounded-lg border border-neutral-200 bg-white pl-2 pr-3 font-medium text-neutral-700"
+                >
+                  <ChevronLeft className="size-4" aria-hidden="true" />
+                  Anterior
                 </Link>
               ) : null}
               {page < totalPages ? (
-                <Link href={href(page + 1)} className="inline-flex h-9 items-center gap-1 rounded-lg border border-neutral-200 bg-white pl-3 pr-2 font-medium text-neutral-700">
-                  Siguiente<ChevronRight className="size-4" aria-hidden="true" />
+                <Link
+                  href={href(page + 1)}
+                  className="inline-flex h-9 items-center gap-1 rounded-lg border border-neutral-200 bg-white pl-3 pr-2 font-medium text-neutral-700"
+                >
+                  Siguiente
+                  <ChevronRight className="size-4" aria-hidden="true" />
                 </Link>
               ) : null}
             </div>
@@ -109,25 +150,44 @@ export function ProductsManager({
           <div className="flex size-11 items-center justify-center rounded-full bg-neutral-100 text-neutral-500">
             <PackageSearch className="size-5" aria-hidden="true" />
           </div>
-          <p className="mt-4 text-sm font-medium text-neutral-900">{query || status !== "todos" ? "Sin resultados" : "Aún no hay productos"}</p>
+          <p className="mt-4 text-sm font-medium text-neutral-900">
+            {query || status !== "todos" ? "Sin resultados" : "Aún no hay productos"}
+          </p>
           <p className="mt-1 max-w-xs text-sm text-neutral-500">
-            {query || status !== "todos" ? "No encontramos productos con esos filtros." : "Registra tu primer producto para empezar a vender."}
+            {query || status !== "todos"
+              ? "No encontramos productos con esos filtros."
+              : "Registra tu primer producto para empezar a vender."}
           </p>
           {isOwner && !query && status === "todos" ? (
-            <button type="button" onClick={() => setOpen(true)} className="mt-5 inline-flex h-10 items-center gap-2 rounded-lg bg-neutral-900 px-4 text-sm font-medium text-white">
-              <Plus className="size-4" aria-hidden="true" />Crear primer producto
+            <button
+              type="button"
+              onClick={() => setCreateOpen(true)}
+              className="mt-5 inline-flex h-10 items-center gap-2 rounded-lg bg-neutral-900 px-4 text-sm font-medium text-white"
+            >
+              <Plus className="size-4" aria-hidden="true" />
+              Crear primer producto
             </button>
           ) : null}
         </div>
       )}
 
       <ProductCreateModal
-        open={open}
+        open={createOpen}
         isSaving={createMutation.isPending}
-        onClose={() => setOpen(false)}
+        onClose={() => setCreateOpen(false)}
         onCreate={create}
         onCreated={() => undefined}
       />
+
+      {editingProduct ? (
+        <ProductEditModal
+          product={editingProduct}
+          open
+          isSaving={updateMutation.isPending}
+          onClose={() => setEditingProduct(null)}
+          onUpdate={update}
+        />
+      ) : null}
     </div>
   );
 }
