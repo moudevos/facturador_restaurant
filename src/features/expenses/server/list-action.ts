@@ -4,7 +4,7 @@ import { getExpenseContext, listExpenses } from "./expenses";
 import type { ExpenseFilters, ExpenseStatusFilter } from "../types/expense";
 import { EXPENSE_CATEGORIES } from "../types/expense";
 
-const allowedCategories = new Set(EXPENSE_CATEGORIES.map((item) => item.value));
+const allowedCategories = new Set<string>(EXPENSE_CATEGORIES.map((item) => item.value));
 
 function normalizeFilters(filters: ExpenseFilters): ExpenseFilters {
   const status: ExpenseStatusFilter =
