@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { buildIntifactDetailItem } from "./intifact-emission";
+import { buildIntifactDetailItem } from "./intifact-detail";
 
 describe("buildIntifactDetailItem", () => {
   it("mantiene base imponible para una línea gravada", () => {

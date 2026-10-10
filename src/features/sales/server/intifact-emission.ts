@@ -6,6 +6,7 @@ import type { IntifactComputeData } from "@/lib/intifact/types";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import type { SalesContext } from "./context";
+import { buildIntifactDetailItem } from "./intifact-detail";
 
 type RequestedItem = { productId: string; quantity: number };
 
@@ -297,53 +298,4 @@ export function mapIntifactStatus(status: string) {
 function round(value: number, decimals = 2) {
   const factor = 10 ** decimals;
   return Math.round((value + Number.EPSILON) * factor) / factor;
-}
-
-
-export function buildIntifactDetailItem(input: {
-  productCode: string;
-  sunatProductCode: string | null;
-  description: string;
-  unitCode: string;
-  affectation: "10" | "20" | "30";
-  quantity: number;
-  lineSubtotal: number;
-  lineIgv: number;
-  lineTotal: number;
-}) {
-  const {
-    productCode,
-    sunatProductCode,
-    description,
-    unitCode,
-    affectation,
-    quantity,
-    lineSubtotal,
-    lineIgv,
-    lineTotal,
-  } = input;
-
-  if (!Number.isFinite(quantity) || quantity <= 0) {
-    throw new Error("Cantidad inválida al construir el detalle fiscal.");
-  }
-
-  // SUNAT exige TaxSubtotal por cada línea gravada, exonerada o inafecta.
-  // Para 20/30 el impuesto es 0, pero la base NO es 0: es el valor de venta
-  // de la línea. Si mandamos base 0, Intifact puede omitir el tributo del XML
-  // y SUNAT rechaza con 3105.
-  return {
-    unidad: unitCode,
-    cantidad: quantity,
-    codProducto: productCode,
-    ...(sunatProductCode ? { codProdSunat: sunatProductCode } : {}),
-    descripcion: description,
-    montoValorUnitario: round(lineSubtotal / quantity, 6),
-    montoBaseIgv: round(lineSubtotal),
-    porcentajeIgv: affectation === "10" ? 18 : 0,
-    igv: round(lineIgv),
-    tipAfeIgv: affectation,
-    totalImpuestos: round(lineIgv),
-    montoPrecioUnitario: round(lineTotal / quantity, 6),
-    montoValorVenta: round(lineSubtotal),
-  };
 }
