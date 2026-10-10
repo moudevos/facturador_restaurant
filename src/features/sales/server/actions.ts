@@ -13,6 +13,7 @@ import { emitPersistedSaleToIntifact, validateWithIntifactCompute } from "./inti
 export type SalesActionResult<T = undefined> = {
   success: boolean;
   message: string;
+  code?: string;
   data?: T;
 };
 
@@ -188,9 +189,10 @@ export async function lookupCustomerDocumentAction(input: {
       if (error.code === "document_not_found") {
         return {
           success: false,
+          code: "document_not_found",
           message:
             parsed.data.documentNumber.length === 8
-              ? "ApiPeru no encontró este DNI en sus fuentes públicas. No lo guardaremos como verificado."
+              ? "ApiPeru no encontró este DNI en sus fuentes públicas."
               : "El RUC no fue encontrado en ApiPeru/SUNAT.",
         };
       }
@@ -279,11 +281,76 @@ export async function createCustomerAction(input: {
   return { success: true, message: "Cliente registrado.", data: { customerId: data as string } };
 }
 
+export async function createManualCustomerAction(input: {
+  documentNumber: string;
+  name: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+}): Promise<SalesActionResult<{ customerId: string }>> {
+  const context = await requireContext();
+  if (!context) {
+    return {
+      success: false,
+      message: "Tu sesión de usuario no es válida.",
+    };
+  }
+
+  const parsed = z.object({
+    documentNumber: z.string().trim().regex(/^\d{8}$/),
+    name: z.string().trim().min(2).max(160),
+    phone: z.string().trim().max(40).optional(),
+    email: z.union([z.literal(""), z.string().email()]).optional(),
+    address: z.string().trim().max(300).optional(),
+  }).safeParse(input);
+
+  if (!parsed.success) {
+    return {
+      success: false,
+      message: "Revisa el DNI y el nombre ingresados manualmente.",
+    };
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("create_customer", {
+    p_organization_id: context.organizationId,
+    p_document_type: "1",
+    p_document_number: parsed.data.documentNumber,
+    p_name: parsed.data.name,
+    p_phone: parsed.data.phone || null,
+    p_email: parsed.data.email || null,
+    p_address: parsed.data.address || null,
+  });
+
+  if (error) {
+    if (
+      error.code === "23505" ||
+      error.message.toLowerCase().includes("duplicate")
+    ) {
+      return {
+        success: false,
+        message: "Ya existe un cliente con ese DNI.",
+      };
+    }
+
+    return {
+      success: false,
+      message: "No pudimos registrar el cliente manual.",
+    };
+  }
+
+  return {
+    success: true,
+    message: "Cliente registrado manualmente.",
+    data: { customerId: data as string },
+  };
+}
+
 export async function createPosSaleAction(input: {
   sessionId: string;
   documentType: DocumentType;
   series: string;
-  customerId: string | null;
+  customerId?: string;
   items: Array<{ productId: string; quantity: number }>;
   paymentMethod: PaymentMethod;
   receivedAmount?: number | null;
@@ -307,7 +374,7 @@ export async function createPosSaleAction(input: {
     sessionId: uuid,
     documentType: z.enum(["01", "03"]),
     series: z.string().trim().regex(/^[A-Z0-9]{4}$/),
-    customerId: z.union([uuid, z.null()]),
+    customerId: uuid.optional(),
     items: z.array(z.object({
       productId: uuid,
       quantity: z.number().positive().max(999),
@@ -397,7 +464,7 @@ export async function createPosSaleAction(input: {
     p_session_id: parsed.data.sessionId,
     p_document_type: parsed.data.documentType,
     p_series: parsed.data.series,
-    p_customer_id: parsed.data.customerId,
+    p_customer_id: parsed.data.customerId ?? null,
     p_items: parsed.data.items.map((item) => ({
       product_id: item.productId,
       quantity: item.quantity,

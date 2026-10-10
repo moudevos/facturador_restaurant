@@ -19,6 +19,7 @@ La base de datos se administra mediante scripts SQL versionados y ejecutados man
 13. `sql/013_comprobantes_fiscales.sql`
 14. `sql/014_configuracion_fiscal_comprobante_pwa.sql`
 15. `sql/015_motor_transaccional_ventas.sql`
+16. `sql/016_clientes_manuales_y_cliente_generico.sql`
 
 Al terminar:
 
@@ -28,7 +29,7 @@ from public.schema_change_log
 order by script_code;
 ```
 
-Deben aparecer `001` a `015`.
+Deben aparecer `001` a `016`.
 
 ## Regla de cambios
 
@@ -51,3 +52,10 @@ Las categorías se almacenan en `product_categories` y se crean con valores inic
 `create_pos_sale(...)` valida la sesión abierta, cliente, método de pago y luego llama a `create_sale_draft(...)`. Los productos y precios se vuelven a leer desde la base de datos antes de reservar el correlativo. El cobro se persiste inicialmente como `pending` en `sale_payments`. Desde SQL 015 no impacta caja, sesiones ni Dashboard hasta que SUNAT/Intifact deje el comprobante en `accepted`; entonces pasa a `completed`. Un rechazo definitivo conserva el intento para auditoría pero revierte el pago a `reversed` y la venta queda `failed`.
 
 Un comprobante no se considera venta efectiva hasta recibir el estado fiscal real de Intifact/SUNAT.
+
+
+## Cliente varios y alta manual
+
+Desde SQL 016 una boleta sin cliente registrado conserva `CLIENTE VARIOS` como nombre de snapshot, pero no inventa DNI/RUC. La integración fiscal omite los campos de identificación del cliente en lugar de serializarlos con `null`.
+
+El alta manual se usa únicamente como fallback para DNI no encontrados por ApiPeru. Un RUC destinado a factura debe seguir pasando por la validación fiscal.

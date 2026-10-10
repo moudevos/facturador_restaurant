@@ -6,6 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import type { SalesContext } from "./context";
 import { applyFiscalCommercialOutcome, reverseFailedSale } from "./commercial-state";
+import { buildIntifactCustomerFields } from "./intifact-customer";
 import { buildIntifactDetailItem } from "./intifact-detail";
 
 type RequestedItem = { productId: string; quantity: number };
@@ -275,16 +276,16 @@ export async function emitPersistedSaleToIntifact(
     formaPago: [{ tipo: "Contado", monto: total, fechaPago: businessDate }],
   };
 
-  if (sale.customer_document_type && sale.customer_document_number && sale.customer_name) {
-    Object.assign(payload, {
-      clienteTipoDoc: sale.customer_document_type,
-      clienteNumDoc: sale.customer_document_number,
-      clienteRazonSocial: sale.customer_name,
-      ...(customerResult.data?.address
-        ? { clienteDireccion: customerResult.data.address }
-        : {}),
-    });
-  }
+  Object.assign(
+    payload,
+    buildIntifactCustomerFields({
+      customerId: sale.customer_id,
+      documentType: sale.customer_document_type,
+      documentNumber: sale.customer_document_number,
+      name: sale.customer_name,
+      address: customerResult.data?.address ?? null,
+    }),
+  );
 
   const payloadHash = createHash("sha256")
     .update(JSON.stringify(payload))

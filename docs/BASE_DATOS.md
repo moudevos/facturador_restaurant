@@ -22,6 +22,7 @@ Secuencia actual:
 013_comprobantes_fiscales.sql
 014_configuracion_fiscal_comprobante_pwa.sql
 015_motor_transaccional_ventas.sql
+016_clientes_manuales_y_cliente_generico.sql
 ```
 
 ## Regla inmutable
@@ -70,3 +71,8 @@ Solo una venta con estado fiscal `accepted`, estado comercial `completed` y pago
 Estados inciertos, colas y timeouts permanecen `pending` y deben reconciliarse usando la misma identidad fiscal. Un rechazo definitivo conserva el comprobante fallido para auditoría y revierte el efecto comercial/pago sin borrar filas.
 
 No se permite cerrar una sesión con ventas comerciales pendientes.
+
+
+## Cliente genérico
+
+SQL 016 normaliza el caso `Cliente varios`. La fila de venta conserva `customer_name = 'CLIENTE VARIOS'`, mientras `customer_id`, tipo y número de documento permanecen vacíos. La capa Intifact no convierte esos vacíos en un DNI ficticio ni en `clienteNumDoc: null`; simplemente omite los campos de identificación del cliente.

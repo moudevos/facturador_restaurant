@@ -69,7 +69,9 @@ export function CustomerSelectorModal({
           </div>
           <div className="flex-1">
             <p className="text-sm font-extrabold">Cliente varios</p>
-            <p className="text-xs text-[#7b8680]">Boleta sin documento</p>
+            <p className="text-xs text-[#7b8680]">
+              Boleta sin DNI/RUC · no se inventa documento fiscal
+            </p>
           </div>
           <span className="rounded-[7px] bg-[#f6f3ec] px-2 py-1 text-[10px] font-extrabold tracking-wide">
             BOLETA

@@ -122,7 +122,7 @@ export function PosClient({
             sessionId,
             documentType,
             series: selectedSeries,
-            customerId: customer?.id ?? null,
+            ...(customer ? { customerId: customer.id } : {}),
             items: items.map((item) => ({
               productId: item.product.id,
               quantity: item.quantity,

@@ -6,6 +6,7 @@ import {
   Building2,
   LoaderCircle,
   Search,
+  TriangleAlert,
   UserPlus,
   UserRound,
 } from "lucide-react";
@@ -14,6 +15,7 @@ import { Modal } from "@/components/modal";
 import { useFeedback } from "@/components/feedback";
 import {
   createCustomerAction,
+  createManualCustomerAction,
   lookupCustomerDocumentAction,
 } from "../server/actions";
 import type { Customer } from "../types/sales";
@@ -39,6 +41,8 @@ export function CustomerCreateModal({
   const { toast } = useFeedback();
   const [documentNumber, setDocumentNumber] = useState("");
   const [verified, setVerified] = useState<VerifiedDocument | null>(null);
+  const [manualMode, setManualMode] = useState(false);
+  const [manualName, setManualName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [dniAddress, setDniAddress] = useState("");
@@ -56,6 +60,8 @@ export function CustomerCreateModal({
   function reset() {
     setDocumentNumber("");
     setVerified(null);
+    setManualMode(false);
+    setManualName("");
     setPhone("");
     setEmail("");
     setDniAddress("");
@@ -69,6 +75,16 @@ export function CustomerCreateModal({
     onClose();
   }
 
+  function changeDocument() {
+    if (pending) return;
+    setVerified(null);
+    setManualMode(false);
+    setManualName("");
+    setPhone("");
+    setEmail("");
+    setDniAddress("");
+  }
+
   async function lookup() {
     if (!inferredType || lookupPending) return;
 
@@ -77,10 +93,23 @@ export function CustomerCreateModal({
       const result = await lookupCustomerDocumentAction({ documentNumber });
 
       if (!result.success || !result.data) {
+        if (
+          result.code === "document_not_found" &&
+          inferredType === "1"
+        ) {
+          setVerified(null);
+          setManualMode(true);
+          toast.warning(
+            "ApiPeru no encontró este DNI. Puedes registrarlo manualmente como cliente no verificado.",
+          );
+          return;
+        }
+
         toast.error(result.message);
         return;
       }
 
+      setManualMode(false);
       setVerified(result.data);
       setDocumentNumber(result.data.documentNumber);
       toast.success(result.message);
@@ -89,7 +118,7 @@ export function CustomerCreateModal({
     }
   }
 
-  async function submit() {
+  async function submitVerified() {
     if (!verified || savePending) return;
 
     setSavePending(true);
@@ -113,7 +142,7 @@ export function CustomerCreateModal({
         return;
       }
 
-      const customer: Customer = {
+      onCreated({
         id: result.data.customerId,
         document_type: verified.documentType,
         document_number: verified.documentNumber,
@@ -122,9 +151,52 @@ export function CustomerCreateModal({
         email: email.trim() || null,
         address: address || null,
         active: true,
-      };
+      });
 
-      onCreated(customer);
+      toast.success(result.message);
+      reset();
+      onClose();
+    } finally {
+      setSavePending(false);
+    }
+  }
+
+  async function submitManual() {
+    if (
+      !manualMode ||
+      !/^\d{8}$/.test(documentNumber) ||
+      manualName.trim().length < 2 ||
+      savePending
+    ) {
+      return;
+    }
+
+    setSavePending(true);
+    try {
+      const result = await createManualCustomerAction({
+        documentNumber,
+        name: manualName,
+        phone,
+        email,
+        address: dniAddress,
+      });
+
+      if (!result.success || !result.data) {
+        toast.error(result.message);
+        return;
+      }
+
+      onCreated({
+        id: result.data.customerId,
+        document_type: "1",
+        document_number: documentNumber,
+        name: manualName.trim(),
+        phone: phone.trim() || null,
+        email: email.trim() || null,
+        address: dniAddress.trim() || null,
+        active: true,
+      });
+
       toast.success(result.message);
       reset();
       onClose();
@@ -138,16 +210,24 @@ export function CustomerCreateModal({
       open={open}
       onClose={handleClose}
       dismissible={!pending}
-      title={verified ? "Confirmar cliente" : "Nuevo cliente"}
+      title={
+        verified
+          ? "Confirmar cliente"
+          : manualMode
+            ? "Registrar cliente manualmente"
+            : "Nuevo cliente"
+      }
       description={
         verified
           ? "Revisa los datos oficiales y completa la información de contacto."
-          : "Primero consulta el DNI o RUC para evitar datos fiscales incorrectos."
+          : manualMode
+            ? "El DNI no apareció en ApiPeru. Puedes guardarlo manualmente sin marcarlo como verificado."
+            : "Primero consulta el DNI o RUC para evitar datos fiscales incorrectos."
       }
       icon={verified ? BadgeCheck : UserPlus}
       size="md"
     >
-      {!verified ? (
+      {!verified && !manualMode ? (
         <div className="space-y-5">
           <div className="rounded-[18px] border border-[#e8e3d7] bg-white p-4">
             <label className="block">
@@ -202,7 +282,10 @@ export function CustomerCreateModal({
           </div>
 
           <div className="rounded-[15px] bg-blue-50 p-3 text-xs leading-relaxed text-blue-800">
-            La consulta se realiza desde el servidor con ApiPeru. El token no se expone al navegador.
+            Si un DNI válido no aparece en las fuentes públicas de ApiPeru,
+            después de consultar podrás registrarlo manualmente. Un RUC no
+            encontrado no se habilita manualmente para evitar facturas con
+            identidad fiscal inválida.
           </div>
 
           <div className="flex flex-col-reverse gap-2 border-t border-[#eee9df] pt-4 sm:flex-row sm:justify-end">
@@ -233,6 +316,82 @@ export function CustomerCreateModal({
             </button>
           </div>
         </div>
+      ) : manualMode ? (
+        <div className="space-y-4">
+          <div className="flex items-start gap-3 rounded-[16px] border border-amber-200 bg-amber-50 p-3.5 text-amber-900">
+            <TriangleAlert className="mt-0.5 size-5 shrink-0" />
+            <div>
+              <p className="text-sm font-extrabold">DNI no verificado</p>
+              <p className="mt-1 text-xs leading-relaxed">
+                {documentNumber} no fue encontrado por ApiPeru. El nombre será
+                ingresado por el cajero y quedará como dato manual.
+              </p>
+            </div>
+          </div>
+
+          <label className="block text-sm font-bold text-[#35423c]">
+            Nombre completo
+            <input
+              value={manualName}
+              onChange={(event) => setManualName(event.target.value)}
+              autoFocus
+              maxLength={160}
+              className="mt-1.5 h-12 w-full rounded-[15px] border-[1.5px] border-[#e8e3d7] bg-white px-3.5 text-sm outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10"
+              placeholder="Nombre y apellidos"
+            />
+          </label>
+
+          <label className="block text-sm font-bold text-[#35423c]">
+            Dirección
+            <input
+              value={dniAddress}
+              onChange={(event) => setDniAddress(event.target.value)}
+              maxLength={300}
+              className="mt-1.5 h-12 w-full rounded-[15px] border-[1.5px] border-[#e8e3d7] bg-white px-3.5 text-sm outline-none focus:border-orange-500"
+              placeholder="Opcional"
+            />
+          </label>
+
+          <ContactFields
+            phone={phone}
+            email={email}
+            setPhone={setPhone}
+            setEmail={setEmail}
+          />
+
+          <button
+            type="button"
+            onClick={changeDocument}
+            disabled={pending}
+            className="text-left text-xs font-extrabold text-orange-600 underline decoration-orange-300 underline-offset-4"
+          >
+            Cambiar documento
+          </button>
+
+          <div className="flex flex-col-reverse gap-2 border-t border-[#eee9df] pt-4 sm:flex-row sm:justify-end">
+            <button
+              type="button"
+              onClick={handleClose}
+              disabled={pending}
+              className="h-12 rounded-[15px] border border-[#e8e3d7] bg-white px-5 text-sm font-bold"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={() => void submitManual()}
+              disabled={savePending || manualName.trim().length < 2}
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-[15px] bg-orange-500 px-5 text-sm font-extrabold text-white disabled:opacity-50"
+            >
+              {savePending ? (
+                <LoaderCircle className="size-4 animate-spin" />
+              ) : (
+                <UserPlus className="size-4" />
+              )}
+              {savePending ? "Guardando..." : "Guardar cliente manual"}
+            </button>
+          </div>
+        </div>
       ) : (
         <div className="space-y-4">
           <div className="rounded-[18px] border border-emerald-200 bg-emerald-50 p-4">
@@ -248,7 +407,8 @@ export function CustomerCreateModal({
                   {verified.name}
                 </p>
                 <p className="erp-mono mt-1 text-xs font-bold text-[#59665f]">
-                  {verified.documentType === "6" ? "RUC" : "DNI"} · {verified.documentNumber}
+                  {verified.documentType === "6" ? "RUC" : "DNI"} ·{" "}
+                  {verified.documentNumber}
                 </p>
               </div>
             </div>
@@ -292,37 +452,16 @@ export function CustomerCreateModal({
             </label>
           ) : null}
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className="block text-sm font-bold text-[#35423c]">
-              Teléfono
-              <input
-                value={phone}
-                onChange={(event) => setPhone(event.target.value)}
-                className="mt-1.5 h-12 w-full rounded-[15px] border-[1.5px] border-[#e8e3d7] bg-white px-3.5 text-sm outline-none focus:border-orange-500"
-                placeholder="Opcional"
-              />
-            </label>
-
-            <label className="block text-sm font-bold text-[#35423c]">
-              Correo
-              <input
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                type="email"
-                className="mt-1.5 h-12 w-full rounded-[15px] border-[1.5px] border-[#e8e3d7] bg-white px-3.5 text-sm outline-none focus:border-orange-500"
-                placeholder="Opcional"
-              />
-            </label>
-          </div>
+          <ContactFields
+            phone={phone}
+            email={email}
+            setPhone={setPhone}
+            setEmail={setEmail}
+          />
 
           <button
             type="button"
-            onClick={() => {
-              setVerified(null);
-              setPhone("");
-              setEmail("");
-              setDniAddress("");
-            }}
+            onClick={changeDocument}
             disabled={pending}
             className="text-left text-xs font-extrabold text-orange-600 underline decoration-orange-300 underline-offset-4"
           >
@@ -340,7 +479,7 @@ export function CustomerCreateModal({
             </button>
             <button
               type="button"
-              onClick={() => void submit()}
+              onClick={() => void submitVerified()}
               disabled={savePending}
               className="inline-flex h-12 items-center justify-center gap-2 rounded-[15px] bg-orange-500 px-5 text-sm font-extrabold text-white shadow-[0_8px_20px_-10px_#e86400] disabled:opacity-50"
             >
@@ -355,5 +494,42 @@ export function CustomerCreateModal({
         </div>
       )}
     </Modal>
+  );
+}
+
+function ContactFields({
+  phone,
+  email,
+  setPhone,
+  setEmail,
+}: {
+  phone: string;
+  email: string;
+  setPhone: (value: string) => void;
+  setEmail: (value: string) => void;
+}) {
+  return (
+    <div className="grid gap-4 sm:grid-cols-2">
+      <label className="block text-sm font-bold text-[#35423c]">
+        Teléfono
+        <input
+          value={phone}
+          onChange={(event) => setPhone(event.target.value)}
+          className="mt-1.5 h-12 w-full rounded-[15px] border-[1.5px] border-[#e8e3d7] bg-white px-3.5 text-sm outline-none focus:border-orange-500"
+          placeholder="Opcional"
+        />
+      </label>
+
+      <label className="block text-sm font-bold text-[#35423c]">
+        Correo
+        <input
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          type="email"
+          className="mt-1.5 h-12 w-full rounded-[15px] border-[1.5px] border-[#e8e3d7] bg-white px-3.5 text-sm outline-none focus:border-orange-500"
+          placeholder="Opcional"
+        />
+      </label>
+    </div>
   );
 }
