@@ -169,3 +169,39 @@ export async function getInvoicePdf(
     contentType: response.headers.get("content-type") || "application/pdf",
   };
 }
+
+
+async function getInvoiceArtifact(
+  documentId: string,
+  kind: "xml" | "cdr",
+): Promise<{ bytes: ArrayBuffer; contentType: string; contentDisposition: string | null }> {
+  const response = await request(
+    `/api/v1/invoice/${encodeURIComponent(documentId)}/${kind}`,
+  );
+
+  if (!response.ok) {
+    const payload = await response.text();
+    throw new IntifactApiError(
+      `No se pudo descargar ${kind.toUpperCase()} de Intifact (HTTP ${response.status}).`,
+      response.status,
+      payload,
+      response.headers.get("retry-after"),
+    );
+  }
+
+  return {
+    bytes: await response.arrayBuffer(),
+    contentType:
+      response.headers.get("content-type") ||
+      (kind === "xml" ? "application/xml" : "application/zip"),
+    contentDisposition: response.headers.get("content-disposition"),
+  };
+}
+
+export function getInvoiceXml(documentId: string) {
+  return getInvoiceArtifact(documentId, "xml");
+}
+
+export function getInvoiceCdr(documentId: string) {
+  return getInvoiceArtifact(documentId, "cdr");
+}

@@ -27,14 +27,14 @@
 - [x] Selector de productos y clientes.
 - [x] Cobro y persistencia del medio de pago.
 - [x] Reserva atómica del correlativo mediante PostgreSQL.
-- [ ] Preview fiscal con Intifact compute.
-- [ ] Emitir boleta/factura con Intifact.
-- [ ] Estados de emisión y retry seguro.
-- [ ] Ticket fiscal 80 mm.
+- [x] Preview fiscal con Intifact compute.
+- [x] Emitir boleta/factura con Intifact.
+- [x] Estados de emisión y retry seguro.
+- [x] Ticket fiscal A4 / 80 mm / 58 mm.
 
 ## Fase 3 — control
 
-- [ ] Historial y filtros de comprobantes.
+- [x] Historial, filtros, detalle y descargas de comprobantes.
 - [ ] Anulación de boletas.
 - [x] Registro/anulación de egresos.
 - [x] Resumen operativo de ventas, egresos y sesión en Dashboard.

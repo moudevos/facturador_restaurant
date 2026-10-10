@@ -1,6 +1,5 @@
 import { createHash } from "node:crypto";
 
-import { getBusinessDateISO } from "@/lib/date-time";
 import { computeInvoice, IntifactApiError, sendInvoice } from "@/lib/intifact/client";
 import type { IntifactComputeData } from "@/lib/intifact/types";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -86,14 +85,14 @@ export async function emitPersistedSaleToIntifact(
       supabase
         .from("sales")
         .select(
-          "id, organization_id, branch_id, customer_id, document_type, series, correlative, currency, customer_document_type, customer_document_number, customer_name, total_amount",
+          "id, organization_id, branch_id, customer_id, document_type, series, correlative, currency, fiscal_issue_date, customer_document_type, customer_document_number, customer_name, total_amount",
         )
         .eq("id", saleId)
         .eq("organization_id", context.organizationId)
         .maybeSingle(),
       supabase
         .from("organizations")
-        .select("ruc, timezone")
+        .select("ruc")
         .eq("id", context.organizationId)
         .maybeSingle(),
     ]);
@@ -154,7 +153,7 @@ export async function emitPersistedSaleToIntifact(
   const igv = round(items.reduce((sum, item) => sum + Number(item.line_igv), 0));
   const valorVenta = round(items.reduce((sum, item) => sum + Number(item.line_subtotal), 0));
   const total = round(Number(sale.total_amount));
-  const businessDate = getBusinessDateISO(new Date(), organization.timezone ?? context.timeZone);
+  const businessDate = sale.fiscal_issue_date;
 
   const payload: Record<string, unknown> = {
     empresaRuc: organization.ruc,
