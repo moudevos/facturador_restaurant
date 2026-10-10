@@ -31,11 +31,11 @@ type ProductsData = {
 };
 
 const pageButton =
-  "inline-flex h-9 items-center gap-1 rounded-lg border border-[#e8e3d7] bg-white px-3 text-sm font-medium text-[#35423c] shadow-sm transition-colors hover:bg-[#f6f3ec] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900/20";
+  "inline-flex h-10 items-center gap-1 rounded-[13px] border border-[#e8e3d7] bg-white px-3 text-sm font-bold text-[#35423c] transition-colors hover:bg-[#fbfaf6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300/50";
 const pageButtonDisabled =
-  "inline-flex h-9 cursor-not-allowed items-center gap-1 rounded-lg border border-[#eee9df] bg-[#f6f3ec] px-3 text-sm font-medium text-[#c6c0b3]";
+  "inline-flex h-10 cursor-not-allowed items-center gap-1 rounded-[13px] border border-[#eee9df] bg-[#f6f3ec] px-3 text-sm font-bold text-[#c6c0b3]";
 const primaryButton =
-  "inline-flex h-10 items-center gap-2 rounded-lg bg-neutral-900 px-4 text-sm font-medium text-white shadow-sm transition hover:bg-[#1e2d27] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-neutral-900/20";
+  "inline-flex h-12 items-center gap-2 rounded-[15px] bg-orange-500 px-5 text-sm font-extrabold text-white shadow-[0_8px_20px_-10px_#e86400] transition hover:bg-orange-600 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-300/50";
 
 export function ProductsManager({
   query,

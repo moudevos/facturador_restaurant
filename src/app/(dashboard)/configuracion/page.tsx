@@ -23,9 +23,9 @@ type SettingsPageProps = {
 };
 
 const inputClass =
-  "mt-1 h-10 w-full rounded-[13px] border border-[#d8d2c0] bg-white px-3 text-sm outline-none transition focus:border-neutral-500 focus:ring-2 focus:ring-neutral-200 disabled:bg-[#e9e4d6] disabled:text-[#7b8680]";
+  "mt-1.5 h-12 w-full rounded-[13px] border-[1.5px] border-[#e8e3d7] bg-white px-3.5 text-sm outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 disabled:bg-[#f6f3ec] disabled:text-[#7b8680]";
 const buttonClass =
-  "inline-flex h-10 items-center justify-center rounded-[13px] bg-[#14201b] px-4 text-sm font-medium text-white transition hover:bg-[#1e2d27] disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex h-12 items-center justify-center rounded-[15px] bg-orange-500 px-5 text-sm font-extrabold text-white shadow-[0_8px_20px_-10px_#e86400] transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50";
 const panelClass = "rounded-[20px] border border-[#e8e3d7] bg-white p-4 sm:p-6";
 
 export default async function SettingsPage({ searchParams }: SettingsPageProps) {
@@ -57,7 +57,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
         <Message success={params.success} error={params.error} />
         <section className={panelClass}>
           <div className="flex items-start gap-3">
-            <div className="rounded-[14px] bg-[#e9e4d6] p-2"><Building2 className="size-5" /></div>
+            <div className="rounded-[14px] bg-[#fff0e2] p-2 text-orange-600"><Building2 className="size-5" /></div>
             <div>
               <h2 className="font-bold">Configurar el negocio</h2>
               <p className="mt-1 text-sm text-[#7b8680]">
@@ -209,8 +209,8 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
 function Header() {
   return (
     <div>
-      <div className="flex items-center gap-2 text-sm font-medium text-[#7b8680]"><Settings className="size-4" /> Administración</div>
-      <h1 className="mt-1 text-2xl font-bold tracking-tight">Configuración</h1>
+      <div className="flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-[0.12em] text-orange-600"><Settings className="size-4" /> Administración</div>
+      <h1 className="mt-1 text-[23px] font-extrabold tracking-[-0.02em] text-[#14201b] sm:text-[27px]">Configuración</h1>
       <p className="mt-2 text-sm text-[#7b8680]">Datos maestros del negocio, locales, series y accesos.</p>
     </div>
   );

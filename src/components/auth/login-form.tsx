@@ -3,21 +3,30 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, LoaderCircle, LogIn, TriangleAlert } from "lucide-react";
+
 import { createClient } from "@/lib/supabase/client";
 
-const REMEMBER_KEY = "ara-burger:remembered-email";
+const REMEMBER_KEY = "facturador:remembered-email";
 
 export function LoginForm({ nextPath }: { nextPath: string }) {
   const router = useRouter();
   const [email, setEmail] = useState(() => {
     if (typeof window === "undefined") return "";
-    try { return localStorage.getItem(REMEMBER_KEY) ?? ""; } catch { return ""; }
+    try {
+      return localStorage.getItem(REMEMBER_KEY) ?? "";
+    } catch {
+      return "";
+    }
   });
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(() => {
     if (typeof window === "undefined") return false;
-    try { return Boolean(localStorage.getItem(REMEMBER_KEY)); } catch { return false; }
+    try {
+      return Boolean(localStorage.getItem(REMEMBER_KEY));
+    } catch {
+      return false;
+    }
   });
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -43,7 +52,7 @@ export function LoginForm({ nextPath }: { nextPath: string }) {
       if (remember) localStorage.setItem(REMEMBER_KEY, email.trim());
       else localStorage.removeItem(REMEMBER_KEY);
     } catch {
-      /* ignorar */
+      // Storage puede estar deshabilitado.
     }
 
     router.replace(nextPath);
@@ -51,44 +60,49 @@ export function LoginForm({ nextPath }: { nextPath: string }) {
   }
 
   const inputClass =
-    "block h-12 w-full rounded-xl border border-neutral-300 bg-white px-4 text-[15px] text-neutral-900 placeholder:text-neutral-400 outline-none transition focus:border-neutral-900 focus:ring-4 focus:ring-neutral-900/10 disabled:cursor-not-allowed disabled:bg-neutral-50 [&:-webkit-autofill]:[-webkit-box-shadow:0_0_0_1000px_white_inset]";
+    "block h-12 w-full rounded-[14px] border-[1.5px] border-[#e8e3d7] bg-white px-4 text-[15px] text-[#14201b] placeholder:text-[#9b9f99] outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 disabled:cursor-not-allowed disabled:bg-[#f6f3ec] [&:-webkit-autofill]:[-webkit-box-shadow:0_0_0_1000px_white_inset]";
 
   return (
-    <div
-      className="flex min-h-dvh w-full items-center justify-center px-4 py-10"
-      style={{
-        backgroundColor: "#0a0a0a",
-        backgroundImage:
-          "radial-gradient(60% 50% at 50% 0%, rgba(255,255,255,0.10), transparent 70%), linear-gradient(to right, rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.04) 1px, transparent 1px)",
-        backgroundSize: "100% 100%, 48px 48px, 48px 48px",
-        backgroundPosition: "center top",
-      }}
-    >
-      <div className="w-full max-w-[420px] rounded-2xl bg-white px-8 py-10 shadow-2xl shadow-black/40 ring-1 ring-white/10 sm:px-10">
-        {/* Marca */}
+    <div className="relative flex min-h-dvh w-full items-center justify-center overflow-hidden bg-[#14201b] px-4 py-8 sm:py-10">
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 opacity-40"
+        style={{
+          backgroundImage:
+            "radial-gradient(70% 55% at 50% 0%, rgba(255,122,26,.35), transparent 72%), linear-gradient(to right, rgba(255,255,255,.035) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,.035) 1px, transparent 1px)",
+          backgroundSize: "100% 100%, 44px 44px, 44px 44px",
+        }}
+      />
+
+      <div className="relative w-full max-w-[410px] rounded-[28px] border border-white/10 bg-[#f6f3ec] px-5 py-7 shadow-2xl shadow-black/30 sm:px-8 sm:py-9">
         <div className="flex flex-col items-center text-center">
-          <div className="flex size-14 items-center justify-center rounded-2xl bg-neutral-900 text-2xl font-bold text-white">
+          <div className="flex size-14 items-center justify-center rounded-[18px] bg-orange-500 text-2xl font-extrabold text-white shadow-[0_12px_30px_-14px_#e86400]">
             A
           </div>
-          <h1 className="mt-5 text-2xl font-semibold tracking-tight text-neutral-900">Ara Burger</h1>
-          <p className="mt-1 text-sm text-neutral-500">Facturador Restaurant</p>
+          <h1 className="mt-4 text-[24px] font-extrabold tracking-[-0.03em] text-[#14201b]">
+            Ara Burger
+          </h1>
+          <p className="mt-1 text-xs font-semibold text-[#7b8680]">Facturador Restaurant</p>
         </div>
 
-        <div className="my-8 h-px w-full bg-neutral-200" />
+        <div className="my-6 h-px w-full bg-[#e8e3d7]" />
 
-        <div className="mb-6 text-center">
-          <h2 className="text-lg font-semibold text-neutral-900">Iniciar sesión</h2>
-          <p className="mt-1 text-sm text-neutral-500">Acceso restringido al personal autorizado.</p>
+        <div className="mb-5">
+          <p className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-orange-600">
+            Acceso
+          </p>
+          <h2 className="mt-1 text-lg font-extrabold text-[#14201b]">Iniciar sesión</h2>
+          <p className="mt-1 text-xs leading-relaxed text-[#7b8680]">
+            Acceso restringido al personal autorizado.
+          </p>
         </div>
 
-        <form className="space-y-5" onSubmit={handleSubmit}>
-          <div className="space-y-2">
-            <label htmlFor="email" className="block text-sm font-medium text-neutral-800">
-              Correo electrónico
-            </label>
+        <form className="space-y-4" onSubmit={handleSubmit}>
+          <label htmlFor="email" className="block text-sm font-bold text-[#35423c]">
+            Correo electrónico
             <input
               id="email"
-              className={inputClass}
+              className={`${inputClass} mt-1.5`}
               type="email"
               autoComplete="email"
               placeholder="usuario@correo.com"
@@ -97,13 +111,11 @@ export function LoginForm({ nextPath }: { nextPath: string }) {
               value={email}
               onChange={(event) => setEmail(event.target.value)}
             />
-          </div>
+          </label>
 
-          <div className="space-y-2">
-            <label htmlFor="password" className="block text-sm font-medium text-neutral-800">
-              Contraseña
-            </label>
-            <div className="relative">
+          <label htmlFor="password" className="block text-sm font-bold text-[#35423c]">
+            Contraseña
+            <div className="relative mt-1.5">
               <input
                 id="password"
                 className={`${inputClass} pr-12`}
@@ -121,17 +133,21 @@ export function LoginForm({ nextPath }: { nextPath: string }) {
                 disabled={isLoading}
                 aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
                 aria-pressed={showPassword}
-                className="absolute right-2 top-1/2 flex size-9 -translate-y-1/2 items-center justify-center rounded-lg text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900/30"
+                className="absolute right-2 top-1/2 flex size-9 -translate-y-1/2 items-center justify-center rounded-[11px] text-[#7b8680] transition hover:bg-[#f6f3ec] hover:text-[#14201b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300"
               >
-                {showPassword ? <EyeOff className="size-[18px]" aria-hidden="true" /> : <Eye className="size-[18px]" aria-hidden="true" />}
+                {showPassword ? (
+                  <EyeOff className="size-[18px]" aria-hidden="true" />
+                ) : (
+                  <Eye className="size-[18px]" aria-hidden="true" />
+                )}
               </button>
             </div>
-          </div>
+          </label>
 
-          <label className="flex cursor-pointer select-none items-center gap-3 text-sm text-neutral-600">
+          <label className="flex cursor-pointer select-none items-center gap-3 py-1 text-sm font-semibold text-[#59665f]">
             <input
               type="checkbox"
-              className="size-4 rounded border-neutral-300 accent-neutral-900"
+              className="size-4 rounded border-[#d8d2c0] accent-orange-500"
               checked={remember}
               disabled={isLoading}
               onChange={(event) => setRemember(event.target.checked)}
@@ -142,7 +158,7 @@ export function LoginForm({ nextPath }: { nextPath: string }) {
           {error ? (
             <div
               role="alert"
-              className="flex items-start gap-2.5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+              className="flex items-start gap-2.5 rounded-[15px] border border-red-200 bg-[#fde8e8] px-4 py-3 text-sm font-semibold text-[#b83232]"
             >
               <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
               <span>{error}</span>
@@ -150,17 +166,21 @@ export function LoginForm({ nextPath }: { nextPath: string }) {
           ) : null}
 
           <button
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-neutral-900 px-4 text-[15px] font-medium text-white transition hover:bg-neutral-800 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-neutral-900/25 disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex h-[52px] w-full items-center justify-center gap-2 rounded-[16px] bg-orange-500 px-4 text-[15px] font-extrabold text-white shadow-[0_8px_20px_-8px_#e86400] transition hover:bg-orange-600 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-300/60 disabled:cursor-not-allowed disabled:opacity-60"
             type="submit"
             disabled={isLoading}
           >
-            {isLoading ? <LoaderCircle className="size-4 animate-spin" aria-hidden="true" /> : <LogIn className="size-4" aria-hidden="true" />}
+            {isLoading ? (
+              <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
+            ) : (
+              <LogIn className="size-4" aria-hidden="true" />
+            )}
             {isLoading ? "Ingresando..." : "Ingresar"}
           </button>
         </form>
 
-        <p className="mt-8 text-center text-xs text-neutral-400">
-          © {new Date().getFullYear()} Ara Burger. Todos los derechos reservados.
+        <p className="mt-7 text-center text-[10px] font-semibold text-[#9b9f99]">
+          © {new Date().getFullYear()} Ara Burger · Facturador Restaurant
         </p>
       </div>
     </div>
