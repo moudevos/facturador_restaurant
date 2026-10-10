@@ -3,14 +3,15 @@ import { redirect } from "next/navigation";
 
 import { FeedbackProvider } from "@/components/feedback";
 import { AppSidebar } from "@/components/layout/app-sidebar";
-import { getSalesContext } from "@/features/sales/server/context";
-import { createClient } from "@/lib/supabase/server";
+import {
+  getAuthenticatedUserId,
+  getSalesContext,
+} from "@/features/sales/server/context";
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.getClaims();
+  const userId = await getAuthenticatedUserId();
 
-  if (error || !data?.claims) {
+  if (!userId) {
     redirect("/login");
   }
 

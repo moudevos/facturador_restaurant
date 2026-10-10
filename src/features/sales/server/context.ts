@@ -1,3 +1,5 @@
+import { cache } from "react";
+
 import { createClient } from "@/lib/supabase/server";
 import type { Branch } from "@/features/settings/types";
 
@@ -10,12 +12,20 @@ export type SalesContext = {
   tradeName: string;
 };
 
-export async function getSalesContext(): Promise<SalesContext | null> {
+export const getAuthenticatedUserId = cache(async (): Promise<string | null> => {
   const supabase = await createClient();
-  const { data: claims, error: claimsError } = await supabase.auth.getClaims();
+  const { data: claims, error } = await supabase.auth.getClaims();
   const userId = claims?.claims.sub;
 
-  if (claimsError || typeof userId !== "string") return null;
+  if (error || typeof userId !== "string") return null;
+  return userId;
+});
+
+export const getSalesContext = cache(async (): Promise<SalesContext | null> => {
+  const userId = await getAuthenticatedUserId();
+  if (!userId) return null;
+
+  const supabase = await createClient();
 
   const { data: membership, error: membershipError } = await supabase
     .from("organization_members")
@@ -49,7 +59,7 @@ export async function getSalesContext(): Promise<SalesContext | null> {
     timeZone: organization.timezone ?? "America/Lima",
     tradeName: organization.trade_name || organization.legal_name,
   };
-}
+});
 
 export async function listAccessibleBranches(context: SalesContext): Promise<Branch[]> {
   const supabase = await createClient();

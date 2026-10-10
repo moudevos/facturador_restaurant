@@ -31,6 +31,8 @@ export type DashboardData = {
   errorMessage: string | null;
 };
 
+const DASHBOARD_QUERY_TIMEOUT_MS = 5_000;
+
 function dateRange(end: string, days: number) {
   const result: string[] = [];
   const current = new Date(`${end}T12:00:00Z`);
@@ -47,7 +49,8 @@ export async function getDashboardData(context: SalesContext): Promise<Dashboard
   const businessDate = getBusinessDateISO(new Date(), context.timeZone);
   const monthStart = `${businessDate.slice(0, 8)}01`;
   const days = dateRange(businessDate, 7);
-  const sevenStart = days[0];
+
+  const newSignal = () => AbortSignal.timeout(DASHBOARD_QUERY_TIMEOUT_MS);
 
   const [collectionsResult, financialResult, sessionResult, salesResult, expensesResult] =
     await Promise.all([
@@ -55,30 +58,35 @@ export async function getDashboardData(context: SalesContext): Promise<Dashboard
         .from("v_daily_collections")
         .select("business_date, collected_amount, sales_count")
         .gte("business_date", monthStart)
-        .lte("business_date", businessDate),
+        .lte("business_date", businessDate)
+        .abortSignal(newSignal()),
       supabase
         .from("v_daily_financial_summary")
         .select("business_date, document_count, invoiced_amount, expense_amount, simple_result")
         .gte("business_date", monthStart)
-        .lte("business_date", businessDate),
+        .lte("business_date", businessDate)
+        .abortSignal(newSignal()),
       supabase
         .from("v_sales_session_summary")
         .select("*")
         .eq("status", "open")
-        .order("opened_at"),
+        .order("opened_at")
+        .abortSignal(newSignal()),
       supabase
         .from("sales")
         .select("id, series, correlative, customer_name, total_amount, created_at, sale_payments(payment_method)")
         .neq("status", "voided")
         .order("created_at", { ascending: false })
-        .limit(6),
+        .limit(6)
+        .abortSignal(newSignal()),
       supabase
         .from("expenses")
         .select("id, expense_date, description, amount, category")
         .eq("is_voided", false)
         .order("expense_date", { ascending: false })
         .order("created_at", { ascending: false })
-        .limit(6),
+        .limit(6)
+        .abortSignal(newSignal()),
     ]);
 
   const collections = collectionsResult.data ?? [];
@@ -113,9 +121,7 @@ export async function getDashboardData(context: SalesContext): Promise<Dashboard
   );
 
   const last7Days = days.map((date) => {
-    const rows = collections.filter(
-      (row) => row.business_date === date && row.business_date >= sevenStart,
-    );
+    const rows = collections.filter((row) => row.business_date === date);
     return {
       date,
       amount: rows.reduce((sum, row) => sum + Number(row.collected_amount), 0),
@@ -158,7 +164,7 @@ export async function getDashboardData(context: SalesContext): Promise<Dashboard
     recentSales,
     recentExpenses: expensesResult.data ?? [],
     errorMessage: hasError
-      ? "Algunos indicadores no pudieron cargarse. Verifica que los SQL hasta 010 estén aplicados."
+      ? "Algunos indicadores tardaron demasiado o no pudieron cargarse. La navegación seguirá disponible; revisa la conexión o las vistas SQL."
       : null,
   };
 }
