@@ -23,6 +23,7 @@ import { CustomerCreateModal } from "./customer-create-modal";
 import { CustomerSelectorModal } from "./customer-selector-modal";
 import { PaymentModal } from "./payment-modal";
 import { ProductSelectorModal } from "./product-selector-modal";
+import { SaleCompleteModal } from "./sale-complete-modal";
 
 type Sequence = {
   id: string;
@@ -46,7 +47,7 @@ export function PosClient({
   initialCustomers: Customer[];
   sequences: Sequence[];
 }) {
-  const { toast, alert, withLoading } = useFeedback();
+  const { toast, withLoading } = useFeedback();
   const {
     items,
     step,
@@ -68,6 +69,7 @@ export function PosClient({
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [customers, setCustomers] = useState(initialCustomers);
   const [pendingPayment, setPendingPayment] = useState(false);
+  const [completedSale, setCompletedSale] = useState<Awaited<ReturnType<typeof createPosSaleAction>>["data"] | null>(null);
 
   const totals = useMemo(() => {
     let total = 0;
@@ -129,8 +131,8 @@ export function PosClient({
             receivedAmount,
           }),
         {
-          title: "Registrando venta",
-          message: "Validando productos, correlativo y pago...",
+          title: "Validando y emitiendo",
+          message: "Calculando importes, registrando el cobro y enviando a Intifact...",
         },
       );
 
@@ -140,21 +142,7 @@ export function PosClient({
       }
 
       setPaymentOpen(false);
-
-      const number = `${result.data.series}-${String(result.data.correlative).padStart(8, "0")}`;
-      const changeText =
-        result.data.changeAmount > 0
-          ? ` Vuelto: ${formatMoney(result.data.changeAmount)}.`
-          : "";
-
-      await alert.success({
-        title: "Venta completada",
-        description:
-          `${number} · ${formatMoney(result.data.totalAmount)}.${changeText} La venta quedó registrada; la emisión electrónica con Intifact se conectará en la siguiente fase fiscal.`,
-        confirmText: "Nueva venta",
-      });
-
-      resetSale();
+      setCompletedSale(result.data);
     } finally {
       setPendingPayment(false);
     }
@@ -485,6 +473,14 @@ export function PosClient({
         pending={pendingPayment}
         onClose={() => setPaymentOpen(false)}
         onConfirm={charge}
+      />
+
+      <SaleCompleteModal
+        sale={completedSale ?? null}
+        onNewSale={() => {
+          resetSale();
+          setCompletedSale(null);
+        }}
       />
     </div>
   );

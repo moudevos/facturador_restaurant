@@ -24,4 +24,4 @@ Los movimientos de caja no son sinónimos de egresos. Un retiro a caja fuerte so
 
 ## Fiscal
 
-El POS actual registra la venta local y reserva su identidad fiscal. No marca la venta como aceptada por SUNAT. La siguiente fase debe integrar Intifact compute/send/polling sobre la misma venta, sin generar un nuevo correlativo ante retries.
+El POS actual registra la venta local y reserva su identidad fiscal. No marca la venta como aceptada por SUNAT. La emisión usa Intifact compute/send y polling sobre la misma venta, sin generar un nuevo correlativo ante retries. El PDF oficial se habilita solo cuando el documento queda aceptado.

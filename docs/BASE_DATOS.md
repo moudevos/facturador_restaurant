@@ -17,6 +17,7 @@ Secuencia actual:
 008_productos_catalogo.sql
 009_egresos_financieros.sql
 010_pos_sesiones_clientes_pagos.sql
+011_intifact_emision.sql
 ```
 
 ## Regla inmutable

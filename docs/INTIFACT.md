@@ -1,58 +1,67 @@
-# Integración Intifact
+# Intifact — emisión sin webhooks
 
-Documentación oficial: https://docs.intifact.com/docs/facturacion
+## Entorno
 
-Base API: `https://api-facturacion.intifact.com`.
+Variables server-only en `.env.local`:
 
-## Endpoints relevantes
+```env
+INTIFACT_API_URL=https://api-facturacion.intifact.com
+INTIFACT_API_KEY=fact_test_TU_KEY
+SUPABASE_SECRET_KEY=TU_SECRET_KEY_DE_SUPABASE
+```
 
-- `POST /api/v1/invoice/compute`: cálculo fiscal sin emitir.
-- `POST /api/v1/invoice/send`: emisión de factura/boleta.
-- `GET /api/v1/documents/{id}`: estado del documento.
-- `POST /api/v1/documents/{id}/retry`: reencolar fallidos.
-- `GET /api/v1/invoice/{id}/pdf?format=ticket80`: PDF de ticket.
-- `POST /api/v1/boleta/cancel`: anulación de boleta.
+No uses `NEXT_PUBLIC_` para ninguna de estas credenciales.
 
-## Idempotencia
+Mientras se prueba la integración debe utilizarse una key `fact_test_`. La key `fact_live_` se reserva para producción.
 
-La identidad fiscal es `RUC + tipoDoc + serie + correlativo`. Si una llamada falla por red y no sabemos si Intifact la recibió, se reenvía la misma venta con el mismo correlativo. Nunca se crea otra venta para resolver un timeout.
+## Flujo POS
 
-## Flujo propuesto
+1. El POS envía productos/cantidades al Server Action.
+2. El servidor llama a `POST /api/v1/invoice/compute` con `preciosIncluyenIgv: true`.
+3. Si Intifact y el POS no coinciden en el total, la venta se detiene antes de reservar correlativo.
+4. PostgreSQL ejecuta `create_pos_sale`, congela precio/afectación IGV y registra pago.
+5. El servidor reconstruye el comprobante desde la venta persistida.
+6. Se llama a `POST /api/v1/invoice/send` reutilizando exactamente la identidad fiscal persistida.
+7. La respuesta normalmente queda en `ENCOLADO`.
+8. Sin webhooks, el modal postventa consulta `GET /api/v1/documents/{id}` con backoff.
+9. Al quedar `ACEPTADO`, se habilitan PDF e impresión/compartir.
+10. Si tarda, el cajero puede iniciar otra venta; no se genera un correlativo nuevo.
 
-1. Carrito local: aún no existe comprobante.
-2. Para previsualizar impuestos se puede usar `/invoice/compute` sin reservar correlativo.
-3. Al confirmar, ejecutar `create_sale_draft`; esto congela productos/precios y reserva correlativo de forma atómica.
-4. Transformar esa venta persistida al payload Intifact.
-5. Enviar `/invoice/send`.
-6. Guardar `intifact_document_id`, hash y estado recibido.
-7. Sincronizar el estado definitivo por webhook o consulta del documento.
+## Estados
 
-## Mapeo de estados
+Mapeo local:
 
-| Intifact | Local |
-| --- | --- |
-| PENDIENTE | draft/processing según etapa |
-| ENCOLADO | queued |
-| ENVIANDO | processing |
-| ACEPTADO | accepted |
-| RECHAZADO | rejected |
-| COLA_FALLIDA | queue_failed |
-| ANULADO | voided |
+- `PENDIENTE` / `ENVIANDO` → `processing`
+- `ENCOLADO` → `queued`
+- `ACEPTADO` → `accepted`
+- `RECHAZADO` → `rejected`
+- `COLA_FALLIDA` → `queue_failed`
+- `ANULADO` → `voided`
 
-La API responde de forma asíncrona; `202`/`ENCOLADO` no significa que SUNAT ya aceptó la boleta.
+Un HTTP 202 o estado `ENCOLADO` NO equivale a aceptación SUNAT.
 
-## Webhooks
+## PDF
 
-Cuando el plan de Intifact los habilite, verificar:
+La API oficial soporta:
 
-- `X-Facturacion-Delivery-Id` para idempotencia;
-- `X-Facturacion-Timestamp` con ventana máxima de 5 minutos;
-- `X-Facturacion-Signature` como HMAC-SHA256 de `${timestamp}.${rawBody}`.
+- `a4`: hoja A4.
+- `ticket` / `ticket80`: ticket térmico 80 mm.
+- `ticket58`: ticket térmico 58 mm.
 
-Los eventos principales son `document.accepted`, `document.rejected` y `document.queue_failed`.
+No existe un formato oficial `40mm` documentado. Para impresoras compactas se usa `ticket58` y, si el hardware lo exige, el driver de impresión debe escalarlo.
 
-El plan Free de Intifact actualmente no incluye webhooks. Si se utiliza ese plan, el sistema debe hacer polling temporal del documento recién emitido y reconciliar documentos pendientes al volver a abrir el sistema. No diseñar la consistencia fiscal dependiendo exclusivamente de webhooks.
+El frontend nunca recibe la API key de Intifact. Descarga los PDFs mediante una ruta autenticada del propio Next.js:
 
-## PDF/XML/CDR
+```text
+/api/intifact/sales/{saleId}/pdf?format=a4
+/api/intifact/sales/{saleId}/pdf?format=ticket80
+/api/intifact/sales/{saleId}/pdf?format=ticket58
+```
 
-No duplicar archivos fiscales en Supabase Storage durante el MVP. Guardar identificadores y descargar el documento desde Intifact cuando el usuario lo solicite. Reevaluar esta decisión si aparecen requisitos legales/operativos de archivo independiente.
+En móvil, "Enviar por WhatsApp" usa Web Share para compartir el PDF como archivo. Si el navegador no permite compartir archivos, se descarga el PDF para adjuntarlo manualmente.
+
+## Sin webhooks
+
+No se configura webhook secret en esta fase. El plan gratuito se opera con polling controlado y, más adelante, reconciliación desde el módulo Comprobantes.
+
+Nunca reintentes una caída creando otro correlativo. La identidad RUC + tipo + serie + correlativo se mantiene.

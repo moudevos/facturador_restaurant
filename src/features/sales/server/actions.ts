@@ -2,9 +2,12 @@
 
 import { z } from "zod";
 
+import { assertIntifactConfigured } from "@/lib/intifact/client";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { getSalesContext } from "./context";
 import type { DocumentType, PaymentMethod } from "../types/sales";
+import { emitPersistedSaleToIntifact, validateWithIntifactCompute } from "./intifact-emission";
 
 export type SalesActionResult<T = undefined> = {
   success: boolean;
@@ -199,6 +202,10 @@ export async function createPosSaleAction(input: {
   correlative: number;
   totalAmount: number;
   changeAmount: number;
+  fiscalStatus: string;
+  intifactDocumentId: string | null;
+  pdfReady: boolean;
+  fiscalMessage: string | null;
 }>> {
   const context = await requireContext();
   if (!context) return { success: false, message: "Tu sesión de usuario no es válida." };
@@ -217,6 +224,21 @@ export async function createPosSaleAction(input: {
   }).safeParse(input);
 
   if (!parsed.success) return { success: false, message: "Revisa los datos de la venta." };
+
+  let computeData;
+  try {
+    assertIntifactConfigured();
+    createAdminClient();
+    computeData = await validateWithIntifactCompute(context, parsed.data.items);
+  } catch (error) {
+    return {
+      success: false,
+      message:
+        error instanceof Error
+          ? error.message
+          : "No pudimos validar la venta con Intifact.",
+    };
+  }
 
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("create_pos_sale", {
@@ -246,19 +268,59 @@ export async function createPosSaleAction(input: {
     if (message.includes("sesión") || message.includes("sesion")) {
       return { success: false, message: "La sesión de caja ya no está disponible." };
     }
+    if (message.includes("tax_affectation_code")) {
+      return {
+        success: false,
+        message: "Falta aplicar SQL 011 antes de emitir comprobantes.",
+      };
+    }
     return { success: false, message: "No pudimos registrar la venta." };
   }
 
   const row = Array.isArray(data) ? data[0] : data;
-  return {
-    success: true,
-    message: "Venta cobrada y registrada.",
-    data: {
-      saleId: row.sale_id,
-      series: row.series,
-      correlative: Number(row.correlative),
-      totalAmount: Number(row.total_amount),
-      changeAmount: Number(row.change_amount),
-    },
-  };
+
+  try {
+    const emission = await emitPersistedSaleToIntifact(
+      context,
+      row.sale_id,
+      computeData,
+    );
+
+    return {
+      success: true,
+      message: "Venta cobrada y enviada a Intifact.",
+      data: {
+        saleId: row.sale_id,
+        series: row.series,
+        correlative: Number(row.correlative),
+        totalAmount: Number(row.total_amount),
+        changeAmount: Number(row.change_amount),
+        fiscalStatus: emission.localStatus,
+        intifactDocumentId: emission.documentId,
+        pdfReady: emission.localStatus === "accepted",
+        fiscalMessage: null,
+      },
+    };
+  } catch (error) {
+    const fiscalMessage =
+      error instanceof Error
+        ? error.message
+        : "La venta fue cobrada, pero no se pudo completar el envío fiscal.";
+
+    return {
+      success: true,
+      message: "Venta cobrada. La emisión fiscal requiere revisión.",
+      data: {
+        saleId: row.sale_id,
+        series: row.series,
+        correlative: Number(row.correlative),
+        totalAmount: Number(row.total_amount),
+        changeAmount: Number(row.change_amount),
+        fiscalStatus: "error",
+        intifactDocumentId: null,
+        pdfReady: false,
+        fiscalMessage,
+      },
+    };
+  }
 }

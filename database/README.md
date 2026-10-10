@@ -14,6 +14,7 @@ La base de datos se administra mediante scripts SQL versionados y ejecutados man
 8. `sql/008_productos_catalogo.sql`
 9. `sql/009_egresos_financieros.sql`
 10. `sql/010_pos_sesiones_clientes_pagos.sql`
+11. `sql/011_intifact_emision.sql`
 
 Al terminar:
 
@@ -23,7 +24,7 @@ from public.schema_change_log
 order by script_code;
 ```
 
-Deben aparecer `001` a `010`.
+Deben aparecer `001` a `011`.
 
 ## Regla de cambios
 

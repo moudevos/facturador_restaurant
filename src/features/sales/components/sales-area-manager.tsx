@@ -933,7 +933,41 @@ function CloseSessionModal({
       size="lg"
     >
       <div className="space-y-5">
+        <div>
+          <p className="mb-2 text-[10px] font-extrabold uppercase tracking-[0.1em] text-[#7b8680]">
+            Resumen de ventas
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="rounded-[16px] border border-[#e8e3d7] bg-white p-3.5">
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.08em] text-[#7b8680]">
+                Ventas totales
+              </p>
+              <p className="erp-mono mt-1.5 text-[22px] font-bold text-[#14201b]">
+                {session.sales_count}
+              </p>
+            </div>
+            <div className="rounded-[16px] border border-[#14201b] bg-[#14201b] p-3.5 text-white">
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.08em] text-[#9fb0a8]">
+                Monto total
+              </p>
+              <p className="erp-mono mt-1.5 truncate text-[20px] font-bold text-orange-400">
+                {formatMoney(session.total_sales)}
+              </p>
+            </div>
+          </div>
+          <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 rounded-[14px] bg-[#fbfaf6] px-3.5 py-3 text-xs sm:grid-cols-3">
+            <DetailRow label="Efectivo" value={formatMoney(session.cash_sales)} />
+            <DetailRow label="Yape" value={formatMoney(session.yape_sales)} />
+            <DetailRow label="Plin" value={formatMoney(session.plin_sales)} />
+            <DetailRow label="Tarjeta" value={formatMoney(session.card_sales)} />
+            <DetailRow label="Transferencia" value={formatMoney(session.transfer_sales)} />
+          </div>
+        </div>
+
         <div className="rounded-[20px] bg-[#f6f3ec] p-4">
+          <p className="mb-2 text-[10px] font-extrabold uppercase tracking-[0.1em] text-[#7b8680]">
+            Arqueo de efectivo
+          </p>
           <CashLine label="Fondo inicial" value={Number(session.opening_cash)} />
           <CashLine label="+ Ventas en efectivo" value={Number(session.cash_sales)} />
           <CashLine label="+ Ingresos de caja" value={Number(session.cash_in)} />
