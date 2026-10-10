@@ -249,6 +249,23 @@ export function SaleCompleteModal({
                 Intifact ofrece A4, ticket 80 mm y ticket 58 mm. El formato térmico más compacto disponible es 58 mm.
               </p>
 
+              <div className="mt-4 overflow-hidden rounded-[14px] border border-[#e8e3d7] bg-[#f6f3ec]">
+                <div className="flex items-center justify-between border-b border-[#e8e3d7] bg-white px-3 py-2">
+                  <span className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-[#7b8680]">
+                    Vista previa PDF
+                  </span>
+                  <span className="rounded-full bg-[#fff0e2] px-2 py-1 text-[9px] font-extrabold text-orange-700">
+                    {format === "a4" ? "A4" : format === "ticket80" ? "80 mm" : "58 mm"}
+                  </span>
+                </div>
+                <iframe
+                  key={pdfUrl}
+                  title={`Vista previa del comprobante ${number}`}
+                  src={pdfUrl}
+                  className="h-[380px] w-full bg-white sm:h-[460px]"
+                />
+              </div>
+
               <div className="mt-4 grid gap-2 sm:grid-cols-2">
                 <button
                   type="button"
