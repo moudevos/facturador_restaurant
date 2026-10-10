@@ -17,6 +17,8 @@ La base de datos se administra mediante scripts SQL versionados y ejecutados man
 11. `sql/011_intifact_emision.sql`
 12. `sql/012_catalogo_productos_normalizado.sql`
 13. `sql/013_comprobantes_fiscales.sql`
+14. `sql/014_configuracion_fiscal_comprobante_pwa.sql`
+15. `sql/015_motor_transaccional_ventas.sql`
 
 Al terminar:
 
@@ -26,7 +28,7 @@ from public.schema_change_log
 order by script_code;
 ```
 
-Deben aparecer `001` a `013`.
+Deben aparecer `001` a `015`.
 
 ## Regla de cambios
 
@@ -46,6 +48,6 @@ Las categorías se almacenan en `product_categories` y se crean con valores inic
 
 ## Venta POS
 
-`create_pos_sale(...)` valida la sesión abierta, cliente, método de pago y luego llama a `create_sale_draft(...)`. Los productos y precios se vuelven a leer desde la base de datos antes de reservar el correlativo. El cobro se persiste en `sale_payments`.
+`create_pos_sale(...)` valida la sesión abierta, cliente, método de pago y luego llama a `create_sale_draft(...)`. Los productos y precios se vuelven a leer desde la base de datos antes de reservar el correlativo. El cobro se persiste inicialmente como `pending` en `sale_payments`. Desde SQL 015 no impacta caja, sesiones ni Dashboard hasta que SUNAT/Intifact deje el comprobante en `accepted`; entonces pasa a `completed`. Un rechazo definitivo conserva el intento para auditoría pero revierte el pago a `reversed` y la venta queda `failed`.
 
-Un comprobante no se considera aceptado hasta recibir el estado fiscal real de Intifact/SUNAT.
+Un comprobante no se considera venta efectiva hasta recibir el estado fiscal real de Intifact/SUNAT.

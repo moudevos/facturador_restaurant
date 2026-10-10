@@ -304,9 +304,9 @@ async function writeBle(bytes: Uint8Array) {
       characteristic.properties?.writeWithoutResponse &&
       characteristic.writeValueWithoutResponse
     ) {
-      await characteristic.writeValueWithoutResponse(chunk);
+      await characteristic.writeValueWithoutResponse(chunk as unknown as BufferSource);
     } else if (characteristic.writeValue) {
-      await characteristic.writeValue(chunk);
+      await characteristic.writeValue(chunk as unknown as BufferSource);
     } else {
       throw new Error(
         "La característica BLE no permite escritura.",

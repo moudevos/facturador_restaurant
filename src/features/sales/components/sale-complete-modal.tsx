@@ -80,8 +80,8 @@ export function SaleCompleteModal({
   }, [sale]);
 
   useEffect(() => {
-    if (!sale || !status?.intifactDocumentId) return;
-    if (isTerminal(status.status)) return;
+    if (!sale || !status) return;
+    if (isTerminal(status.status, status.commercialStatus)) return;
 
     const saleId = sale.saleId;
     let cancelled = false;
@@ -102,7 +102,10 @@ export function SaleCompleteModal({
         if (cancelled) return;
         setStatus(payload);
 
-        if (!isTerminal(payload.status) && attempt < POLL_DELAYS.length - 1) {
+        if (
+          !isTerminal(payload.status, payload.commercialStatus) &&
+          attempt < POLL_DELAYS.length - 1
+        ) {
           attempt += 1;
           timerRef.current = setTimeout(poll, POLL_DELAYS[attempt]);
         }
@@ -133,7 +136,7 @@ export function SaleCompleteModal({
       cancelled = true;
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [sale, status?.intifactDocumentId, status?.status]);
+  }, [sale, status?.commercialStatus, status?.status]);
 
   useEffect(() => {
     if (
@@ -458,6 +461,10 @@ function FiscalState({
   );
 }
 
-function isTerminal(status: string) {
-  return ["accepted", "rejected", "queue_failed", "voided", "error"].includes(status);
+function isTerminal(status: string, commercialStatus: string) {
+  if (["completed", "failed", "voided"].includes(commercialStatus)) {
+    return true;
+  }
+
+  return ["rejected", "queue_failed", "voided"].includes(status);
 }

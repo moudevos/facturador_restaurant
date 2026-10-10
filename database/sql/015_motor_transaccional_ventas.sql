@@ -390,7 +390,9 @@ begin
 end;
 $$;
 
-create or replace view public.v_sales_session_summary
+drop view if exists public.v_sales_session_summary;
+
+create view public.v_sales_session_summary
 with (security_invoker = true)
 as
 select

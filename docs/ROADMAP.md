@@ -29,8 +29,11 @@
 - [x] Reserva atómica del correlativo mediante PostgreSQL.
 - [x] Preview fiscal con Intifact compute.
 - [x] Emitir boleta/factura con Intifact.
-- [x] Estados de emisión y retry seguro.
-- [x] Ticket fiscal A4 / 80 mm / 58 mm.
+- [x] Estados de emisión, reconciliación y retry seguro.
+- [x] Representación configurable A4 / 80 / 58 / 48 mm e impresión ESC/POS.
+
+- [x] Motor transaccional: cobro pendiente hasta aceptación fiscal y reversa contable de rechazos.
+- [x] PWA instalable y adaptadores de impresión system/BLE/Android bridge.
 
 ## Fase 3 — control
 
