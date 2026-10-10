@@ -1,3 +1,4 @@
+// Dashboard principal consolidado; no mezclar con implementaciones legacy.
 import {
   Banknote,
   CircleDollarSign,
