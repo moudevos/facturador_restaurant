@@ -15,10 +15,10 @@ import { X, type LucideIcon } from "lucide-react";
 import { useScrollLock } from "@/lib/use-scroll-lock";
 
 const SIZES = {
-  sm: "max-w-sm",
-  md: "max-w-lg",
-  lg: "max-w-2xl",
-  xl: "max-w-4xl",
+  sm: "sm:max-w-sm",
+  md: "sm:max-w-lg",
+  lg: "sm:max-w-2xl",
+  xl: "sm:max-w-4xl",
 } as const;
 
 export type ModalSize = keyof typeof SIZES;
@@ -156,10 +156,10 @@ export function Modal({
   if (!open || typeof document === "undefined") return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[90] flex items-end justify-center p-0 sm:items-center sm:p-4">
+    <div className="fixed inset-0 z-[90] flex items-end justify-center sm:items-center sm:p-4">
       <div
         aria-hidden="true"
-        className="absolute inset-0 bg-neutral-950/40 backdrop-blur-[2px]"
+        className="absolute inset-0 bg-[#14201b]/55 backdrop-blur-[2px]"
         onMouseDown={() => {
           if (dismissible) void requestClose();
         }}
@@ -173,21 +173,23 @@ export function Modal({
         aria-describedby={description ? descriptionId : undefined}
         tabIndex={-1}
         onKeyDown={handleKeyDown}
-        className={`relative flex max-h-[94dvh] w-full ${SIZES[size]} flex-col rounded-t-2xl border border-neutral-200 bg-white shadow-xl outline-none sm:rounded-2xl`}
+        className={`relative flex max-h-[92dvh] w-full flex-col rounded-t-[28px] border border-[#e8e3d7] bg-[#f6f3ec] shadow-2xl outline-none sm:max-h-[88dvh] sm:rounded-[28px] ${SIZES[size]}`}
       >
-        <div className="flex shrink-0 items-start gap-3 border-b border-neutral-100 px-5 py-4 sm:px-6 sm:py-5">
+        <div className="mx-auto mt-2.5 h-1.5 w-11 shrink-0 rounded-full bg-[#cfcabb] sm:hidden" />
+
+        <div className="flex shrink-0 items-start gap-3 px-5 pb-3 pt-3 sm:px-6 sm:pb-4 sm:pt-5">
           {Icon ? (
-            <div className="rounded-xl bg-neutral-100 p-2">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-[13px] bg-orange-50 text-orange-600">
               <Icon className="size-5" aria-hidden="true" />
             </div>
           ) : null}
 
-          <div className="min-w-0 flex-1">
-            <h2 id={titleId} className="font-semibold text-neutral-900">
+          <div className="min-w-0 flex-1 pt-0.5">
+            <h2 id={titleId} className="text-[18px] font-extrabold tracking-[-0.01em] text-[#14201b]">
               {title}
             </h2>
             {description ? (
-              <p id={descriptionId} className="mt-1 text-sm text-neutral-500">
+              <p id={descriptionId} className="mt-1 text-xs leading-relaxed text-[#7b8680] sm:text-sm">
                 {description}
               </p>
             ) : null}
@@ -198,19 +200,19 @@ export function Modal({
               type="button"
               onClick={() => void requestClose()}
               aria-label="Cerrar modal"
-              className="-mr-1.5 inline-flex size-10 items-center justify-center rounded-lg text-neutral-400 transition hover:bg-neutral-100 hover:text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300"
+              className="inline-flex size-9 shrink-0 items-center justify-center rounded-full border border-[#e8e3d7] bg-white text-[#7b8680] transition hover:text-[#14201b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300"
             >
               <X className="size-4" aria-hidden="true" />
             </button>
           ) : null}
         </div>
 
-        <div ref={bodyRef} className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6">
+        <div ref={bodyRef} className="min-h-0 flex-1 overflow-y-auto px-5 pb-5 sm:px-6 sm:pb-6">
           {children}
         </div>
 
         {footer ? (
-          <div className="flex shrink-0 flex-col-reverse gap-2 rounded-b-2xl border-t border-neutral-100 bg-neutral-50 px-5 py-4 sm:flex-row sm:justify-end sm:px-6">
+          <div className="flex shrink-0 flex-col-reverse gap-2 border-t border-[#e8e3d7] bg-[#f6f3ec] px-5 py-4 sm:flex-row sm:justify-end sm:rounded-b-[28px] sm:px-6">
             {footer}
           </div>
         ) : null}
@@ -223,11 +225,13 @@ export function Modal({
 type ModalButtonVariant = "primary" | "secondary" | "danger";
 
 const BUTTON_BASE =
-  "inline-flex h-10 items-center justify-center rounded-lg px-4 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex h-12 items-center justify-center rounded-[15px] px-5 text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50";
 
 const BUTTON_VARIANTS: Record<ModalButtonVariant, string> = {
-  primary: "bg-neutral-950 text-white hover:bg-neutral-800 focus-visible:ring-neutral-300",
-  secondary: "border border-neutral-300 bg-white text-neutral-800 hover:bg-neutral-50 focus-visible:ring-neutral-300",
+  primary:
+    "bg-orange-500 text-white shadow-[0_8px_20px_-10px_#e86400] hover:bg-orange-600 focus-visible:ring-orange-300",
+  secondary:
+    "border border-[#e8e3d7] bg-white text-[#14201b] hover:bg-[#fbfaf6] focus-visible:ring-[#d8d2c0]",
   danger: "bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-300",
 };
 

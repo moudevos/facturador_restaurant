@@ -36,13 +36,13 @@ export function PaymentModal({
       open={open}
       onClose={onClose}
       dismissible={!pending}
-      title="Cobrar venta"
+      title="Método de pago"
       description={`Total a cobrar: ${formatMoney(total)}`}
       icon={CreditCard}
       size="md"
     >
       <div className="space-y-5">
-        <div className="grid gap-2 sm:grid-cols-2">
+        <div className="grid grid-cols-3 gap-2">
           {PAYMENT_METHODS.map((item) => (
             <button
               key={item.value}
@@ -51,35 +51,35 @@ export function PaymentModal({
                 setMethod(item.value);
                 if (item.value !== "cash") setReceived("");
               }}
-              className={`flex h-12 items-center gap-3 rounded-xl border px-4 text-left text-sm font-semibold ${
+              className={`flex min-h-[82px] flex-col items-center justify-center gap-1.5 rounded-[16px] border-[1.5px] px-2 text-center text-[11px] font-extrabold transition ${
                 method === item.value
-                  ? "border-orange-400 bg-orange-50 text-orange-800"
-                  : "border-neutral-200"
+                  ? "border-orange-500 bg-[#fff0e2] text-[#e86400] shadow-[0_0_0_3px_rgba(255,122,26,.12)]"
+                  : "border-[#e8e3d7] bg-white text-[#14201b]"
               }`}
             >
-              <span className="text-lg">{item.icon}</span>
-              {item.label}
+              <span className="text-[25px] leading-none">{item.icon}</span>
+              <span>{item.label}</span>
             </button>
           ))}
         </div>
 
         {method === "cash" ? (
-          <>
-            <label className="block text-sm font-medium">
+          <div className="rounded-[18px] border-[1.5px] border-[#e8e3d7] bg-white p-4">
+            <label className="block text-[10px] font-extrabold uppercase tracking-[0.1em] text-[#7b8680]">
               Monto recibido
-              <div className="relative mt-1.5">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400">S/</span>
+              <div className="mt-2 flex items-center gap-2 border-b-2 border-[#14201b] pb-1.5">
+                <span className="erp-mono text-lg font-bold text-[#7b8680]">S/</span>
                 <input
                   value={received}
                   onChange={(event) => setReceived(event.target.value.replace(/[^0-9.]/g, ""))}
                   inputMode="decimal"
                   placeholder="0.00"
-                  className="h-12 w-full rounded-xl border border-neutral-200 pl-9 pr-3 text-xl font-semibold tabular-nums outline-none focus:border-orange-400"
+                  className="erp-mono min-w-0 flex-1 bg-transparent text-[28px] font-bold tracking-[-0.03em] outline-none"
                 />
               </div>
             </label>
 
-            <div className="flex flex-wrap gap-2">
+            <div className="mt-3 flex flex-wrap gap-2">
               {[total, 20, 50, 100, 200]
                 .filter((value, index, values) => value >= total && values.indexOf(value) === index)
                 .slice(0, 5)
@@ -88,39 +88,49 @@ export function PaymentModal({
                     key={value}
                     type="button"
                     onClick={() => setReceived(String(value))}
-                    className="rounded-lg border border-neutral-200 px-3 py-2 text-sm font-semibold"
+                    className="erp-mono rounded-[11px] bg-[#f6f3ec] px-3 py-2 text-xs font-bold"
                   >
                     {value === total ? "Exacto" : formatMoney(value)}
                   </button>
                 ))}
             </div>
 
-            <div className={`rounded-xl p-4 ${missing > 0 ? "bg-amber-50 text-amber-800" : "bg-emerald-50 text-emerald-800"}`}>
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">{missing > 0 ? "Falta" : "Vuelto"}</span>
-                <span className="text-lg font-semibold tabular-nums">
-                  {formatMoney(missing > 0 ? missing : change)}
-                </span>
-              </div>
+            <div
+              className={`mt-3 flex items-center justify-between rounded-[14px] px-3.5 py-3 ${
+                missing > 0 ? "bg-[#fde8e8] text-[#d64545]" : "bg-[#dff5e9] text-[#1f9d63]"
+              }`}
+            >
+              <span className="text-sm font-extrabold">{missing > 0 ? "Falta" : "Vuelto"}</span>
+              <span className="erp-mono text-lg font-bold">
+                {formatMoney(missing > 0 ? missing : change)}
+              </span>
             </div>
-          </>
+          </div>
         ) : (
-          <div className="rounded-xl bg-neutral-50 p-4 text-sm text-neutral-600">
-            Se registrará el total de {formatMoney(total)} con {PAYMENT_METHODS.find((item) => item.value === method)?.label}.
+          <div className="rounded-[15px] bg-[#eee9dc] p-3 text-center text-sm text-[#7b8680]">
+            Se registrará {formatMoney(total)} con{" "}
+            <strong className="text-[#14201b]">
+              {PAYMENT_METHODS.find((item) => item.value === method)?.label}
+            </strong>.
           </div>
         )}
 
-        <div className="flex flex-col-reverse gap-2 border-t border-neutral-100 pt-5 sm:flex-row sm:justify-end">
-          <button type="button" onClick={onClose} disabled={pending} className="h-11 rounded-xl border border-neutral-200 px-5 text-sm font-semibold">
+        <div className="flex flex-col-reverse gap-2 border-t border-[#e8e3d7] pt-4 sm:flex-row sm:justify-end">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={pending}
+            className="h-12 rounded-[15px] border border-[#e8e3d7] bg-white px-5 text-sm font-bold"
+          >
             Cancelar
           </button>
           <button
             type="button"
             disabled={!valid || pending}
             onClick={() => void onConfirm(method, method === "cash" ? receivedNumber : null)}
-            className="h-11 rounded-xl bg-orange-500 px-5 text-sm font-semibold text-white disabled:opacity-50"
+            className="h-12 rounded-[15px] bg-orange-500 px-5 text-sm font-extrabold text-white shadow-[0_8px_20px_-10px_#e86400] disabled:bg-[#d8d4c8] disabled:text-[#a5a396] disabled:shadow-none"
           >
-            {pending ? "Procesando..." : "Confirmar cobro"}
+            {pending ? "Procesando..." : "Confirmar pago"}
           </button>
         </div>
       </div>

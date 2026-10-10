@@ -108,7 +108,7 @@ export function BranchesManager({
           <button
             type="button"
             onClick={openCreate}
-            className="inline-flex h-10 items-center gap-2 rounded-lg bg-neutral-950 px-4 text-sm font-medium text-white transition hover:bg-neutral-800"
+            className="inline-flex h-12 items-center gap-2 rounded-[15px] bg-orange-500 px-5 text-sm font-extrabold text-white shadow-[0_8px_20px_-10px_#e86400] transition hover:bg-orange-600"
           >
             <Plus className="size-4" aria-hidden="true" />
             Agregar local
@@ -117,32 +117,32 @@ export function BranchesManager({
       ) : null}
 
       {branchesQuery.data.errorMessage ? (
-        <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+        <div role="alert" className="rounded-[16px] border border-red-200 bg-red-50 p-4 text-sm text-red-700">
           {branchesQuery.data.errorMessage}
         </div>
       ) : branches.length === 0 ? (
         <EmptySettingsState>No hay locales registrados.</EmptySettingsState>
       ) : (
         <>
-          <div className="hidden overflow-hidden rounded-xl border border-neutral-200 md:block">
+          <div className="hidden overflow-hidden rounded-[16px] border border-[#e8e3d7] md:block">
             <table className="w-full text-left text-sm">
-              <thead className="border-b bg-neutral-50 text-xs uppercase tracking-wide text-neutral-500">
+              <thead className="border-b bg-[#f6f3ec] text-xs uppercase tracking-wide text-[#7b8680]">
                 <tr>
-                  <th className="px-4 py-3 font-medium">Código</th>
-                  <th className="px-4 py-3 font-medium">Local</th>
-                  <th className="px-4 py-3 font-medium">Dirección</th>
-                  <th className="px-4 py-3 font-medium">Ubigeo</th>
-                  <th className="px-4 py-3 font-medium">Estado</th>
-                  <th className="px-4 py-3 text-right font-medium">Acciones</th>
+                  <th className="px-4 py-3 font-bold">Código</th>
+                  <th className="px-4 py-3 font-bold">Local</th>
+                  <th className="px-4 py-3 font-bold">Dirección</th>
+                  <th className="px-4 py-3 font-bold">Ubigeo</th>
+                  <th className="px-4 py-3 font-bold">Estado</th>
+                  <th className="px-4 py-3 text-right font-bold">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100 bg-white">
                 {branches.map((branch) => (
                   <tr key={branch.id}>
-                    <td className="px-4 py-3 font-medium">{branch.code}</td>
+                    <td className="px-4 py-3 font-bold">{branch.code}</td>
                     <td className="px-4 py-3">{branch.name}</td>
-                    <td className="px-4 py-3 text-neutral-600">{branch.address || "—"}</td>
-                    <td className="px-4 py-3 text-neutral-600">{branch.ubigeo || "—"}</td>
+                    <td className="px-4 py-3 text-[#59665f]">{branch.address || "—"}</td>
+                    <td className="px-4 py-3 text-[#59665f]">{branch.ubigeo || "—"}</td>
                     <td className="px-4 py-3"><StatusBadge active={branch.active} /></td>
                     <td className="px-4 py-3">
                       {isOwner ? (
@@ -151,7 +151,7 @@ export function BranchesManager({
                             type="button"
                             onClick={() => openEdit(branch)}
                             aria-label={`Editar ${branch.name}`}
-                            className="inline-flex size-9 items-center justify-center rounded-lg text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900"
+                            className="inline-flex size-9 items-center justify-center rounded-[13px] text-[#7b8680] hover:bg-[#e9e4d6] hover:text-[#14201b]"
                           >
                             <Pencil className="size-4" />
                           </button>
@@ -160,13 +160,13 @@ export function BranchesManager({
                             onClick={() => void changeStatus(branch)}
                             disabled={toggleMutation.isPending}
                             aria-label={branch.active ? `Desactivar ${branch.name}` : `Activar ${branch.name}`}
-                            className="inline-flex size-9 items-center justify-center rounded-lg text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 disabled:opacity-50"
+                            className="inline-flex size-9 items-center justify-center rounded-[13px] text-[#7b8680] hover:bg-[#e9e4d6] hover:text-[#14201b] disabled:opacity-50"
                           >
                             <Power className="size-4" />
                           </button>
                         </div>
                       ) : (
-                        <span className="block text-right text-neutral-300">—</span>
+                        <span className="block text-right text-[#c6c0b3]">—</span>
                       )}
                     </td>
                   </tr>
@@ -177,21 +177,21 @@ export function BranchesManager({
 
           <div className="space-y-3 md:hidden">
             {branches.map((branch) => (
-              <article key={branch.id} className="rounded-xl border border-neutral-200 bg-white p-4">
+              <article key={branch.id} className="rounded-[16px] border border-[#e8e3d7] bg-white p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="font-medium text-neutral-900">{branch.code} · {branch.name}</p>
-                    <p className="mt-1 text-sm text-neutral-500">{branch.address || "Sin dirección"}</p>
-                    <p className="mt-1 text-xs text-neutral-400">Ubigeo: {branch.ubigeo || "—"}</p>
+                    <p className="font-bold text-[#14201b]">{branch.code} · {branch.name}</p>
+                    <p className="mt-1 text-sm text-[#7b8680]">{branch.address || "Sin dirección"}</p>
+                    <p className="mt-1 text-xs text-[#9b9f99]">Ubigeo: {branch.ubigeo || "—"}</p>
                   </div>
                   <StatusBadge active={branch.active} />
                 </div>
                 {isOwner ? (
-                  <div className="mt-4 flex gap-2 border-t border-neutral-100 pt-3">
-                    <button type="button" onClick={() => openEdit(branch)} className="h-10 flex-1 rounded-lg border text-sm font-medium">
+                  <div className="mt-4 flex gap-2 border-t border-[#eee9df] pt-3">
+                    <button type="button" onClick={() => openEdit(branch)} className="h-10 flex-1 rounded-[13px] border text-sm font-bold">
                       Editar
                     </button>
-                    <button type="button" onClick={() => void changeStatus(branch)} className="h-10 flex-1 rounded-lg border text-sm font-medium">
+                    <button type="button" onClick={() => void changeStatus(branch)} className="h-10 flex-1 rounded-[13px] border text-sm font-bold">
                       {branch.active ? "Desactivar" : "Activar"}
                     </button>
                   </div>
@@ -245,34 +245,34 @@ function BranchForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       <div className="grid gap-4 sm:grid-cols-2">
-        <label className="text-sm font-medium text-neutral-700">
+        <label className="text-sm font-bold text-[#35423c]">
           Código
           <input className={SETTINGS_INPUT} name="code" defaultValue={branch?.code ?? ""} required maxLength={20} disabled={isSaving} placeholder="002" />
         </label>
-        <label className="text-sm font-medium text-neutral-700">
+        <label className="text-sm font-bold text-[#35423c]">
           Nombre
           <input className={SETTINGS_INPUT} name="name" defaultValue={branch?.name ?? ""} required disabled={isSaving} placeholder="Sucursal centro" />
         </label>
-        <label className="text-sm font-medium text-neutral-700 sm:col-span-2">
+        <label className="text-sm font-bold text-[#35423c] sm:col-span-2">
           Dirección
           <input className={SETTINGS_INPUT} name="address" defaultValue={branch?.address ?? ""} disabled={isSaving} />
         </label>
-        <label className="text-sm font-medium text-neutral-700">
+        <label className="text-sm font-bold text-[#35423c]">
           Ubigeo
           <input className={SETTINGS_INPUT} name="ubigeo" defaultValue={branch?.ubigeo ?? ""} maxLength={6} inputMode="numeric" disabled={isSaving} />
         </label>
         {branch ? (
-          <label className="flex items-center gap-2 self-end pb-3 text-sm text-neutral-700">
+          <label className="flex items-center gap-2 self-end pb-3 text-sm text-[#35423c]">
             <input type="checkbox" name="active" value="true" defaultChecked={branch.active} disabled={isSaving} />
             Local activo
           </label>
         ) : null}
       </div>
-      <div className="flex flex-col-reverse gap-3 border-t border-neutral-100 pt-5 sm:flex-row sm:justify-end">
-        <button type="button" onClick={onCancel} disabled={isSaving} className="h-11 rounded-lg border border-neutral-200 px-5 text-sm font-medium">
+      <div className="flex flex-col-reverse gap-3 border-t border-[#eee9df] pt-5 sm:flex-row sm:justify-end">
+        <button type="button" onClick={onCancel} disabled={isSaving} className="h-12 rounded-[15px] border border-[#e8e3d7] bg-white px-5 text-sm font-bold">
           Cancelar
         </button>
-        <button type="submit" disabled={isSaving} className="h-11 rounded-lg bg-neutral-950 px-5 text-sm font-medium text-white disabled:opacity-60">
+        <button type="submit" disabled={isSaving} className="h-12 rounded-[15px] bg-orange-500 px-5 text-sm font-extrabold text-white disabled:opacity-60">
           {isSaving ? "Guardando..." : branch ? "Guardar cambios" : "Crear local"}
         </button>
       </div>

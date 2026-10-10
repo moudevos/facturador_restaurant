@@ -103,6 +103,7 @@ export function PosClient({
     items.length > 0 &&
     Boolean(selectedSeries) &&
     (documentType === "03" || canInvoice);
+  const initial = tradeName.trim().charAt(0).toUpperCase() || "R";
 
   function chooseCustomer(next: Customer | null) {
     setCustomer(next);
@@ -160,48 +161,59 @@ export function PosClient({
   }
 
   return (
-    <div className="min-h-dvh bg-[#f6f3ec] text-neutral-900">
-      <header className="sticky top-0 z-20 bg-[#14201b] text-white shadow-sm">
-        <div className="mx-auto max-w-3xl px-4 pb-4 pt-3">
+    <div className="min-h-dvh bg-[#f6f3ec] text-[#14201b]">
+      <header className="sticky top-0 z-20 rounded-b-[26px] bg-[#14201b] text-white shadow-sm">
+        <div className="mx-auto max-w-5xl px-4 pb-4 pt-3 sm:px-5">
           <div className="flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <p className="truncate text-sm font-bold">{tradeName}</p>
-              <p className="truncate text-xs text-emerald-100/70">
-                {branchName} · {sessionCode(sessionId)}
-              </p>
+            <div className="flex min-w-0 items-center gap-2.5">
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-[11px] bg-orange-500 text-sm font-extrabold">
+                {initial}
+              </div>
+              <div className="min-w-0">
+                <p className="truncate text-[13px] font-extrabold leading-tight">{tradeName}</p>
+                <p className="mt-0.5 truncate text-[10px] text-[#9fb0a8] sm:text-[11px]">
+                  {branchName}
+                </p>
+              </div>
             </div>
             <button
               type="button"
               onClick={() => window.close()}
-              className="rounded-lg border border-white/15 px-3 py-2 text-xs font-semibold text-white/80"
+              className="rounded-xl border border-white/10 bg-white/[0.05] px-3 py-2 text-[11px] font-bold text-[#b6c4be] transition hover:bg-white/10 hover:text-white"
             >
               Cerrar POS
             </button>
           </div>
 
-          <div className="mt-4 flex items-end justify-between gap-4">
+          <div className="mt-4 flex items-end justify-between gap-3">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/50">
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#9fb0a8]">
                 Total a cobrar
               </p>
-              <p className="mt-1 text-3xl font-bold tabular-nums text-orange-400">
+              <p className="erp-mono mt-0.5 text-[32px] font-bold leading-none tracking-[-0.04em] text-orange-400 sm:text-[36px]">
                 {formatMoney(totals.total)}
               </p>
             </div>
-            <div className="rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold text-white/70">
-              {totals.quantity} {totals.quantity === 1 ? "unidad" : "unidades"}
+            <div className="text-right">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-2.5 py-1 text-[10px] font-extrabold text-emerald-300">
+                <span className="size-1.5 rounded-full bg-emerald-400" />
+                SESIÓN ABIERTA
+              </span>
+              <p className="erp-mono mt-1.5 text-[10px] text-[#9fb0a8]">
+                {sessionCode(sessionId)}
+              </p>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-3xl px-4 pb-28 pt-5">
-        <div className="mb-5 grid grid-cols-2 rounded-xl bg-white p-1 shadow-sm">
+      <main className="mx-auto max-w-5xl px-4 pb-28 pt-5 sm:px-5 lg:pb-32 lg:pt-6">
+        <div className="mb-4 grid grid-cols-2 rounded-[15px] bg-[#e9e4d6] p-1">
           <button
             type="button"
             onClick={() => setStep(1)}
-            className={`h-10 rounded-lg text-sm font-semibold ${
-              step === 1 ? "bg-[#14201b] text-white" : "text-neutral-500"
+            className={`h-10 rounded-[11px] text-sm font-bold transition ${
+              step === 1 ? "bg-white text-[#14201b] shadow-sm" : "text-[#7b8680]"
             }`}
           >
             1 · Carrito
@@ -210,8 +222,8 @@ export function PosClient({
             type="button"
             disabled={!items.length}
             onClick={() => setStep(2)}
-            className={`h-10 rounded-lg text-sm font-semibold disabled:opacity-40 ${
-              step === 2 ? "bg-[#14201b] text-white" : "text-neutral-500"
+            className={`h-10 rounded-[11px] text-sm font-bold transition disabled:opacity-40 ${
+              step === 2 ? "bg-white text-[#14201b] shadow-sm" : "text-[#7b8680]"
             }`}
           >
             2 · Cierre
@@ -219,43 +231,47 @@ export function PosClient({
         </div>
 
         {step === 1 ? (
-          <div className="space-y-4">
+          <div className="space-y-4 lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start lg:gap-5 lg:space-y-0">
             <button
               type="button"
               onClick={() => setProductSelectorOpen(true)}
-              className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-orange-500 text-sm font-bold text-white shadow-sm hover:bg-orange-600"
+              className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-[16px] border-2 border-dashed border-[#ffb27a] bg-[#fff0e2] text-sm font-extrabold text-[#e86400] transition active:scale-[.99] lg:col-start-1"
             >
               <PackagePlus className="size-5" />
               Agregar productos
             </button>
 
-            <section className="rounded-2xl border border-[#e8e3d7] bg-white p-4">
-              <div className="mb-3 flex items-center justify-between">
-                <h2 className="font-bold">Carrito</h2>
-                <span className="text-xs font-semibold text-neutral-400">
+            <section className="rounded-[18px] border border-[#e8e3d7] bg-white p-3.5 sm:p-4 lg:col-start-1">
+              <div className="mb-2 flex items-center justify-between">
+                <h2 className="text-[17px] font-extrabold">Carrito</h2>
+                <span className="text-xs font-bold text-[#7b8680]">
                   {items.length} {items.length === 1 ? "producto" : "productos"}
                 </span>
               </div>
 
               {items.length ? (
-                <div className="divide-y divide-neutral-100">
+                <div className="divide-y divide-[#eee9df]">
                   {items.map((item) => (
-                    <div key={item.product.id} className="flex items-center gap-3 py-3">
+                    <div key={item.product.id} className="flex items-center gap-2.5 py-3 sm:gap-3">
+                      <div className="flex size-11 shrink-0 items-center justify-center rounded-[13px] bg-[#fff0e2] text-lg">
+                        🍽️
+                      </div>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold">{item.product.name}</p>
-                        <p className="mt-0.5 text-xs text-neutral-500">
+                        <p className="truncate text-sm font-extrabold">{item.product.name}</p>
+                        <p className="erp-mono mt-0.5 text-[11px] text-[#7b8680]">
                           {formatMoney(item.product.price)} c/u
                         </p>
+                        <p className="erp-mono mt-1 text-xs font-bold">
+                          {formatMoney(Number(item.product.price) * item.quantity)}
+                        </p>
                       </div>
-                      <p className="w-20 text-right text-sm font-bold tabular-nums">
-                        {formatMoney(Number(item.product.price) * item.quantity)}
-                      </p>
-                      <div className="flex items-center gap-1 rounded-xl bg-[#f6f3ec] p-1">
+                      <div className="flex items-center gap-0.5 rounded-[12px] bg-[#f6f3ec] p-1">
                         {item.quantity === 1 ? (
                           <button
                             type="button"
                             onClick={() => remove(item.product.id)}
-                            className="flex size-8 items-center justify-center rounded-lg bg-white text-red-600 shadow-sm"
+                            aria-label={`Eliminar ${item.product.name}`}
+                            className="flex size-8 items-center justify-center rounded-[9px] bg-white text-red-600 shadow-sm"
                           >
                             <Trash2 className="size-3.5" />
                           </button>
@@ -263,16 +279,18 @@ export function PosClient({
                           <button
                             type="button"
                             onClick={() => decrease(item.product.id)}
-                            className="flex size-8 items-center justify-center rounded-lg bg-white shadow-sm"
+                            aria-label={`Reducir ${item.product.name}`}
+                            className="flex size-8 items-center justify-center rounded-[9px] bg-white shadow-sm"
                           >
                             <Minus className="size-3.5" />
                           </button>
                         )}
-                        <span className="min-w-7 text-center text-sm font-bold tabular-nums">{item.quantity}</span>
+                        <span className="erp-mono min-w-7 text-center text-sm font-bold">{item.quantity}</span>
                         <button
                           type="button"
                           onClick={() => increase(item.product.id)}
-                          className="flex size-8 items-center justify-center rounded-lg bg-white shadow-sm"
+                          aria-label={`Aumentar ${item.product.name}`}
+                          className="flex size-8 items-center justify-center rounded-[9px] bg-white shadow-sm"
                         >
                           <Plus className="size-3.5" />
                         </button>
@@ -282,75 +300,80 @@ export function PosClient({
                 </div>
               ) : (
                 <div className="py-10 text-center">
-                  <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-orange-50 text-orange-500">
-                    <ShoppingCart className="size-6" />
+                  <div className="mx-auto flex size-[72px] items-center justify-center rounded-full border-2 border-dashed border-[#ffb27a] bg-[#fff0e2]">
+                    <ShoppingCart className="size-7 text-orange-500" />
                   </div>
-                  <p className="mt-4 text-sm font-semibold">El carrito está vacío</p>
-                  <p className="mt-1 text-xs text-neutral-500">Agrega productos para comenzar la venta.</p>
+                  <p className="mt-4 text-sm font-extrabold">El carrito está vacío</p>
+                  <p className="mt-1 text-xs text-[#7b8680]">Agrega productos para comenzar la venta.</p>
                 </div>
               )}
             </section>
 
             {items.length ? (
-              <section className="rounded-2xl border border-[#e8e3d7] bg-white p-4">
+              <section className="rounded-[18px] border border-[#e8e3d7] bg-white p-4 lg:sticky lg:top-[150px] lg:col-start-2 lg:row-start-1 lg:row-span-2">
+                <p className="mb-2 text-[10px] font-extrabold uppercase tracking-[0.1em] text-[#7b8680]">
+                  Resumen del pedido
+                </p>
                 <SummaryLine label="Subtotal" value={totals.subtotal} />
                 <SummaryLine label="IGV" value={totals.igv} />
-                <div className="mt-3 flex items-center justify-between border-t border-dashed border-neutral-200 pt-3">
-                  <span className="font-bold">Total</span>
-                  <span className="text-xl font-bold tabular-nums">{formatMoney(totals.total)}</span>
+                <div className="mt-3 flex items-center justify-between border-t border-dashed border-[#d8d2c0] pt-3">
+                  <span className="font-extrabold">Total</span>
+                  <span className="erp-mono text-xl font-bold">{formatMoney(totals.total)}</span>
                 </div>
               </section>
             ) : null}
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="mx-auto max-w-2xl space-y-4">
             <button
               type="button"
               onClick={() => setStep(1)}
-              className="inline-flex items-center gap-2 text-sm font-semibold text-neutral-500"
+              className="inline-flex items-center gap-2 text-sm font-bold text-[#7b8680]"
             >
               <ArrowLeft className="size-4" />
               Volver al pedido
             </button>
 
-            <section className="rounded-2xl border border-[#e8e3d7] bg-white p-4">
+            <section className="rounded-[18px] border border-[#e8e3d7] bg-white p-3.5">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">Pedido</p>
-                  <p className="mt-1 text-sm font-semibold">{totals.quantity} unidades</p>
+                  <p className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-[#7b8680]">Pedido</p>
+                  <p className="mt-1 text-sm font-extrabold">{totals.quantity} unidades</p>
                 </div>
-                <p className="text-xl font-bold tabular-nums">{formatMoney(totals.total)}</p>
+                <p className="erp-mono text-xl font-bold">{formatMoney(totals.total)}</p>
               </div>
             </section>
 
             <button
               type="button"
               onClick={() => setCustomerSelectorOpen(true)}
-              className="flex w-full items-center gap-3 rounded-2xl border border-[#e8e3d7] bg-white p-4 text-left"
+              className="flex w-full items-center gap-3 rounded-[20px] border-[1.5px] border-[#e8e3d7] bg-white p-4 text-left transition active:scale-[.99]"
             >
-              <div className="flex size-11 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
+              <div className="flex size-12 shrink-0 items-center justify-center rounded-[16px] bg-[#fff0e2] text-orange-600">
                 <UserRound className="size-5" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">Cliente</p>
-                <p className="mt-1 truncate text-sm font-semibold">{customer?.name || "Cliente varios"}</p>
-                <p className="mt-0.5 text-xs text-neutral-500">
+                <p className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-[#7b8680]">Cliente</p>
+                <p className="mt-1 truncate text-[15px] font-extrabold">{customer?.name || "Cliente varios"}</p>
+                <p className="mt-0.5 text-xs text-[#7b8680]">
                   {customer
                     ? `${customer.document_type === "6" ? "RUC" : "DNI"} · ${customer.document_number}`
                     : "Opcional · sin documento"}
                 </p>
               </div>
-              <ChevronRight className="size-5 text-neutral-300" />
+              <ChevronRight className="size-5 text-[#a7aca7]" />
             </button>
 
-            <section className="rounded-2xl border border-[#e8e3d7] bg-white p-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">Comprobante</p>
+            <section className="rounded-[20px] border-[1.5px] border-[#e8e3d7] bg-white p-4">
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-[#7b8680]">Comprobante</p>
               <div className="mt-3 grid grid-cols-2 gap-2">
                 <button
                   type="button"
                   onClick={() => setDocumentType("03")}
-                  className={`h-11 rounded-xl border text-sm font-semibold ${
-                    documentType === "03" ? "border-orange-400 bg-orange-50 text-orange-800" : "border-neutral-200"
+                  className={`h-12 rounded-[14px] border-[1.5px] text-sm font-extrabold transition ${
+                    documentType === "03"
+                      ? "border-orange-500 bg-[#fff0e2] text-[#e86400]"
+                      : "border-[#e8e3d7] bg-white"
                   }`}
                 >
                   Boleta
@@ -361,50 +384,54 @@ export function PosClient({
                     if (canInvoice) setDocumentType("01");
                     else toast.warning("Selecciona un cliente con RUC para emitir factura.");
                   }}
-                  className={`h-11 rounded-xl border text-sm font-semibold ${
-                    documentType === "01" ? "border-orange-400 bg-orange-50 text-orange-800" : "border-neutral-200"
-                  } ${!canInvoice ? "opacity-50" : ""}`}
+                  className={`h-12 rounded-[14px] border-[1.5px] text-sm font-extrabold transition ${
+                    documentType === "01"
+                      ? "border-orange-500 bg-[#fff0e2] text-[#e86400]"
+                      : "border-[#e8e3d7] bg-white"
+                  } ${!canInvoice ? "opacity-45" : ""}`}
                 >
                   Factura
                 </button>
               </div>
-              <p className="mt-3 text-xs text-neutral-500">
-                Serie: <span className="font-semibold text-neutral-700">{selectedSeries || "Sin serie activa"}</span>
+              <p className="mt-3 text-xs text-[#7b8680]">
+                Serie: <span className="font-extrabold text-[#14201b]">{selectedSeries || "Sin serie activa"}</span>
               </p>
             </section>
 
             {!selectedSeries ? (
-              <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+              <div className="rounded-[15px] border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-800">
                 Configura una serie activa para este tipo de comprobante antes de cobrar.
               </div>
             ) : null}
 
-            <section className="rounded-2xl border border-[#e8e3d7] bg-white p-4">
+            <section className="rounded-[18px] bg-[#14201b] p-4 text-white">
               <div className="flex items-center gap-3">
-                <div className="flex size-11 items-center justify-center rounded-xl bg-neutral-100">
-                  <ReceiptText className="size-5 text-neutral-600" />
+                <div className="flex size-11 items-center justify-center rounded-[13px] bg-white/10">
+                  <ReceiptText className="size-5 text-orange-400" />
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold">Total a cobrar</p>
-                  <p className="text-xs text-neutral-500">
-                    El pago quedará vinculado a esta sesión de caja.
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-extrabold">Total a cobrar</p>
+                  <p className="mt-0.5 text-[11px] text-[#9fb0a8]">
+                    El pago quedará vinculado a esta sesión.
                   </p>
                 </div>
-                <p className="text-xl font-bold tabular-nums">{formatMoney(totals.total)}</p>
+                <p className="erp-mono text-lg font-bold text-orange-400 sm:text-xl">
+                  {formatMoney(totals.total)}
+                </p>
               </div>
             </section>
           </div>
         )}
       </main>
 
-      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-[#e8e3d7] bg-[#f6f3ec]/95 p-4 backdrop-blur">
-        <div className="mx-auto max-w-3xl">
+      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-[#e8e3d7] bg-[#f6f3ec]/95 p-3.5 backdrop-blur lg:bottom-5 lg:left-1/2 lg:right-auto lg:w-[min(960px,calc(100%-48px))] lg:-translate-x-1/2 lg:rounded-[20px] lg:border lg:bg-white/95 lg:p-3 lg:shadow-xl">
+        <div className="mx-auto max-w-5xl">
           {step === 1 ? (
             <button
               type="button"
               disabled={!items.length}
               onClick={() => setStep(2)}
-              className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#14201b] text-sm font-bold text-white disabled:opacity-40"
+              className="inline-flex h-[52px] w-full items-center justify-center gap-2 rounded-[16px] bg-orange-500 text-sm font-extrabold text-white shadow-[0_8px_20px_-8px_#e86400] transition active:scale-[.99] disabled:bg-[#d8d4c8] disabled:text-[#a5a396] disabled:shadow-none"
             >
               Siguiente paso
               <ChevronRight className="size-4" />
@@ -414,7 +441,7 @@ export function PosClient({
               type="button"
               disabled={!canCharge}
               onClick={() => setPaymentOpen(true)}
-              className="h-12 w-full rounded-2xl bg-orange-500 text-sm font-bold text-white disabled:opacity-40"
+              className="h-[52px] w-full rounded-[16px] bg-orange-500 text-sm font-extrabold text-white shadow-[0_8px_20px_-8px_#e86400] transition active:scale-[.99] disabled:bg-[#d8d4c8] disabled:text-[#a5a396] disabled:shadow-none"
             >
               Cobrar {formatMoney(totals.total)}
             </button>
@@ -466,8 +493,8 @@ export function PosClient({
 function SummaryLine({ label, value }: { label: string; value: number }) {
   return (
     <div className="flex items-center justify-between py-1.5 text-sm">
-      <span className="text-neutral-500">{label}</span>
-      <span className="font-semibold tabular-nums">{formatMoney(value)}</span>
+      <span className="text-[#7b8680]">{label}</span>
+      <span className="erp-mono font-bold">{formatMoney(value)}</span>
     </div>
   );
 }

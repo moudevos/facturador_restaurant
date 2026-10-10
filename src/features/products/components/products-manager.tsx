@@ -31,11 +31,11 @@ type ProductsData = {
 };
 
 const pageButton =
-  "inline-flex h-9 items-center gap-1 rounded-lg border border-neutral-200 bg-white px-3 text-sm font-medium text-neutral-700 shadow-sm transition-colors hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900/20";
+  "inline-flex h-9 items-center gap-1 rounded-lg border border-[#e8e3d7] bg-white px-3 text-sm font-medium text-[#35423c] shadow-sm transition-colors hover:bg-[#f6f3ec] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900/20";
 const pageButtonDisabled =
-  "inline-flex h-9 cursor-not-allowed items-center gap-1 rounded-lg border border-neutral-100 bg-neutral-50 px-3 text-sm font-medium text-neutral-300";
+  "inline-flex h-9 cursor-not-allowed items-center gap-1 rounded-lg border border-[#eee9df] bg-[#f6f3ec] px-3 text-sm font-medium text-[#c6c0b3]";
 const primaryButton =
-  "inline-flex h-10 items-center gap-2 rounded-lg bg-neutral-900 px-4 text-sm font-medium text-white shadow-sm transition hover:bg-neutral-800 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-neutral-900/20";
+  "inline-flex h-10 items-center gap-2 rounded-lg bg-neutral-900 px-4 text-sm font-medium text-white shadow-sm transition hover:bg-[#1e2d27] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-neutral-900/20";
 
 export function ProductsManager({
   query,
@@ -111,10 +111,10 @@ export function ProductsManager({
     <div className="space-y-5">
       {(isOwner || !data.errorMessage) && (
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3 text-sm text-neutral-500">
+          <div className="flex items-center gap-3 text-sm text-[#7b8680]">
             {!data.errorMessage && (
               <p>
-                <span className="font-semibold text-neutral-900">{data.count}</span>{" "}
+                <span className="font-semibold text-[#14201b]">{data.count}</span>{" "}
                 {hasFilters
                   ? data.count === 1
                     ? "resultado"
@@ -125,7 +125,7 @@ export function ProductsManager({
               </p>
             )}
             {isRefreshing && (
-              <span className="inline-flex items-center gap-1.5 text-xs text-neutral-400" aria-live="polite">
+              <span className="inline-flex items-center gap-1.5 text-xs text-[#9b9f99]" aria-live="polite">
                 <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
                 Actualizando…
               </span>
@@ -144,7 +144,7 @@ export function ProductsManager({
       {data.errorMessage ? (
         <div
           role="alert"
-          className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50/70 p-4 text-sm"
+          className="flex items-start gap-3 rounded-[14px] border border-red-200 bg-red-50/70 p-4 text-sm"
         >
           <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-600">
             <AlertCircle className="size-4" aria-hidden="true" />
@@ -164,13 +164,13 @@ export function ProductsManager({
             aria-label="Paginación"
             className="flex flex-wrap items-center justify-between gap-3 text-sm"
           >
-            <p className="text-neutral-500">
+            <p className="text-[#7b8680]">
               Mostrando{" "}
-              <span className="font-medium text-neutral-900">
+              <span className="font-medium text-[#14201b]">
                 {from}–{to}
               </span>{" "}
-              de <span className="font-medium text-neutral-900">{data.count}</span>
-              <span className="mx-1.5 text-neutral-300">·</span>
+              de <span className="font-medium text-[#14201b]">{data.count}</span>
+              <span className="mx-1.5 text-[#c6c0b3]">·</span>
               Página {page} de {totalPages}
             </p>
             <div className="flex gap-2">
@@ -200,14 +200,14 @@ export function ProductsManager({
           </nav>
         </>
       ) : (
-        <div className="flex flex-col items-center rounded-2xl border border-dashed border-neutral-300 bg-white px-6 py-16 text-center">
-          <div className="flex size-14 items-center justify-center rounded-full bg-neutral-100 text-neutral-500 ring-8 ring-neutral-50">
+        <div className="flex flex-col items-center rounded-[20px] border border-dashed border-[#d8d2c0] bg-white px-6 py-16 text-center">
+          <div className="flex size-14 items-center justify-center rounded-full bg-[#e9e4d6] text-[#7b8680] ring-8 ring-neutral-50">
             <PackageSearch className="size-6" aria-hidden="true" />
           </div>
-          <p className="mt-5 text-base font-semibold text-neutral-900">
+          <p className="mt-5 text-base font-semibold text-[#14201b]">
             {hasFilters ? "Sin resultados" : "Aún no hay productos"}
           </p>
-          <p className="mt-1.5 max-w-xs text-sm text-neutral-500">
+          <p className="mt-1.5 max-w-xs text-sm text-[#7b8680]">
             {hasFilters
               ? "No encontramos productos con esos filtros. Prueba con otra búsqueda."
               : "Registra tu primer producto para empezar a vender."}

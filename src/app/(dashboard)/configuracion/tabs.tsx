@@ -38,7 +38,7 @@ export function TabsNav() {
 
   return (
     <div className="-mx-1 overflow-x-auto px-1">
-      <div role="tablist" aria-label="Secciones de configuración" className="flex min-w-max gap-1 border-b border-neutral-200">
+      <div role="tablist" aria-label="Secciones de configuración" className="flex min-w-max gap-1 rounded-[14px] bg-[#e9e4d6] p-1">
         {TABS.map(({ id, label, icon: Icon }) => {
           const isActive = id === tab;
           return (
@@ -50,10 +50,10 @@ export function TabsNav() {
               aria-selected={isActive}
               aria-controls={`panel-${id}`}
               onClick={() => setTab(id)}
-              className={`-mb-px inline-flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition-colors ${
+              className={`inline-flex items-center gap-2 rounded-[11px] px-3.5 py-2.5 text-sm font-bold transition-colors ${
                 isActive
-                  ? "border-neutral-950 text-neutral-950"
-                  : "border-transparent text-neutral-500 hover:border-neutral-300 hover:text-neutral-800"
+                  ? "bg-white text-[#14201b] shadow-sm"
+                  : "text-[#7b8680] hover:text-[#14201b]"
               }`}
             >
               <Icon className="size-4" />

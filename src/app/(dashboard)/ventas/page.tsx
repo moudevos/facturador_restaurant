@@ -29,8 +29,10 @@ export default async function SalesPage({
   if (!branches.length) {
     return (
       <section className="space-y-4">
-        <h1 className="text-2xl font-semibold tracking-tight">Área de venta</h1>
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+        <h1 className="text-[23px] font-extrabold tracking-[-0.02em] text-[#14201b] sm:text-[27px]">
+          Área de venta
+        </h1>
+        <div className="rounded-[16px] border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-900">
           No hay un local activo disponible para abrir una sesión.
         </div>
       </section>
@@ -58,11 +60,15 @@ export default async function SalesPage({
     : [{ sales: [], error: null }, { movements: [], error: null }];
 
   return (
-    <section className="space-y-6">
+    <section className="space-y-4 sm:space-y-6">
       <header>
-        <p className="text-sm font-medium text-orange-600">Operación</p>
-        <h1 className="mt-1 text-2xl font-semibold tracking-tight text-neutral-900">Área de venta</h1>
-        <p className="mt-2 text-sm text-neutral-500">
+        <p className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-orange-600">
+          Operación
+        </p>
+        <h1 className="mt-1 text-[23px] font-extrabold tracking-[-0.02em] text-[#14201b] sm:text-[27px]">
+          Área de venta
+        </h1>
+        <p className="mt-1.5 max-w-2xl text-[13px] leading-relaxed text-[#7b8680]">
           Abre, controla y cierra la sesión de caja. El POS funciona en una pestaña independiente.
         </p>
       </header>

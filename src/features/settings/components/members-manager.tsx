@@ -46,7 +46,7 @@ export function MembersManager({
 
   if (!isOwner) {
     return (
-      <div className="mt-6 rounded-xl bg-neutral-50 p-4 text-sm text-neutral-600">
+      <div className="mt-6 rounded-[16px] bg-[#f6f3ec] p-4 text-sm text-[#59665f]">
         La administración de usuarios está reservada a propietarios.
       </div>
     );
@@ -81,29 +81,29 @@ export function MembersManager({
   return (
     <div className="mt-6 space-y-4">
       <div className="flex justify-end">
-        <button type="button" onClick={openCreate} className="inline-flex h-10 items-center gap-2 rounded-lg bg-neutral-950 px-4 text-sm font-medium text-white">
+        <button type="button" onClick={openCreate} className="inline-flex h-12 items-center gap-2 rounded-[15px] bg-orange-500 px-5 text-sm font-extrabold text-white shadow-[0_8px_20px_-10px_#e86400]">
           <Plus className="size-4" aria-hidden="true" />
           Agregar usuario
         </button>
       </div>
 
       {membersQuery.data.errorMessage ? (
-        <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+        <div role="alert" className="rounded-[16px] border border-red-200 bg-red-50 p-4 text-sm text-red-700">
           {membersQuery.data.errorMessage}
         </div>
       ) : members.length === 0 ? (
         <EmptySettingsState>No hay usuarios registrados.</EmptySettingsState>
       ) : (
         <>
-          <div className="hidden overflow-hidden rounded-xl border border-neutral-200 md:block">
+          <div className="hidden overflow-hidden rounded-[16px] border border-[#e8e3d7] md:block">
             <table className="w-full text-left text-sm">
-              <thead className="border-b bg-neutral-50 text-xs uppercase tracking-wide text-neutral-500">
+              <thead className="border-b bg-[#f6f3ec] text-xs uppercase tracking-wide text-[#7b8680]">
                 <tr>
-                  <th className="px-4 py-3 font-medium">Usuario</th>
-                  <th className="px-4 py-3 font-medium">Rol</th>
-                  <th className="px-4 py-3 font-medium">Local</th>
-                  <th className="px-4 py-3 font-medium">Estado</th>
-                  <th className="px-4 py-3 text-right font-medium">Acciones</th>
+                  <th className="px-4 py-3 font-bold">Usuario</th>
+                  <th className="px-4 py-3 font-bold">Rol</th>
+                  <th className="px-4 py-3 font-bold">Local</th>
+                  <th className="px-4 py-3 font-bold">Estado</th>
+                  <th className="px-4 py-3 text-right font-bold">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100 bg-white">
@@ -111,16 +111,16 @@ export function MembersManager({
                   const branch = branches.find((item) => item.id === member.branch_id);
                   return (
                     <tr key={member.member_id}>
-                      <td className="px-4 py-3 font-medium">{member.email ?? member.user_id}</td>
+                      <td className="px-4 py-3 font-bold">{member.email ?? member.user_id}</td>
                       <td className="px-4 py-3">{member.role === "owner" ? "Owner" : "Cashier"}</td>
-                      <td className="px-4 py-3 text-neutral-600">{branch?.name ?? "Todos / sin restricción"}</td>
+                      <td className="px-4 py-3 text-[#59665f]">{branch?.name ?? "Todos / sin restricción"}</td>
                       <td className="px-4 py-3"><StatusBadge active={member.active} /></td>
                       <td className="px-4 py-3 text-right">
                         <button
                           type="button"
                           onClick={() => openEdit(member)}
                           aria-label={`Editar permisos de ${member.email ?? "usuario"}`}
-                          className="inline-flex size-9 items-center justify-center rounded-lg text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900"
+                          className="inline-flex size-9 items-center justify-center rounded-[13px] text-[#7b8680] hover:bg-[#e9e4d6] hover:text-[#14201b]"
                         >
                           <Pencil className="size-4" />
                         </button>
@@ -136,15 +136,15 @@ export function MembersManager({
             {members.map((member) => {
               const branch = branches.find((item) => item.id === member.branch_id);
               return (
-                <article key={member.member_id} className="rounded-xl border border-neutral-200 bg-white p-4">
+                <article key={member.member_id} className="rounded-[16px] border border-[#e8e3d7] bg-white p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="truncate font-medium">{member.email ?? member.user_id}</p>
-                      <p className="mt-1 text-sm text-neutral-500">{member.role === "owner" ? "Owner" : "Cashier"} · {branch?.name ?? "Todos / sin restricción"}</p>
+                      <p className="truncate font-bold">{member.email ?? member.user_id}</p>
+                      <p className="mt-1 text-sm text-[#7b8680]">{member.role === "owner" ? "Owner" : "Cashier"} · {branch?.name ?? "Todos / sin restricción"}</p>
                     </div>
                     <StatusBadge active={member.active} />
                   </div>
-                  <button type="button" onClick={() => openEdit(member)} className="mt-4 h-10 w-full rounded-lg border text-sm font-medium">
+                  <button type="button" onClick={() => openEdit(member)} className="mt-4 h-10 w-full rounded-[13px] border text-sm font-bold">
                     Editar permisos
                   </button>
                 </article>
@@ -209,18 +209,18 @@ function MemberForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       {member ? (
-        <div className="rounded-lg bg-neutral-50 px-4 py-3">
-          <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">Usuario</p>
-          <p className="mt-1 text-sm font-medium text-neutral-900">{member.email ?? member.user_id}</p>
+        <div className="rounded-[13px] bg-[#f6f3ec] px-4 py-3">
+          <p className="text-xs font-bold uppercase tracking-wide text-[#7b8680]">Usuario</p>
+          <p className="mt-1 text-sm font-bold text-[#14201b]">{member.email ?? member.user_id}</p>
         </div>
       ) : (
-        <label className="block text-sm font-medium text-neutral-700">
+        <label className="block text-sm font-bold text-[#35423c]">
           Correo del usuario
           <input className={SETTINGS_INPUT} name="email" type="email" required disabled={isSaving} placeholder="cajero@negocio.com" />
         </label>
       )}
 
-      <label className="block text-sm font-medium text-neutral-700">
+      <label className="block text-sm font-bold text-[#35423c]">
         Rol
         <select className={SETTINGS_INPUT} name="role" defaultValue={member?.role ?? "cashier"} disabled={isSaving}>
           <option value="cashier">Cashier</option>
@@ -228,7 +228,7 @@ function MemberForm({
         </select>
       </label>
 
-      <label className="block text-sm font-medium text-neutral-700">
+      <label className="block text-sm font-bold text-[#35423c]">
         Local
         <select className={SETTINGS_INPUT} name="branchId" defaultValue={member?.branch_id ?? ""} disabled={isSaving}>
           <option value="">Todos / sin restricción</option>
@@ -237,22 +237,22 @@ function MemberForm({
       </label>
 
       {member ? (
-        <label className="flex items-start gap-3 rounded-xl border border-neutral-200 p-4 text-sm">
+        <label className="flex items-start gap-3 rounded-[16px] border border-[#e8e3d7] p-4 text-sm">
           <input type="checkbox" name="active" value="true" defaultChecked={member.active} disabled={isSaving} className="mt-0.5" />
           <span>
-            <span className="block font-medium text-neutral-900">Usuario activo</span>
-            <span className="mt-0.5 block text-xs text-neutral-500">Al desactivarlo perderá acceso operativo a esta organización.</span>
+            <span className="block font-bold text-[#14201b]">Usuario activo</span>
+            <span className="mt-0.5 block text-xs text-[#7b8680]">Al desactivarlo perderá acceso operativo a esta organización.</span>
           </span>
         </label>
       ) : (
-        <p className="text-xs leading-relaxed text-neutral-500">
+        <p className="text-xs leading-relaxed text-[#7b8680]">
           Este flujo no crea cuentas de Auth. Primero crea el usuario en Supabase Auth y luego asígnalo aquí.
         </p>
       )}
 
-      <div className="flex flex-col-reverse gap-3 border-t border-neutral-100 pt-5 sm:flex-row sm:justify-end">
-        <button type="button" onClick={onCancel} disabled={isSaving} className="h-11 rounded-lg border border-neutral-200 px-5 text-sm font-medium">Cancelar</button>
-        <button type="submit" disabled={isSaving} className="h-11 rounded-lg bg-neutral-950 px-5 text-sm font-medium text-white disabled:opacity-60">
+      <div className="flex flex-col-reverse gap-3 border-t border-[#eee9df] pt-5 sm:flex-row sm:justify-end">
+        <button type="button" onClick={onCancel} disabled={isSaving} className="h-11 rounded-[13px] border border-[#e8e3d7] px-5 text-sm font-bold">Cancelar</button>
+        <button type="submit" disabled={isSaving} className="h-12 rounded-[15px] bg-orange-500 px-5 text-sm font-extrabold text-white disabled:opacity-60">
           {isSaving ? "Guardando..." : member ? "Guardar cambios" : "Agregar usuario"}
         </button>
       </div>

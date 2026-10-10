@@ -12,9 +12,9 @@ import { EXPENSE_CATEGORIES } from "../types/expense";
 import type { ExpenseActionResult } from "../server/actions";
 
 const inputClass =
-  "mt-1.5 block h-11 w-full rounded-lg border border-neutral-200 bg-white px-3.5 text-sm text-neutral-900 shadow-sm outline-none transition placeholder:text-neutral-400 focus:border-neutral-900 focus:ring-4 focus:ring-neutral-900/5 disabled:cursor-not-allowed disabled:bg-neutral-50 disabled:text-neutral-500 aria-[invalid=true]:border-red-400 aria-[invalid=true]:bg-red-50/40";
+  "mt-1.5 block h-11 w-full rounded-[13px] border border-[#e8e3d7] bg-white px-3.5 text-sm text-[#14201b] outline-none transition placeholder:text-[#9b9f99] focus:border-orange-500 focus:ring-4 focus:ring-neutral-900/5 disabled:cursor-not-allowed disabled:bg-[#f6f3ec] disabled:text-[#7b8680] aria-[invalid=true]:border-red-400 aria-[invalid=true]:bg-red-50/40";
 const textareaClass =
-  "mt-1.5 block min-h-24 w-full resize-y rounded-lg border border-neutral-200 bg-white px-3.5 py-2.5 text-sm text-neutral-900 shadow-sm outline-none transition placeholder:text-neutral-400 focus:border-neutral-900 focus:ring-4 focus:ring-neutral-900/5 disabled:bg-neutral-50";
+  "mt-1.5 block min-h-24 w-full resize-y rounded-[13px] border border-[#e8e3d7] bg-white px-3.5 py-2.5 text-sm text-[#14201b] outline-none transition placeholder:text-[#9b9f99] focus:border-orange-500 focus:ring-4 focus:ring-neutral-900/5 disabled:bg-[#f6f3ec]";
 
 function Field({
   id,
@@ -31,14 +31,14 @@ function Field({
 }) {
   return (
     <div>
-      <label htmlFor={id} className="text-sm font-medium text-neutral-800">
+      <label htmlFor={id} className="text-sm font-medium text-[#1e2d27]">
         {label}
       </label>
       {children}
       {error ? (
         <p className="mt-1.5 text-xs font-medium text-red-600">{error}</p>
       ) : hint ? (
-        <p className="mt-1.5 text-xs text-neutral-500">{hint}</p>
+        <p className="mt-1.5 text-xs text-[#7b8680]">{hint}</p>
       ) : null}
     </div>
   );
@@ -124,12 +124,12 @@ export function ExpenseForm({
     <form onSubmit={handleSubmit(submit)} className="space-y-7" noValidate>
       <section className="space-y-5">
         <div className="flex items-start gap-3">
-          <div className="flex size-8 items-center justify-center rounded-lg bg-neutral-100 text-neutral-600">
+          <div className="flex size-8 items-center justify-center rounded-[13px] bg-[#fff0e2] text-orange-600">
             <CalendarDays className="size-4" aria-hidden="true" />
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-neutral-900">Fecha y local</h3>
-            <p className="mt-0.5 text-xs text-neutral-500">
+            <h3 className="text-sm font-bold text-[#14201b]">Fecha y local</h3>
+            <p className="mt-0.5 text-xs text-[#7b8680]">
               La fecha corresponde al día del gasto, no al momento en que se registra.
             </p>
           </div>
@@ -168,16 +168,16 @@ export function ExpenseForm({
         </div>
       </section>
 
-      <div className="h-px bg-neutral-100" />
+      <div className="h-px bg-[#e9e4d6]" />
 
       <section className="space-y-5">
         <div className="flex items-start gap-3">
-          <div className="flex size-8 items-center justify-center rounded-lg bg-neutral-100 text-neutral-600">
+          <div className="flex size-8 items-center justify-center rounded-[13px] bg-[#e9e4d6] text-[#59665f]">
             <ReceiptText className="size-4" aria-hidden="true" />
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-neutral-900">Detalle</h3>
-            <p className="mt-0.5 text-xs text-neutral-500">
+            <h3 className="text-sm font-bold text-[#14201b]">Detalle</h3>
+            <p className="mt-0.5 text-xs text-[#7b8680]">
               Describe la salida de dinero de forma breve y trazable.
             </p>
           </div>
@@ -213,7 +213,7 @@ export function ExpenseForm({
         <Field id="amount" label="Monto" error={fieldError("amount")}>
           <div className="relative mt-1.5">
             <span
-              className="pointer-events-none absolute inset-y-px left-px flex w-10 items-center justify-center rounded-l-[7px] border-r border-neutral-200 bg-neutral-50 text-sm font-medium text-neutral-500"
+              className="pointer-events-none absolute inset-y-px left-px flex w-10 items-center justify-center rounded-l-[7px] border-r border-[#e8e3d7] bg-[#f6f3ec] text-sm font-medium text-[#7b8680]"
               aria-hidden="true"
             >
               S/
@@ -241,19 +241,19 @@ export function ExpenseForm({
         </Field>
       </section>
 
-      <div className="flex flex-col-reverse gap-3 border-t border-neutral-100 pt-5 sm:flex-row sm:justify-end">
+      <div className="flex flex-col-reverse gap-3 border-t border-[#eee9df] pt-5 sm:flex-row sm:justify-end">
         <button
           type="button"
           onClick={onCancel}
           disabled={busy}
-          className="h-11 rounded-lg border border-neutral-200 bg-white px-5 text-sm font-medium text-neutral-700 shadow-sm transition hover:bg-neutral-50 disabled:opacity-60"
+          className="h-11 rounded-[13px] border border-[#e8e3d7] bg-white px-5 text-sm font-medium text-[#35423c] transition hover:bg-[#f6f3ec] disabled:opacity-60"
         >
           Cancelar
         </button>
         <button
           type="submit"
           disabled={busy || branches.every((branch) => !branch.active)}
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-neutral-950 px-5 text-sm font-medium text-white shadow-sm transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex h-11 items-center justify-center gap-2 rounded-[13px] bg-[#14201b] px-5 text-sm font-medium text-white transition hover:bg-[#1e2d27] disabled:cursor-not-allowed disabled:opacity-60"
         >
           {busy ? <LoaderCircle className="size-4 animate-spin" aria-hidden="true" /> : <WalletCards className="size-4" aria-hidden="true" />}
           {busy ? "Registrando..." : "Registrar egreso"}

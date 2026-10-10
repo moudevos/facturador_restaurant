@@ -66,50 +66,50 @@ export default async function ExpensesPage({
   return (
     <section className="space-y-6">
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">Egresos</h1>
-        <p className="mt-1 text-sm text-neutral-500">
+        <h1 className="text-2xl font-bold tracking-[-0.02em] text-[#14201b]">Egresos</h1>
+        <p className="mt-1 text-sm text-[#7b8680]">
           Registro de compras y salidas de dinero. Los egresos financieros se anulan; no se editan ni eliminan.
         </p>
       </header>
 
       {!isOwner ? (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+        <div className="rounded-[14px] border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
           Tu rol es cajero. Puedes consultar los egresos permitidos por tu local, pero solo un propietario puede registrarlos o anularlos.
         </div>
       ) : null}
 
-      <form className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm" role="search">
+      <form className="rounded-[20px] border border-[#e8e3d7] bg-white p-4 shadow-sm" role="search">
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-6">
-          <label className="text-xs font-medium text-neutral-600 xl:col-span-2">
+          <label className="text-xs font-medium text-[#59665f] xl:col-span-2">
             Buscar
             <div className="relative mt-1.5">
-              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-neutral-400" aria-hidden="true" />
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#9b9f99]" aria-hidden="true" />
               <input
                 name="q"
                 defaultValue={filters.query}
                 placeholder="Descripción o notas"
-                className="h-10 w-full rounded-lg border border-neutral-200 bg-white pl-9 pr-3 text-sm outline-none focus:border-neutral-900 focus:ring-4 focus:ring-neutral-900/5"
+                className="h-10 w-full rounded-[13px] border border-[#e8e3d7] bg-white pl-9 pr-3 text-sm outline-none focus:border-orange-500 focus:ring-4 focus:ring-neutral-900/5"
               />
             </div>
           </label>
 
-          <label className="text-xs font-medium text-neutral-600">
+          <label className="text-xs font-medium text-[#59665f]">
             Desde
-            <input name="desde" type="date" defaultValue={filters.dateFrom} className="mt-1.5 h-10 w-full rounded-lg border border-neutral-200 px-3 text-sm outline-none focus:border-neutral-900" />
+            <input name="desde" type="date" defaultValue={filters.dateFrom} className="mt-1.5 h-10 w-full rounded-[13px] border border-[#e8e3d7] px-3 text-sm outline-none focus:border-orange-500" />
           </label>
 
-          <label className="text-xs font-medium text-neutral-600">
+          <label className="text-xs font-medium text-[#59665f]">
             Hasta
-            <input name="hasta" type="date" defaultValue={filters.dateTo} className="mt-1.5 h-10 w-full rounded-lg border border-neutral-200 px-3 text-sm outline-none focus:border-neutral-900" />
+            <input name="hasta" type="date" defaultValue={filters.dateTo} className="mt-1.5 h-10 w-full rounded-[13px] border border-[#e8e3d7] px-3 text-sm outline-none focus:border-orange-500" />
           </label>
 
-          <label className="text-xs font-medium text-neutral-600">
+          <label className="text-xs font-medium text-[#59665f]">
             Local
             <select
               name="local"
               defaultValue={filters.branchId}
               disabled={context.role === "cashier" && Boolean(context.branchId)}
-              className="mt-1.5 h-10 w-full rounded-lg border border-neutral-200 bg-white px-3 text-sm outline-none focus:border-neutral-900 disabled:bg-neutral-50"
+              className="mt-1.5 h-10 w-full rounded-[13px] border border-[#e8e3d7] bg-white px-3 text-sm outline-none focus:border-orange-500 disabled:bg-[#f6f3ec]"
             >
               <option value="">Todos</option>
               {branches.map((branch) => (
@@ -119,19 +119,19 @@ export default async function ExpensesPage({
             {context.role === "cashier" && context.branchId ? <input type="hidden" name="local" value={context.branchId} /> : null}
           </label>
 
-          <label className="text-xs font-medium text-neutral-600">
+          <label className="text-xs font-medium text-[#59665f]">
             Categoría
-            <select name="categoria" defaultValue={filters.category} className="mt-1.5 h-10 w-full rounded-lg border border-neutral-200 bg-white px-3 text-sm outline-none focus:border-neutral-900">
+            <select name="categoria" defaultValue={filters.category} className="mt-1.5 h-10 w-full rounded-[13px] border border-[#e8e3d7] bg-white px-3 text-sm outline-none focus:border-orange-500">
               <option value="">Todas</option>
               {EXPENSE_CATEGORIES.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
             </select>
           </label>
         </div>
 
-        <div className="mt-3 flex flex-wrap items-end justify-between gap-3 border-t border-neutral-100 pt-3">
-          <label className="text-xs font-medium text-neutral-600">
+        <div className="mt-3 flex flex-wrap items-end justify-between gap-3 border-t border-[#eee9df] pt-3">
+          <label className="text-xs font-medium text-[#59665f]">
             Estado
-            <select name="estado" defaultValue={filters.status} className="mt-1.5 h-10 rounded-lg border border-neutral-200 bg-white px-3 text-sm outline-none focus:border-neutral-900">
+            <select name="estado" defaultValue={filters.status} className="mt-1.5 h-10 rounded-[13px] border border-[#e8e3d7] bg-white px-3 text-sm outline-none focus:border-orange-500">
               <option value="activos">Activos</option>
               <option value="anulados">Anulados</option>
               <option value="todos">Todos</option>
@@ -139,10 +139,10 @@ export default async function ExpensesPage({
           </label>
 
           <div className="flex gap-2">
-            <Link href="/egresos" className="inline-flex h-10 items-center justify-center rounded-lg border border-neutral-200 bg-white px-4 text-sm font-medium text-neutral-700 hover:bg-neutral-50">
+            <Link href="/egresos" className="inline-flex h-10 items-center justify-center rounded-[13px] border border-[#e8e3d7] bg-white px-4 text-sm font-medium text-[#35423c] hover:bg-[#f6f3ec]">
               Restablecer
             </Link>
-            <button type="submit" className="h-10 rounded-lg bg-neutral-950 px-4 text-sm font-medium text-white hover:bg-neutral-800">
+            <button type="submit" className="h-10 rounded-[13px] bg-[#14201b] px-4 text-sm font-medium text-white hover:bg-[#1e2d27]">
               Aplicar filtros
             </button>
           </div>

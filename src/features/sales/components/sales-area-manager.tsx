@@ -209,14 +209,14 @@ export function SalesAreaManager({
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-col gap-3 rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 rounded-[22px] border border-[#14201b] bg-[#14201b] p-4 text-white shadow-sm sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex size-10 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
+          <div className="flex size-10 items-center justify-center rounded-[13px] bg-orange-500 text-white">
             <Store className="size-5" aria-hidden="true" />
           </div>
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-neutral-400">Local operativo</p>
-            <p className="font-semibold text-neutral-900">{branch.code} · {branch.name}</p>
+            <p className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-[#9fb0a8]">Local operativo</p>
+            <p className="font-extrabold text-white">{branch.code} · {branch.name}</p>
           </div>
         </div>
 
@@ -224,7 +224,7 @@ export function SalesAreaManager({
           <select
             value={branch.id}
             onChange={(event) => router.push(`/ventas?local=${event.target.value}`)}
-            className="h-10 rounded-lg border border-neutral-200 bg-white px-3 text-sm outline-none focus:border-neutral-900"
+            className="h-10 rounded-[12px] border border-white/10 bg-white/10 px-3 text-sm font-bold text-white outline-none focus:border-orange-400 [&>option]:text-[#14201b]"
             aria-label="Cambiar local"
           >
             {branches.map((item) => (
@@ -236,12 +236,12 @@ export function SalesAreaManager({
         ) : null}
       </div>
 
-      <div className="inline-flex rounded-xl bg-neutral-100 p-1">
+      <div className="grid w-full grid-cols-2 rounded-[14px] bg-[#e9e4d6] p-1 sm:inline-grid sm:w-auto">
         <button
           type="button"
           onClick={() => setTab("session")}
           className={`inline-flex h-9 items-center gap-2 rounded-lg px-4 text-sm font-medium transition ${
-            tab === "session" ? "bg-white text-neutral-950 shadow-sm" : "text-neutral-500"
+            tab === "session" ? "bg-white text-neutral-950 shadow-sm" : "text-[#7b8680]"
           }`}
         >
           <WalletCards className="size-4" />
@@ -251,7 +251,7 @@ export function SalesAreaManager({
           type="button"
           onClick={() => setTab("history")}
           className={`inline-flex h-9 items-center gap-2 rounded-lg px-4 text-sm font-medium transition ${
-            tab === "history" ? "bg-white text-neutral-950 shadow-sm" : "text-neutral-500"
+            tab === "history" ? "bg-white text-neutral-950 shadow-sm" : "text-[#7b8680]"
           }`}
         >
           <History className="size-4" />
@@ -260,7 +260,7 @@ export function SalesAreaManager({
       </div>
 
       {data.errorMessage ? (
-        <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+        <div role="alert" className="rounded-[14px] border border-red-200 bg-red-50 p-4 text-sm text-red-700">
           {data.errorMessage}
         </div>
       ) : null}
@@ -345,25 +345,25 @@ function NoSessionView({
 
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
+      <div className="rounded-[20px] border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
         <p className="font-semibold">Ventas bloqueadas</p>
         <p className="mt-1 text-blue-800">
           Abre una sesión de caja indicando el cajero y fondo inicial para habilitar el POS.
         </p>
       </div>
 
-      <div className="rounded-2xl border border-dashed border-neutral-300 bg-white px-6 py-12 text-center">
+      <div className="rounded-[20px] border border-dashed border-[#d8d2c0] bg-white px-6 py-12 text-center">
         <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-orange-50 text-orange-600">
           <LockKeyhole className="size-7" />
         </div>
-        <h2 className="mt-5 text-lg font-semibold text-neutral-900">No hay sesión abierta</h2>
-        <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-neutral-500">
+        <h2 className="mt-5 text-lg font-semibold text-[#14201b]">No hay sesión abierta</h2>
+        <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-[#7b8680]">
           La apertura controla el efectivo inicial, las ventas y el arqueo de cierre.
         </p>
         <button
           type="button"
           onClick={onOpen}
-          className="mt-6 inline-flex h-11 items-center gap-2 rounded-xl bg-orange-500 px-5 text-sm font-semibold text-white shadow-sm hover:bg-orange-600"
+          className="mt-6 inline-flex h-11 items-center gap-2 rounded-[14px] bg-orange-500 px-5 text-sm font-semibold text-white shadow-sm hover:bg-orange-600"
         >
           <Play className="size-4" />
           Abrir sesión
@@ -372,18 +372,18 @@ function NoSessionView({
 
       {last ? (
         <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-400">Última sesión cerrada</p>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#9b9f99]">Última sesión cerrada</p>
           <button
             type="button"
             onClick={() => onHistory(last)}
-            className="flex w-full items-center gap-3 rounded-2xl border border-neutral-200 bg-white p-4 text-left shadow-sm transition hover:border-neutral-300"
+            className="flex w-full items-center gap-3 rounded-[20px] border border-[#e8e3d7] bg-white p-4 text-left shadow-sm transition hover:border-[#d8d2c0]"
           >
-            <div className="flex size-11 items-center justify-center rounded-xl bg-neutral-100">
-              <ReceiptText className="size-5 text-neutral-500" />
+            <div className="flex size-11 items-center justify-center rounded-[14px] bg-[#e9e4d6]">
+              <ReceiptText className="size-5 text-[#7b8680]" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="font-semibold text-neutral-900">{sessionCode(last.session_id)}</p>
-              <p className="mt-1 text-xs text-neutral-500">
+              <p className="font-semibold text-[#14201b]">{sessionCode(last.session_id)}</p>
+              <p className="mt-1 text-xs text-[#7b8680]">
                 {formatSessionDateTime(last.opened_at, timeZone)} · {last.sales_count} ventas
               </p>
             </div>
@@ -453,24 +453,24 @@ function OpenSessionView({
 
   return (
     <div className="space-y-5">
-      <section className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
+      <section className="rounded-[20px] border border-[#e8e3d7] bg-white p-5 shadow-sm">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="font-semibold text-neutral-900">{sessionCode(session.session_id)}</h2>
+              <h2 className="font-semibold text-[#14201b]">{sessionCode(session.session_id)}</h2>
               <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
                 <span className="size-1.5 rounded-full bg-emerald-500" />
                 ABIERTA
               </span>
             </div>
-            <p className="mt-1 text-sm text-neutral-500">
+            <p className="mt-1 text-sm text-[#7b8680]">
               {cashier?.email || "Cajero asignado"} · desde {formatSessionTime(session.opened_at, timeZone)}
             </p>
           </div>
           <button
             type="button"
             onClick={onOpenPos}
-            className="inline-flex h-11 items-center gap-2 rounded-xl bg-orange-500 px-5 text-sm font-semibold text-white shadow-sm hover:bg-orange-600"
+            className="inline-flex h-[52px] items-center gap-2 rounded-[16px] bg-orange-500 px-5 text-sm font-extrabold text-white shadow-[0_8px_20px_-10px_#e86400] hover:bg-orange-600"
           >
             <ExternalLink className="size-4" />
             Ir a vender
@@ -489,7 +489,7 @@ function OpenSessionView({
         </div>
 
         {session.opening_note ? (
-          <p className="mt-4 rounded-xl bg-neutral-50 px-4 py-3 text-sm text-neutral-600">
+          <p className="mt-4 rounded-[14px] bg-[#f6f3ec] px-4 py-3 text-sm text-[#59665f]">
             Nota de apertura: {session.opening_note}
           </p>
         ) : null}
@@ -499,7 +499,7 @@ function OpenSessionView({
         <button
           type="button"
           onClick={onMovement}
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-neutral-200 bg-white text-sm font-semibold text-neutral-700 shadow-sm hover:bg-neutral-50"
+          className="inline-flex h-[52px] items-center justify-center gap-2 rounded-[16px] border border-[#e8e3d7] bg-white text-sm font-extrabold text-[#14201b] hover:bg-[#fbfaf6]"
         >
           <Plus className="size-4" />
           Movimiento de caja
@@ -507,7 +507,7 @@ function OpenSessionView({
         <button
           type="button"
           onClick={onClose}
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-neutral-950 text-sm font-semibold text-white shadow-sm hover:bg-neutral-800"
+          className="inline-flex h-[52px] items-center justify-center gap-2 rounded-[16px] bg-[#14201b] text-sm font-extrabold text-white hover:bg-[#1e2d27]"
         >
           <LockKeyhole className="size-4" />
           Cerrar sesión
@@ -515,9 +515,9 @@ function OpenSessionView({
       </div>
 
       <div className="grid gap-5 lg:grid-cols-2">
-        <section className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
+        <section className="rounded-[20px] border border-[#e8e3d7] bg-white p-5 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
-            <h3 className="font-semibold text-neutral-900">Ventas por método</h3>
+            <h3 className="font-semibold text-[#14201b]">Ventas por método</h3>
             <span className="text-sm font-semibold tabular-nums">{formatMoney(session.total_sales)}</span>
           </div>
           {paymentRows.length ? (
@@ -529,51 +529,51 @@ function OpenSessionView({
                 return (
                   <div key={method}>
                     <div className="flex items-center justify-between gap-3 text-sm">
-                      <span className="font-medium text-neutral-700">{PAYMENT_LABELS[method]}</span>
+                      <span className="font-medium text-[#35423c]">{PAYMENT_LABELS[method]}</span>
                       <div className="text-right">
                         <span className="font-semibold tabular-nums">{formatMoney(amount)}</span>
-                        <span className="ml-2 text-xs text-neutral-400">{pct}%</span>
+                        <span className="ml-2 text-xs text-[#9b9f99]">{pct}%</span>
                       </div>
                     </div>
-                    <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-neutral-100">
-                      <div className="h-full rounded-full bg-orange-400" style={{ width: `${Math.max(2, pct)}%` }} />
+                    <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-[#e9e4d6]">
+                      <div className="h-full rounded-full bg-orange-500" style={{ width: `${Math.max(2, pct)}%` }} />
                     </div>
                   </div>
                 );
               })}
             </div>
           ) : (
-            <p className="text-sm text-neutral-500">Aún no hay ventas en esta sesión.</p>
+            <p className="text-sm text-[#7b8680]">Aún no hay ventas en esta sesión.</p>
           )}
         </section>
 
-        <section className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
+        <section className="rounded-[20px] border border-[#e8e3d7] bg-white p-5 shadow-sm">
           <div className="mb-3 flex items-center justify-between">
-            <h3 className="font-semibold text-neutral-900">Actividad reciente</h3>
-            <Clock3 className="size-4 text-neutral-400" />
+            <h3 className="font-semibold text-[#14201b]">Actividad reciente</h3>
+            <Clock3 className="size-4 text-[#9b9f99]" />
           </div>
           {recent.length ? (
             <div className="divide-y divide-neutral-100">
               {recent.map((item) => (
                 <div key={item.key} className="flex items-center gap-3 py-3">
                   <div
-                    className={`flex size-9 items-center justify-center rounded-xl ${
+                    className={`flex size-9 items-center justify-center rounded-[14px] ${
                       item.kind === "in"
                         ? "bg-emerald-50 text-emerald-600"
                         : item.kind === "out"
                           ? "bg-red-50 text-red-600"
-                          : "bg-neutral-100 text-neutral-600"
+                          : "bg-[#e9e4d6] text-[#59665f]"
                     }`}
                   >
                     {item.kind === "in" ? <ArrowDown className="size-4" /> : item.kind === "out" ? <ArrowUp className="size-4" /> : <ReceiptText className="size-4" />}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-neutral-900">{item.title}</p>
-                    <p className="truncate text-xs text-neutral-500">
+                    <p className="truncate text-sm font-medium text-[#14201b]">{item.title}</p>
+                    <p className="truncate text-xs text-[#7b8680]">
                       {formatSessionTime(item.createdAt, timeZone)} · {item.subtitle}
                     </p>
                   </div>
-                  <p className={`text-sm font-semibold tabular-nums ${item.kind === "out" ? "text-red-600" : item.kind === "in" ? "text-emerald-600" : "text-neutral-900"}`}>
+                  <p className={`text-sm font-semibold tabular-nums ${item.kind === "out" ? "text-red-600" : item.kind === "in" ? "text-emerald-600" : "text-[#14201b]"}`}>
                     {item.kind === "out" ? "−" : item.kind === "in" ? "+" : ""}
                     {formatMoney(item.amount)}
                   </p>
@@ -581,7 +581,7 @@ function OpenSessionView({
               ))}
             </div>
           ) : (
-            <p className="text-sm text-neutral-500">Todavía no hay actividad registrada.</p>
+            <p className="text-sm text-[#7b8680]">Todavía no hay actividad registrada.</p>
           )}
         </section>
       </div>
@@ -616,14 +616,14 @@ function SessionHistory({
               key={session.session_id}
               type="button"
               onClick={() => onDetail(session)}
-              className="flex w-full items-center gap-3 rounded-2xl border border-neutral-200 bg-white p-4 text-left shadow-sm transition hover:border-neutral-300"
+              className="flex w-full items-center gap-3 rounded-[20px] border border-[#e8e3d7] bg-white p-4 text-left shadow-sm transition hover:border-[#d8d2c0]"
             >
-              <div className="flex size-11 items-center justify-center rounded-xl bg-neutral-100">
-                <ReceiptText className="size-5 text-neutral-500" />
+              <div className="flex size-11 items-center justify-center rounded-[14px] bg-[#e9e4d6]">
+                <ReceiptText className="size-5 text-[#7b8680]" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="font-semibold text-neutral-900">{sessionCode(session.session_id)}</p>
-                <p className="mt-1 text-xs text-neutral-500">
+                <p className="font-semibold text-[#14201b]">{sessionCode(session.session_id)}</p>
+                <p className="mt-1 text-xs text-[#7b8680]">
                   {formatSessionDateTime(session.opened_at, timeZone)} · {sessionDuration(session.opened_at, session.closed_at)}
                 </p>
               </div>
@@ -635,7 +635,7 @@ function SessionHistory({
           ))}
         </div>
       ) : (
-        <div className="rounded-2xl border border-dashed border-neutral-300 bg-white px-6 py-12 text-center text-sm text-neutral-500">
+        <div className="rounded-[20px] border border-dashed border-[#d8d2c0] bg-white px-6 py-12 text-center text-sm text-[#7b8680]">
           Aún no hay sesiones cerradas.
         </div>
       )}
@@ -676,15 +676,15 @@ function OpenSessionModal({
     >
       <div className="space-y-5">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">Cajero responsable</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-[#9b9f99]">Cajero responsable</p>
           <div className="mt-2 space-y-2">
             {cashiers.map((item) => (
               <button
                 key={item.user_id}
                 type="button"
                 onClick={() => setCashier(item.user_id)}
-                className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left transition ${
-                  cashier === item.user_id ? "border-orange-400 bg-orange-50" : "border-neutral-200"
+                className={`flex w-full items-center gap-3 rounded-[14px] border p-3 text-left transition ${
+                  cashier === item.user_id ? "border-orange-400 bg-orange-50" : "border-[#e8e3d7]"
                 }`}
               >
                 <div className="flex size-9 items-center justify-center rounded-full bg-neutral-900 text-xs font-semibold text-white">
@@ -692,23 +692,23 @@ function OpenSessionModal({
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium">{item.email || "Cajero actual"}</p>
-                  <p className="text-xs text-neutral-500">{item.role === "owner" ? "Propietario" : "Cajero"}</p>
+                  <p className="text-xs text-[#7b8680]">{item.role === "owner" ? "Propietario" : "Cajero"}</p>
                 </div>
-                <span className={`size-4 rounded-full border-4 ${cashier === item.user_id ? "border-orange-500" : "border-neutral-200"}`} />
+                <span className={`size-4 rounded-full border-4 ${cashier === item.user_id ? "border-orange-500" : "border-[#e8e3d7]"}`} />
               </button>
             ))}
           </div>
         </div>
 
-        <label className="block text-sm font-medium text-neutral-700">
+        <label className="block text-sm font-medium text-[#35423c]">
           Fondo inicial de caja
           <div className="relative mt-1.5">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-neutral-400">S/</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-[#9b9f99]">S/</span>
             <input
               value={cash}
               onChange={(event) => setCash(event.target.value.replace(/[^0-9.]/g, ""))}
               inputMode="decimal"
-              className="h-11 w-full rounded-xl border border-neutral-200 pl-9 pr-3 text-lg font-semibold tabular-nums outline-none focus:border-orange-400"
+              className="h-11 w-full rounded-[14px] border border-[#e8e3d7] pl-9 pr-3 text-lg font-semibold tabular-nums outline-none focus:border-orange-400"
             />
           </div>
         </label>
@@ -719,33 +719,33 @@ function OpenSessionModal({
               key={value}
               type="button"
               onClick={() => setCash(String(value))}
-              className="rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm font-medium hover:bg-neutral-50"
+              className="rounded-lg border border-[#e8e3d7] bg-white px-3 py-2 text-sm font-medium hover:bg-[#f6f3ec]"
             >
               S/ {value}
             </button>
           ))}
         </div>
 
-        <label className="block text-sm font-medium text-neutral-700">
+        <label className="block text-sm font-medium text-[#35423c]">
           Nota de apertura
           <input
             value={note}
             onChange={(event) => setNote(event.target.value)}
             maxLength={300}
             placeholder="Opcional"
-            className="mt-1.5 h-11 w-full rounded-xl border border-neutral-200 px-3 text-sm outline-none focus:border-orange-400"
+            className="mt-1.5 h-11 w-full rounded-[14px] border border-[#e8e3d7] px-3 text-sm outline-none focus:border-orange-400"
           />
         </label>
 
-        <div className="flex flex-col-reverse gap-2 border-t border-neutral-100 pt-5 sm:flex-row sm:justify-end">
-          <button type="button" onClick={onClose} disabled={pending} className="h-11 rounded-xl border border-neutral-200 px-5 text-sm font-semibold">
+        <div className="flex flex-col-reverse gap-2 border-t border-[#eee9df] pt-5 sm:flex-row sm:justify-end">
+          <button type="button" onClick={onClose} disabled={pending} className="h-11 rounded-[14px] border border-[#e8e3d7] px-5 text-sm font-semibold">
             Cancelar
           </button>
           <button
             type="button"
             disabled={!valid || pending}
             onClick={() => void onSubmit({ cashierUserId: cashier, openingCash: Number(cash), openingNote: note })}
-            className="h-11 rounded-xl bg-orange-500 px-5 text-sm font-semibold text-white disabled:opacity-50"
+            className="h-11 rounded-[14px] bg-orange-500 px-5 text-sm font-semibold text-white disabled:opacity-50"
           >
             {pending ? "Abriendo..." : `Abrir con ${formatMoney(Number(cash))}`}
           </button>
@@ -798,18 +798,18 @@ function CashMovementModal({
       size="md"
     >
       <div className="space-y-5">
-        <div className="grid grid-cols-2 rounded-xl bg-neutral-100 p-1">
+        <div className="grid grid-cols-2 rounded-[14px] bg-[#e9e4d6] p-1">
           <button
             type="button"
             onClick={() => changeType("in")}
-            className={`h-10 rounded-lg text-sm font-semibold ${type === "in" ? "bg-white text-emerald-700 shadow-sm" : "text-neutral-500"}`}
+            className={`h-10 rounded-lg text-sm font-semibold ${type === "in" ? "bg-white text-emerald-700 shadow-sm" : "text-[#7b8680]"}`}
           >
             ↓ Ingreso
           </button>
           <button
             type="button"
             onClick={() => changeType("out")}
-            className={`h-10 rounded-lg text-sm font-semibold ${type === "out" ? "bg-white text-red-700 shadow-sm" : "text-neutral-500"}`}
+            className={`h-10 rounded-lg text-sm font-semibold ${type === "out" ? "bg-white text-red-700 shadow-sm" : "text-[#7b8680]"}`}
           >
             ↑ Salida
           </button>
@@ -818,33 +818,33 @@ function CashMovementModal({
         <label className="block text-sm font-medium">
           Monto
           <div className="relative mt-1.5">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400">S/</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9b9f99]">S/</span>
             <input
               value={amount}
               onChange={(event) => setAmount(event.target.value.replace(/[^0-9.]/g, ""))}
               inputMode="decimal"
-              className="h-12 w-full rounded-xl border border-neutral-200 pl-9 pr-3 text-xl font-semibold tabular-nums outline-none focus:border-neutral-900"
+              className="h-12 w-full rounded-[14px] border border-[#e8e3d7] pl-9 pr-3 text-xl font-semibold tabular-nums outline-none focus:border-neutral-900"
               placeholder="0.00"
             />
           </div>
         </label>
 
         {over ? (
-          <p className="rounded-xl bg-red-50 p-3 text-sm font-medium text-red-700">
+          <p className="rounded-[14px] bg-red-50 p-3 text-sm font-medium text-red-700">
             La salida supera el efectivo esperado de {formatMoney(expectedCash)}.
           </p>
         ) : null}
 
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">Motivo</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-[#9b9f99]">Motivo</p>
           <div className="mt-2 flex flex-wrap gap-2">
             {reasons.map((item) => (
               <button
                 key={item.value}
                 type="button"
                 onClick={() => setReason(item.value)}
-                className={`rounded-xl border px-3 py-2 text-sm font-medium ${
-                  reason === item.value ? "border-orange-400 bg-orange-50 text-orange-700" : "border-neutral-200"
+                className={`rounded-[14px] border px-3 py-2 text-sm font-medium ${
+                  reason === item.value ? "border-orange-400 bg-orange-50 text-orange-700" : "border-[#e8e3d7]"
                 }`}
               >
                 {item.label}
@@ -860,19 +860,19 @@ function CashMovementModal({
             onChange={(event) => setDescription(event.target.value)}
             maxLength={300}
             placeholder="Opcional"
-            className="mt-1.5 h-11 w-full rounded-xl border border-neutral-200 px-3 text-sm outline-none"
+            className="mt-1.5 h-11 w-full rounded-[14px] border border-[#e8e3d7] px-3 text-sm outline-none"
           />
         </label>
 
-        <div className="flex flex-col-reverse gap-2 border-t border-neutral-100 pt-5 sm:flex-row sm:justify-end">
-          <button type="button" onClick={onClose} disabled={pending} className="h-11 rounded-xl border border-neutral-200 px-5 text-sm font-semibold">
+        <div className="flex flex-col-reverse gap-2 border-t border-[#eee9df] pt-5 sm:flex-row sm:justify-end">
+          <button type="button" onClick={onClose} disabled={pending} className="h-11 rounded-[14px] border border-[#e8e3d7] px-5 text-sm font-semibold">
             Cancelar
           </button>
           <button
             type="button"
             disabled={!valid || pending}
             onClick={() => void onSubmit({ movementType: type, reasonCode: reason, amount: Number(amount), description })}
-            className={`h-11 rounded-xl px-5 text-sm font-semibold text-white disabled:opacity-50 ${
+            className={`h-11 rounded-[14px] px-5 text-sm font-semibold text-white disabled:opacity-50 ${
               type === "out" ? "bg-red-600" : "bg-emerald-600"
             }`}
           >
@@ -933,22 +933,22 @@ function CloseSessionModal({
       size="lg"
     >
       <div className="space-y-5">
-        <div className="rounded-2xl bg-neutral-50 p-4">
+        <div className="rounded-[20px] bg-[#f6f3ec] p-4">
           <CashLine label="Fondo inicial" value={Number(session.opening_cash)} />
           <CashLine label="+ Ventas en efectivo" value={Number(session.cash_sales)} />
           <CashLine label="+ Ingresos de caja" value={Number(session.cash_in)} />
           <CashLine label="− Salidas de caja" value={Number(session.cash_out)} />
-          <div className="mt-3 flex items-center justify-between border-t border-dashed border-neutral-300 pt-3">
-            <span className="font-semibold text-neutral-900">Efectivo esperado</span>
+          <div className="mt-3 flex items-center justify-between border-t border-dashed border-[#d8d2c0] pt-3">
+            <span className="font-semibold text-[#14201b]">Efectivo esperado</span>
             <span className="text-lg font-semibold tabular-nums text-emerald-700">{formatMoney(expected)}</span>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 rounded-xl bg-neutral-100 p-1">
-          <button type="button" onClick={() => setMode("den")} className={`h-10 rounded-lg text-sm font-semibold ${mode === "den" ? "bg-white shadow-sm" : "text-neutral-500"}`}>
+        <div className="grid grid-cols-2 rounded-[14px] bg-[#e9e4d6] p-1">
+          <button type="button" onClick={() => setMode("den")} className={`h-10 rounded-lg text-sm font-semibold ${mode === "den" ? "bg-white shadow-sm" : "text-[#7b8680]"}`}>
             Por denominación
           </button>
-          <button type="button" onClick={() => setMode("total")} className={`h-10 rounded-lg text-sm font-semibold ${mode === "total" ? "bg-white shadow-sm" : "text-neutral-500"}`}>
+          <button type="button" onClick={() => setMode("total")} className={`h-10 rounded-lg text-sm font-semibold ${mode === "total" ? "bg-white shadow-sm" : "text-[#7b8680]"}`}>
             Monto total
           </button>
         </div>
@@ -956,12 +956,12 @@ function CloseSessionModal({
         {mode === "den" ? (
           <div className="grid gap-2 sm:grid-cols-2">
             {DENOMINATIONS.map((value) => (
-              <div key={value} className="flex items-center justify-between rounded-xl border border-neutral-200 p-2 pl-3">
+              <div key={value} className="flex items-center justify-between rounded-[14px] border border-[#e8e3d7] p-2 pl-3">
                 <div>
                   <p className="font-semibold tabular-nums">S/ {value >= 1 ? value : value.toFixed(2)}</p>
-                  <p className="text-xs text-neutral-400">{value >= 10 ? "Billete" : "Moneda"}</p>
+                  <p className="text-xs text-[#9b9f99]">{value >= 10 ? "Billete" : "Moneda"}</p>
                 </div>
-                <div className="flex items-center gap-2 rounded-lg bg-neutral-50 p-1">
+                <div className="flex items-center gap-2 rounded-lg bg-[#f6f3ec] p-1">
                   <button type="button" onClick={() => changeCount(value, -1)} className="size-8 rounded-md bg-white shadow-sm">−</button>
                   <span className="min-w-6 text-center text-sm font-semibold tabular-nums">{counts[String(value)] ?? 0}</span>
                   <button type="button" onClick={() => changeCount(value, 1)} className="size-8 rounded-md bg-white shadow-sm">+</button>
@@ -974,12 +974,12 @@ function CloseSessionModal({
             <label className="block text-sm font-medium">
               Efectivo contado
               <div className="relative mt-1.5">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400">S/</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9b9f99]">S/</span>
                 <input
                   value={total}
                   onChange={(event) => setTotal(event.target.value.replace(/[^0-9.]/g, ""))}
                   inputMode="decimal"
-                  className="h-12 w-full rounded-xl border border-neutral-200 pl-9 pr-3 text-xl font-semibold tabular-nums outline-none"
+                  className="h-12 w-full rounded-[14px] border border-[#e8e3d7] pl-9 pr-3 text-xl font-semibold tabular-nums outline-none"
                 />
               </div>
             </label>
@@ -990,7 +990,7 @@ function CloseSessionModal({
         )}
 
         <div className="flex items-center justify-between">
-          <span className="font-semibold text-neutral-700">Total contado</span>
+          <span className="font-semibold text-[#35423c]">Total contado</span>
           <span className="text-xl font-semibold tabular-nums">{formatMoney(counted)}</span>
         </div>
 
@@ -1004,19 +1004,19 @@ function CloseSessionModal({
             rows={3}
             maxLength={500}
             placeholder="Explica cualquier diferencia o incidencia."
-            className="mt-1.5 w-full rounded-xl border border-neutral-200 p-3 text-sm outline-none"
+            className="mt-1.5 w-full rounded-[14px] border border-[#e8e3d7] p-3 text-sm outline-none"
           />
         </label>
 
-        <div className="flex flex-col-reverse gap-2 border-t border-neutral-100 pt-5 sm:flex-row sm:justify-end">
-          <button type="button" onClick={onClose} disabled={pending} className="h-11 rounded-xl border border-neutral-200 px-5 text-sm font-semibold">
+        <div className="flex flex-col-reverse gap-2 border-t border-[#eee9df] pt-5 sm:flex-row sm:justify-end">
+          <button type="button" onClick={onClose} disabled={pending} className="h-11 rounded-[14px] border border-[#e8e3d7] px-5 text-sm font-semibold">
             Cancelar
           </button>
           <button
             type="button"
             disabled={!valid || pending}
             onClick={() => void onSubmit({ countedCash: counted, closingNote: note })}
-            className="h-11 rounded-xl bg-neutral-950 px-5 text-sm font-semibold text-white disabled:opacity-50"
+            className="h-11 rounded-[14px] bg-[#14201b] px-5 text-sm font-semibold text-white disabled:opacity-50"
           >
             {pending ? "Cerrando..." : "Revisar y cerrar sesión"}
           </button>
@@ -1046,7 +1046,7 @@ function SessionDetailModal({
     >
       {session ? (
         <div className="space-y-5">
-          <div className="rounded-xl border border-neutral-200 p-4">
+          <div className="rounded-[14px] border border-[#e8e3d7] p-4">
             <DetailRow label="Apertura" value={formatSessionDateTime(session.opened_at, timeZone)} />
             <DetailRow label="Cierre" value={session.closed_at ? formatSessionDateTime(session.closed_at, timeZone) : "—"} />
             <DetailRow label="Duración" value={sessionDuration(session.opened_at, session.closed_at)} />
@@ -1055,8 +1055,8 @@ function SessionDetailModal({
           </div>
 
           <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-400">Ventas por método</p>
-            <div className="rounded-xl border border-neutral-200 p-4">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#9b9f99]">Ventas por método</p>
+            <div className="rounded-[14px] border border-[#e8e3d7] p-4">
               <DetailRow label="Efectivo" value={formatMoney(session.cash_sales)} />
               <DetailRow label="Yape" value={formatMoney(session.yape_sales)} />
               <DetailRow label="Plin" value={formatMoney(session.plin_sales)} />
@@ -1066,8 +1066,8 @@ function SessionDetailModal({
           </div>
 
           <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-400">Arqueo</p>
-            <div className="rounded-xl border border-neutral-200 p-4">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#9b9f99]">Arqueo</p>
+            <div className="rounded-[14px] border border-[#e8e3d7] p-4">
               <DetailRow label="Fondo inicial" value={formatMoney(session.opening_cash)} />
               <DetailRow label="Efectivo esperado" value={formatMoney(session.closed_expected_cash)} />
               <DetailRow label="Efectivo contado" value={formatMoney(session.counted_cash)} />
@@ -1076,7 +1076,7 @@ function SessionDetailModal({
           </div>
 
           {session.closing_note ? (
-            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+            <div className="rounded-[14px] border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
               {session.closing_note}
             </div>
           ) : null}
@@ -1098,10 +1098,10 @@ function MiniStat({
   highlighted?: boolean;
 }) {
   return (
-    <div className={`rounded-2xl border p-4 ${highlighted ? "border-neutral-900 bg-neutral-900 text-white" : "border-neutral-200 bg-white"}`}>
-      <p className={`text-[11px] font-semibold uppercase tracking-wide ${highlighted ? "text-neutral-400" : "text-neutral-400"}`}>{label}</p>
-      <p className={`mt-2 text-xl font-semibold tabular-nums ${highlighted ? "text-orange-400" : "text-neutral-900"}`}>{value}</p>
-      {detail ? <p className={`mt-1 text-xs ${highlighted ? "text-neutral-400" : "text-neutral-500"}`}>{detail}</p> : null}
+    <div className={`rounded-[20px] border p-4 ${highlighted ? "border-neutral-900 bg-neutral-900 text-white" : "border-[#e8e3d7] bg-white"}`}>
+      <p className={`text-[11px] font-semibold uppercase tracking-wide ${highlighted ? "text-[#9b9f99]" : "text-[#9b9f99]"}`}>{label}</p>
+      <p className={`mt-2 text-xl font-semibold tabular-nums ${highlighted ? "text-orange-400" : "text-[#14201b]"}`}>{value}</p>
+      {detail ? <p className={`mt-1 text-xs ${highlighted ? "text-[#9b9f99]" : "text-[#7b8680]"}`}>{detail}</p> : null}
     </div>
   );
 }
@@ -1109,23 +1109,23 @@ function MiniStat({
 function CashLine({ label, value }: { label: string; value: number }) {
   return (
     <div className="flex justify-between py-1.5 text-sm">
-      <span className="text-neutral-500">{label}</span>
-      <span className="font-medium tabular-nums text-neutral-900">{formatMoney(value)}</span>
+      <span className="text-[#7b8680]">{label}</span>
+      <span className="font-medium tabular-nums text-[#14201b]">{formatMoney(value)}</span>
     </div>
   );
 }
 
 function DifferencePanel({ difference, counted }: { difference: number; counted: number }) {
   if (counted === 0) {
-    return <div className="rounded-xl bg-neutral-100 p-3 text-sm font-medium text-neutral-500">Ingresa el conteo para ver la diferencia.</div>;
+    return <div className="rounded-[14px] bg-[#e9e4d6] p-3 text-sm font-medium text-[#7b8680]">Ingresa el conteo para ver la diferencia.</div>;
   }
   if (Math.abs(difference) < 0.01) {
-    return <div className="rounded-xl bg-emerald-50 p-3 text-sm font-semibold text-emerald-700">La caja cuadra · {formatMoney(0)}</div>;
+    return <div className="rounded-[14px] bg-emerald-50 p-3 text-sm font-semibold text-emerald-700">La caja cuadra · {formatMoney(0)}</div>;
   }
   if (difference > 0) {
-    return <div className="rounded-xl bg-blue-50 p-3 text-sm font-semibold text-blue-700">Sobrante · +{formatMoney(difference)}</div>;
+    return <div className="rounded-[14px] bg-blue-50 p-3 text-sm font-semibold text-blue-700">Sobrante · +{formatMoney(difference)}</div>;
   }
-  return <div className="rounded-xl bg-red-50 p-3 text-sm font-semibold text-red-700">Faltante · −{formatMoney(Math.abs(difference))}</div>;
+  return <div className="rounded-[14px] bg-red-50 p-3 text-sm font-semibold text-red-700">Faltante · −{formatMoney(Math.abs(difference))}</div>;
 }
 
 function DifferenceBadge({ difference }: { difference: number }) {
@@ -1141,9 +1141,9 @@ function DifferenceBadge({ difference }: { difference: number }) {
 
 function DetailRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-start justify-between gap-4 border-b border-neutral-100 py-2 text-sm last:border-0">
-      <span className="text-neutral-500">{label}</span>
-      <span className="text-right font-medium text-neutral-900">{value}</span>
+    <div className="flex items-start justify-between gap-4 border-b border-[#eee9df] py-2 text-sm last:border-0">
+      <span className="text-[#7b8680]">{label}</span>
+      <span className="text-right font-medium text-[#14201b]">{value}</span>
     </div>
   );
 }

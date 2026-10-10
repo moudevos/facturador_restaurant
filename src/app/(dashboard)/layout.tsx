@@ -18,9 +18,11 @@ export default async function DashboardLayout({ children }: { children: ReactNod
 
   return (
     <FeedbackProvider>
-      <div className="flex min-h-screen bg-neutral-50/40">
+      <div className="flex min-h-dvh bg-[#f6f3ec]">
         <AppSidebar brandName={context?.tradeName ?? "Facturador Restaurant"} />
-        <main className="min-w-0 flex-1 p-5 pb-10 sm:p-8 lg:p-10">{children}</main>
+        <main className="min-w-0 flex-1 px-4 pb-28 pt-[82px] sm:px-6 lg:px-8 lg:pb-10 lg:pt-8 xl:px-10">
+          <div className="mx-auto w-full max-w-[1440px]">{children}</div>
+        </main>
       </div>
     </FeedbackProvider>
   );

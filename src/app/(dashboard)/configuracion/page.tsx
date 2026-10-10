@@ -23,10 +23,10 @@ type SettingsPageProps = {
 };
 
 const inputClass =
-  "mt-1 h-10 w-full rounded-lg border border-neutral-300 bg-white px-3 text-sm outline-none transition focus:border-neutral-500 focus:ring-2 focus:ring-neutral-200 disabled:bg-neutral-100 disabled:text-neutral-500";
+  "mt-1 h-10 w-full rounded-[13px] border border-[#d8d2c0] bg-white px-3 text-sm outline-none transition focus:border-neutral-500 focus:ring-2 focus:ring-neutral-200 disabled:bg-[#e9e4d6] disabled:text-[#7b8680]";
 const buttonClass =
-  "inline-flex h-10 items-center justify-center rounded-lg bg-neutral-950 px-4 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-50";
-const panelClass = "rounded-2xl border bg-white p-6 shadow-sm";
+  "inline-flex h-10 items-center justify-center rounded-[13px] bg-[#14201b] px-4 text-sm font-medium text-white transition hover:bg-[#1e2d27] disabled:cursor-not-allowed disabled:opacity-50";
+const panelClass = "rounded-[20px] border border-[#e8e3d7] bg-white p-4 sm:p-6";
 
 export default async function SettingsPage({ searchParams }: SettingsPageProps) {
   const params = await searchParams;
@@ -57,10 +57,10 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
         <Message success={params.success} error={params.error} />
         <section className={panelClass}>
           <div className="flex items-start gap-3">
-            <div className="rounded-xl bg-neutral-100 p-2"><Building2 className="size-5" /></div>
+            <div className="rounded-[14px] bg-[#e9e4d6] p-2"><Building2 className="size-5" /></div>
             <div>
-              <h2 className="font-semibold">Configurar el negocio</h2>
-              <p className="mt-1 text-sm text-neutral-500">
+              <h2 className="font-bold">Configurar el negocio</h2>
+              <p className="mt-1 text-sm text-[#7b8680]">
                 Este asistente crea la empresa, el local principal, tu acceso como propietario y la serie B001 para boletas.
               </p>
             </div>
@@ -128,7 +128,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
       <Message success={params.success} error={params.error} />
 
       {!isOwner ? (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+        <div className="rounded-[14px] border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
           Tu rol es cajero. Puedes consultar la configuración disponible, pero solo un propietario puede modificarla.
         </div>
       ) : null}
@@ -144,7 +144,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
               <Field label="Razón social" name="legalName" defaultValue={organization.legal_name ?? ""} disabled={!isOwner} required />
               <Field label="Nombre comercial" name="tradeName" defaultValue={organization.trade_name ?? ""} disabled={!isOwner} />
               <Field label="RUC" name="ruc" defaultValue={organization.ruc ?? ""} disabled={!isOwner} required maxLength={11} inputMode="numeric" />
-              <label className="text-sm font-medium text-neutral-700">
+              <label className="text-sm font-medium text-[#35423c]">
                 Zona horaria
                 <select className={inputClass} name="timezone" defaultValue={organization.timezone ?? "America/Lima"} disabled={!isOwner}>
                   <option value="America/Lima">America/Lima — Perú</option>
@@ -189,10 +189,10 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
         <TabPanel id="integraciones">
           <section className={panelClass}>
             <SectionTitle icon={KeyRound} title="Integraciones" description="Las credenciales sensibles permanecen en variables del servidor y nunca se guardan en tablas públicas." />
-            <div className="mt-6 flex items-center justify-between rounded-xl border p-4">
+            <div className="mt-6 flex items-center justify-between rounded-[14px] border p-4">
               <div>
                 <div className="font-medium">Intifact</div>
-                <div className="mt-1 text-sm text-neutral-500">API de facturación electrónica</div>
+                <div className="mt-1 text-sm text-[#7b8680]">API de facturación electrónica</div>
               </div>
               <div className={`rounded-full px-3 py-1 text-xs font-medium ${intifactConfigured ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>
                 {intifactConfigured ? "Configurado" : "Pendiente"}
@@ -209,9 +209,9 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
 function Header() {
   return (
     <div>
-      <div className="flex items-center gap-2 text-sm font-medium text-neutral-500"><Settings className="size-4" /> Administración</div>
-      <h1 className="mt-1 text-2xl font-semibold tracking-tight">Configuración</h1>
-      <p className="mt-2 text-sm text-neutral-500">Datos maestros del negocio, locales, series y accesos.</p>
+      <div className="flex items-center gap-2 text-sm font-medium text-[#7b8680]"><Settings className="size-4" /> Administración</div>
+      <h1 className="mt-1 text-2xl font-bold tracking-tight">Configuración</h1>
+      <p className="mt-2 text-sm text-[#7b8680]">Datos maestros del negocio, locales, series y accesos.</p>
     </div>
   );
 }
@@ -219,7 +219,7 @@ function Header() {
 function Message({ success, error }: { success?: string; error?: string }) {
   if (!success && !error) return null;
   return (
-    <div className={`flex items-start gap-2 rounded-xl border p-4 text-sm ${error ? "border-red-200 bg-red-50 text-red-800" : "border-emerald-200 bg-emerald-50 text-emerald-800"}`}>
+    <div className={`flex items-start gap-2 rounded-[14px] border p-4 text-sm ${error ? "border-red-200 bg-red-50 text-red-800" : "border-emerald-200 bg-emerald-50 text-emerald-800"}`}>
       {error ? <ShieldCheck className="mt-0.5 size-4" /> : <CircleCheck className="mt-0.5 size-4" />}
       <span>{error ?? success}</span>
     </div>
@@ -229,12 +229,12 @@ function Message({ success, error }: { success?: string; error?: string }) {
 function SectionTitle({ icon: Icon, title, description }: { icon: LucideIcon; title: string; description: string }) {
   return (
     <div className="flex items-start gap-3">
-      <div className="rounded-xl bg-neutral-100 p-2"><Icon className="size-5" /></div>
-      <div><h2 className="font-semibold">{title}</h2><p className="mt-1 text-sm text-neutral-500">{description}</p></div>
+      <div className="rounded-[14px] bg-[#e9e4d6] p-2"><Icon className="size-5" /></div>
+      <div><h2 className="font-bold">{title}</h2><p className="mt-1 text-sm text-[#7b8680]">{description}</p></div>
     </div>
   );
 }
 
 function Field({ label, className = "", ...props }: React.InputHTMLAttributes<HTMLInputElement> & { label: string }) {
-  return <label className={`text-sm font-medium text-neutral-700 ${className}`}>{label}<input className={inputClass} {...props} /></label>;
+  return <label className={`text-sm font-medium text-[#35423c] ${className}`}>{label}<input className={inputClass} {...props} /></label>;
 }

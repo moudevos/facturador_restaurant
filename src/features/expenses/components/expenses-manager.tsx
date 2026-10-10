@@ -106,20 +106,20 @@ export function ExpensesManager({
   return (
     <div className="space-y-5">
       <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-stretch">
-        <div className="flex min-h-20 items-center justify-between gap-4 rounded-2xl border border-neutral-200 bg-white px-5 py-4 shadow-sm">
+        <div className="flex min-h-20 items-center justify-between gap-4 rounded-[20px] border border-[#e8e3d7] bg-white px-5 py-4 ">
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-neutral-400">Monto del filtro</p>
-            <p className="mt-1 text-2xl font-semibold tabular-nums text-neutral-900">
+            <p className="text-xs font-medium uppercase tracking-wide text-[#9b9f99]">Monto del filtro</p>
+            <p className="mt-1 text-2xl font-bold tabular-nums text-[#14201b]">
               {formatExpenseAmount(data.totalAmount)}
             </p>
-            <p className="mt-1 text-xs text-neutral-500">
+            <p className="mt-1 text-xs text-[#7b8680]">
               {data.count} {data.count === 1 ? "registro" : "registros"}
             </p>
           </div>
           {expensesQuery.isFetching ? (
-            <LoaderCircle className="size-5 animate-spin text-neutral-300" aria-label="Actualizando egresos" />
+            <LoaderCircle className="size-5 animate-spin text-[#c6c0b3]" aria-label="Actualizando egresos" />
           ) : (
-            <ReceiptText className="size-6 text-neutral-300" aria-hidden="true" />
+            <ReceiptText className="size-6 text-[#c6c0b3]" aria-hidden="true" />
           )}
         </div>
 
@@ -128,7 +128,7 @@ export function ExpensesManager({
             type="button"
             onClick={() => setCreateOpen(true)}
             disabled={activeBranches.length === 0}
-            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-neutral-950 px-5 text-sm font-medium text-white shadow-sm transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-50 sm:min-w-44"
+            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[15px] bg-orange-500 px-5 text-sm font-extrabold text-white shadow-[0_8px_20px_-10px_#e86400] transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50 sm:min-w-44"
           >
             <Plus className="size-4" aria-hidden="true" />
             Registrar egreso
@@ -137,7 +137,7 @@ export function ExpensesManager({
       </div>
 
       {data.errorMessage ? (
-        <div role="alert" className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+        <div role="alert" className="flex items-start gap-3 rounded-[14px] border border-red-200 bg-red-50 p-4 text-sm text-red-700">
           <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
           <div>
             <p className="font-medium text-red-900">No se pudieron cargar los egresos</p>
@@ -157,19 +157,19 @@ export function ExpensesManager({
           </div>
 
           <nav aria-label="Paginación" className="flex flex-wrap items-center justify-between gap-3 text-sm">
-            <p className="text-neutral-500">
-              Mostrando <span className="font-medium text-neutral-900">{from}–{to}</span> de{" "}
-              <span className="font-medium text-neutral-900">{data.count}</span>
+            <p className="text-[#7b8680]">
+              Mostrando <span className="font-medium text-[#14201b]">{from}–{to}</span> de{" "}
+              <span className="font-medium text-[#14201b]">{data.count}</span>
             </p>
             <div className="flex gap-2">
               {filters.page > 1 ? (
-                <Link href={pageHref(filters.page - 1)} className="inline-flex h-9 items-center gap-1 rounded-lg border border-neutral-200 bg-white px-3 text-sm font-medium text-neutral-700 shadow-sm hover:bg-neutral-50">
+                <Link href={pageHref(filters.page - 1)} className="inline-flex h-9 items-center gap-1 rounded-lg border border-[#e8e3d7] bg-white px-3 text-sm font-medium text-[#35423c]  hover:bg-[#f6f3ec]">
                   <ChevronLeft className="size-4" aria-hidden="true" />
                   Anterior
                 </Link>
               ) : null}
               {filters.page < totalPages ? (
-                <Link href={pageHref(filters.page + 1)} className="inline-flex h-9 items-center gap-1 rounded-lg border border-neutral-200 bg-white px-3 text-sm font-medium text-neutral-700 shadow-sm hover:bg-neutral-50">
+                <Link href={pageHref(filters.page + 1)} className="inline-flex h-9 items-center gap-1 rounded-lg border border-[#e8e3d7] bg-white px-3 text-sm font-medium text-[#35423c]  hover:bg-[#f6f3ec]">
                   Siguiente
                   <ChevronRight className="size-4" aria-hidden="true" />
                 </Link>
@@ -178,12 +178,12 @@ export function ExpensesManager({
           </nav>
         </>
       ) : (
-        <div className="rounded-2xl border border-dashed border-neutral-300 bg-white px-6 py-14 text-center">
-          <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-neutral-100 text-neutral-500">
+        <div className="rounded-[20px] border border-dashed border-[#d8d2c0] bg-white px-6 py-14 text-center">
+          <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-[#e9e4d6] text-[#7b8680]">
             <ReceiptText className="size-5" aria-hidden="true" />
           </div>
-          <p className="mt-4 font-medium text-neutral-900">No hay egresos con estos filtros</p>
-          <p className="mt-1 text-sm text-neutral-500">
+          <p className="mt-4 font-medium text-[#14201b]">No hay egresos con estos filtros</p>
+          <p className="mt-1 text-sm text-[#7b8680]">
             Ajusta el período o registra una nueva salida de dinero.
           </p>
         </div>

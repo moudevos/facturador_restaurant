@@ -15,7 +15,7 @@ import {
 } from "../server/actions";
 
 const baseInput =
-  "block w-full rounded-lg border border-neutral-200 bg-white px-3.5 text-sm text-neutral-900 shadow-sm outline-none transition placeholder:text-neutral-400 focus:border-neutral-900 focus:ring-4 focus:ring-neutral-900/5 disabled:cursor-not-allowed disabled:bg-neutral-50 disabled:text-neutral-500 disabled:shadow-none aria-[invalid=true]:border-red-400 aria-[invalid=true]:bg-red-50/40 aria-[invalid=true]:focus:ring-red-500/10";
+  "block w-full rounded-[13px] border-[1.5px] border-[#e8e3d7] bg-white px-3.5 text-sm text-[#14201b] outline-none transition placeholder:text-[#9b9f99] focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 disabled:cursor-not-allowed disabled:bg-[#f6f3ec] disabled:text-[#7b8680] aria-[invalid=true]:border-red-400 aria-[invalid=true]:bg-red-50/40 aria-[invalid=true]:focus:ring-red-500/10";
 const inputClass = `${baseInput} h-11`;
 const textareaClass = `${baseInput} min-h-24 resize-y py-2.5 leading-relaxed`;
 const selectClass = `${inputClass} appearance-none pr-10`;
@@ -37,7 +37,7 @@ function Field({
 }) {
   return (
     <div>
-      <label htmlFor={id} className="text-sm font-medium text-neutral-800">
+      <label htmlFor={id} className="text-sm font-medium text-[#1e2d27]">
         {label}
         {required ? (
           <span className="ml-0.5 text-red-500" aria-hidden="true">
@@ -52,7 +52,7 @@ function Field({
           {error}
         </p>
       ) : hint ? (
-        <p className="mt-1.5 text-xs text-neutral-500">{hint}</p>
+        <p className="mt-1.5 text-xs text-[#7b8680]">{hint}</p>
       ) : null}
     </div>
   );
@@ -63,7 +63,7 @@ function SelectWrap({ children }: { children: ReactNode }) {
     <div className="relative">
       {children}
       <ChevronDown
-        className="pointer-events-none absolute right-3.5 top-1/2 size-4 -translate-y-1/2 text-neutral-400"
+        className="pointer-events-none absolute right-3.5 top-1/2 size-4 -translate-y-1/2 text-[#9b9f99]"
         aria-hidden="true"
       />
     </div>
@@ -84,12 +84,12 @@ function Section({
   return (
     <section className="space-y-5">
       <header className="flex items-start gap-3">
-        <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-neutral-100 text-neutral-600">
+        <div className="flex size-8 shrink-0 items-center justify-center rounded-[13px] bg-[#fff0e2] text-orange-600">
           <Icon className="size-4" aria-hidden="true" />
         </div>
         <div>
-          <h2 className="text-sm font-semibold text-neutral-900">{title}</h2>
-          <p className="mt-0.5 text-xs text-neutral-500">{description}</p>
+          <h2 className="text-sm font-bold text-[#14201b]">{title}</h2>
+          <p className="mt-0.5 text-xs text-[#7b8680]">{description}</p>
         </div>
       </header>
       {children}
@@ -209,7 +209,7 @@ export function ProductForm({
         </Field>
       </Section>
 
-      <div className="h-px bg-neutral-100" />
+      <div className="h-px bg-[#e9e4d6]" />
 
       <Section
         icon={Receipt}
@@ -220,7 +220,7 @@ export function ProductForm({
           <Field id="price" label="Precio de venta" required error={fieldError("price")}>
             <div className="relative">
               <span
-                className="pointer-events-none absolute inset-y-px left-px flex w-10 items-center justify-center rounded-l-[7px] border-r border-neutral-200 bg-neutral-50 text-sm font-medium text-neutral-500"
+                className="pointer-events-none absolute inset-y-px left-px flex w-10 items-center justify-center rounded-l-[7px] border-r border-[#e8e3d7] bg-[#f6f3ec] text-sm font-medium text-[#7b8680]"
                 aria-hidden="true"
               >
                 S/
@@ -269,15 +269,15 @@ export function ProductForm({
 
       {product ? (
         <>
-          <div className="h-px bg-neutral-100" />
+          <div className="h-px bg-[#e9e4d6]" />
           <label
-            className={`flex cursor-pointer items-center justify-between gap-4 rounded-xl border border-neutral-200 bg-neutral-50/60 p-4 transition-colors hover:bg-neutral-50 ${
+            className={`flex cursor-pointer items-center justify-between gap-4 rounded-[16px] border border-[#e8e3d7] bg-[#f6f3ec]/60 p-4 transition-colors hover:bg-[#f6f3ec] ${
               busy ? "cursor-not-allowed opacity-60" : ""
             }`}
           >
             <span>
-              <span className="block text-sm font-medium text-neutral-900">Producto activo</span>
-              <span className="mt-0.5 block text-xs text-neutral-500">
+              <span className="block text-sm font-medium text-[#14201b]">Producto activo</span>
+              <span className="mt-0.5 block text-xs text-[#7b8680]">
                 Los productos inactivos no están disponibles para nuevas ventas.
               </span>
             </span>
@@ -302,8 +302,8 @@ export function ProductForm({
         </>
       ) : null}
 
-      <div className="sticky bottom-0 z-10 -mx-6 -mb-5 flex flex-col-reverse gap-3 rounded-b-2xl border-t border-neutral-100 bg-white/90 px-6 py-4 backdrop-blur sm:flex-row sm:items-center sm:justify-between">
-        <p className="hidden text-xs text-neutral-400 sm:block">
+      <div className="sticky bottom-0 z-10 -mx-5 -mb-5 flex flex-col-reverse gap-3 border-t border-[#e8e3d7] bg-[#f6f3ec]/95 px-5 py-4 backdrop-blur sm:-mx-6 sm:-mb-6 sm:px-6 sm:flex-row sm:items-center sm:justify-between">
+        <p className="hidden text-xs text-[#9b9f99] sm:block">
           <span className="text-red-500">*</span> Campo obligatorio
         </p>
         <div className="flex flex-col-reverse gap-3 sm:flex-row">
@@ -312,7 +312,7 @@ export function ProductForm({
               type="button"
               onClick={onCancel}
               disabled={busy}
-              className="inline-flex h-11 items-center justify-center rounded-lg border border-neutral-200 bg-white px-5 text-sm font-medium text-neutral-700 shadow-sm transition-colors hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-neutral-900/10 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex h-12 items-center justify-center rounded-[15px] border border-[#e8e3d7] bg-white px-5 text-sm font-bold text-[#14201b] transition hover:bg-[#fbfaf6] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 disabled:cursor-not-allowed disabled:opacity-60"
             >
               Cancelar
             </button>
@@ -320,7 +320,7 @@ export function ProductForm({
           <button
             type="submit"
             disabled={busy}
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-neutral-900 px-5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-neutral-800 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-neutral-900/20 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-[15px] bg-orange-500 px-5 text-sm font-extrabold text-white shadow-[0_8px_20px_-10px_#e86400] transition hover:bg-orange-600 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-300/50 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {busy ? <LoaderCircle className="size-4 animate-spin" aria-hidden="true" /> : null}
             {busy ? "Guardando..." : product ? "Guardar cambios" : "Guardar producto"}

@@ -83,14 +83,14 @@ export function CustomerCreateModal({
       size="md"
     >
       <div className="space-y-4">
-        <div className="grid grid-cols-2 rounded-xl bg-neutral-100 p-1">
+        <div className="grid grid-cols-2 rounded-[14px] bg-[#e9e4d6] p-1">
           <button
             type="button"
             onClick={() => {
               setType("1");
               setDocumentNumber("");
             }}
-            className={`h-10 rounded-lg text-sm font-semibold ${type === "1" ? "bg-white shadow-sm" : "text-neutral-500"}`}
+            className={`h-10 rounded-lg text-sm font-bold ${type === "1" ? "bg-white shadow-sm" : "text-[#7b8680]"}`}
           >
             Persona · DNI
           </button>
@@ -100,7 +100,7 @@ export function CustomerCreateModal({
               setType("6");
               setDocumentNumber("");
             }}
-            className={`h-10 rounded-lg text-sm font-semibold ${type === "6" ? "bg-white shadow-sm" : "text-neutral-500"}`}
+            className={`h-10 rounded-lg text-sm font-bold ${type === "6" ? "bg-white shadow-sm" : "text-[#7b8680]"}`}
           >
             Empresa · RUC
           </button>
@@ -111,7 +111,7 @@ export function CustomerCreateModal({
           <input
             value={name}
             onChange={(event) => setName(event.target.value)}
-            className="mt-1.5 h-11 w-full rounded-xl border border-neutral-200 px-3 text-sm outline-none focus:border-orange-400"
+            className="mt-1.5 h-11 w-full rounded-[15px] border border-[#e8e3d7] px-3 text-sm outline-none focus:border-orange-500"
           />
         </label>
 
@@ -126,7 +126,7 @@ export function CustomerCreateModal({
             }
             inputMode="numeric"
             placeholder={`${expectedDigits} dígitos`}
-            className="mt-1.5 h-11 w-full rounded-xl border border-neutral-200 px-3 text-sm outline-none focus:border-orange-400"
+            className="mt-1.5 h-11 w-full rounded-[15px] border border-[#e8e3d7] px-3 text-sm outline-none focus:border-orange-500"
           />
         </label>
 
@@ -136,7 +136,7 @@ export function CustomerCreateModal({
             <input
               value={phone}
               onChange={(event) => setPhone(event.target.value)}
-              className="mt-1.5 h-11 w-full rounded-xl border border-neutral-200 px-3 text-sm outline-none"
+              className="mt-1.5 h-11 w-full rounded-[15px] border border-[#e8e3d7] px-3 text-sm outline-none"
               placeholder="Opcional"
             />
           </label>
@@ -146,7 +146,7 @@ export function CustomerCreateModal({
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               type="email"
-              className="mt-1.5 h-11 w-full rounded-xl border border-neutral-200 px-3 text-sm outline-none"
+              className="mt-1.5 h-11 w-full rounded-[15px] border border-[#e8e3d7] px-3 text-sm outline-none"
               placeholder="Opcional"
             />
           </label>
@@ -157,24 +157,24 @@ export function CustomerCreateModal({
           <input
             value={address}
             onChange={(event) => setAddress(event.target.value)}
-            className="mt-1.5 h-11 w-full rounded-xl border border-neutral-200 px-3 text-sm outline-none"
+            className="mt-1.5 h-11 w-full rounded-[15px] border border-[#e8e3d7] px-3 text-sm outline-none"
             placeholder="Opcional"
           />
         </label>
 
-        <p className="rounded-xl bg-blue-50 p-3 text-xs leading-relaxed text-blue-800">
+        <p className="rounded-[15px] bg-blue-50 p-3 text-xs leading-relaxed text-blue-800">
           Las facturas requieren seleccionar un cliente con RUC.
         </p>
 
-        <div className="flex flex-col-reverse gap-2 border-t border-neutral-100 pt-5 sm:flex-row sm:justify-end">
-          <button type="button" onClick={onClose} disabled={pending} className="h-11 rounded-xl border border-neutral-200 px-5 text-sm font-semibold">
+        <div className="flex flex-col-reverse gap-2 border-t border-[#eee9df] pt-5 sm:flex-row sm:justify-end">
+          <button type="button" onClick={onClose} disabled={pending} className="h-11 rounded-[15px] border border-[#e8e3d7] px-5 text-sm font-bold">
             Cancelar
           </button>
           <button
             type="button"
             onClick={() => void submit()}
             disabled={!valid || pending}
-            className="h-11 rounded-xl bg-orange-500 px-5 text-sm font-semibold text-white disabled:opacity-50"
+            className="h-12 rounded-[15px] bg-orange-500 px-5 text-sm font-extrabold text-white shadow-[0_8px_20px_-10px_#e86400] disabled:opacity-50"
           >
             {pending ? "Guardando..." : "Guardar cliente"}
           </button>
