@@ -74,6 +74,63 @@ export async function validateWithIntifactCompute(
   return computed;
 }
 
+export async function computePersistedSaleWithIntifact(
+  context: SalesContext,
+  saleId: string,
+) {
+  const supabase = await createClient();
+
+  const [{ data: sale, error: saleError }, { data: items, error: itemsError }] =
+    await Promise.all([
+      supabase
+        .from("sales")
+        .select("id, currency, total_amount, commercial_status")
+        .eq("id", saleId)
+        .eq("organization_id", context.organizationId)
+        .maybeSingle(),
+      supabase
+        .from("sale_items")
+        .select("description, quantity, unit_price, tax_affectation_code")
+        .eq("sale_id", saleId)
+        .eq("organization_id", context.organizationId)
+        .order("created_at"),
+    ]);
+
+  if (
+    saleError ||
+    !sale ||
+    sale.commercial_status !== "pending" ||
+    itemsError ||
+    !items?.length
+  ) {
+    throw new Error(
+      "La operación pendiente no tiene un snapshot fiscal válido para reintentar.",
+    );
+  }
+
+  const computed = await computeInvoice({
+    tipoMoneda: sale.currency,
+    preciosIncluyenIgv: true,
+    items: items.map((item) => ({
+      descripcion: item.description,
+      cantidad: Number(item.quantity),
+      valorUnitario: Number(item.unit_price),
+      afectacion: item.tax_affectation_code as "10" | "20" | "30",
+    })),
+  });
+
+  const expectedTotal = Number(sale.total_amount);
+  const computedTotal = Number(computed.montoImpVenta ?? expectedTotal);
+
+  if (Math.abs(computedTotal - expectedTotal) > 0.02) {
+    throw new Error(
+      `Intifact recalculó ${computedTotal.toFixed(2)} y el snapshot de la venta conserva ${expectedTotal.toFixed(2)}. No se reintentó la emisión.`,
+    );
+  }
+
+  return computed;
+}
+
 export async function emitPersistedSaleToIntifact(
   context: SalesContext,
   saleId: string,
@@ -86,7 +143,7 @@ export async function emitPersistedSaleToIntifact(
       supabase
         .from("sales")
         .select(
-          "id, organization_id, branch_id, customer_id, document_type, series, correlative, currency, fiscal_issue_date, customer_document_type, customer_document_number, customer_name, total_amount",
+          "id, organization_id, branch_id, customer_id, document_type, series, correlative, currency, fiscal_issue_date, customer_document_type, customer_document_number, customer_name, total_amount, intifact_attempt_count",
         )
         .eq("id", saleId)
         .eq("organization_id", context.organizationId)
@@ -235,13 +292,14 @@ export async function emitPersistedSaleToIntifact(
 
   const admin = createAdminClient();
   const attemptAt = new Date().toISOString();
+  const attemptCount = Number(sale.intifact_attempt_count ?? 0) + 1;
 
   await admin
     .from("sales")
     .update({
       intifact_payload_hash: payloadHash,
       intifact_last_attempt_at: attemptAt,
-      intifact_attempt_count: 1,
+      intifact_attempt_count: attemptCount,
       intifact_error_message: null,
     })
     .eq("id", saleId);

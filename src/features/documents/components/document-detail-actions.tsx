@@ -6,6 +6,7 @@ import { RefreshCw, RotateCcw } from "lucide-react";
 import { useFeedback } from "@/components/feedback";
 import {
   retryFiscalDocumentAction,
+  retryPendingEmissionAction,
   syncDocumentsAction,
 } from "../server/actions";
 
@@ -27,6 +28,8 @@ export function DocumentDetailActions({
     ["draft", "queued", "processing"].includes(status) ||
     (status === "error" && commercialStatus === "pending");
   const canRetry = isOwner && status === "queue_failed";
+  const canRetryPending =
+    isOwner && status === "error" && commercialStatus === "pending";
 
   async function sync() {
     const result = await withLoading(() => syncDocumentsAction([saleId]), {
@@ -35,6 +38,33 @@ export function DocumentDetailActions({
     });
     if (result.success) toast.success(result.message);
     else toast.warning(result.message);
+    router.refresh();
+  }
+
+  async function retryPending() {
+    const accepted = await confirm({
+      title: "Reintentar emisión pendiente",
+      description:
+        "Primero se volverá a reconciliar con Intifact. Solo si el documento todavía no existe se enviará nuevamente la misma serie, correlativo y fecha fiscal.",
+      tone: "warning",
+      confirmText: "Reintentar de forma segura",
+      cancelText: "Cancelar",
+    });
+
+    if (!accepted) return;
+
+    const result = await withLoading(
+      () => retryPendingEmissionAction(saleId),
+      {
+        title: "Reintentando emisión",
+        message:
+          "Conservando exactamente la misma identidad fiscal...",
+      },
+    );
+
+    if (result.success) toast.success(result.message);
+    else toast.error(result.message);
+
     router.refresh();
   }
 
@@ -60,7 +90,7 @@ export function DocumentDetailActions({
     router.refresh();
   }
 
-  if (!canSync && !canRetry) return null;
+  if (!canSync && !canRetry && !canRetryPending) return null;
 
   return (
     <div className="flex flex-wrap gap-2">
@@ -72,6 +102,16 @@ export function DocumentDetailActions({
         >
           <RefreshCw className="size-4" />
           Actualizar estado
+        </button>
+      ) : null}
+      {canRetryPending ? (
+        <button
+          type="button"
+          onClick={() => void retryPending()}
+          className="inline-flex h-11 items-center gap-2 rounded-[14px] bg-orange-500 px-4 text-sm font-extrabold text-white"
+        >
+          <RotateCcw className="size-4" />
+          Reintentar emisión
         </button>
       ) : null}
       {canRetry ? (

@@ -3,6 +3,10 @@
 import { z } from "zod";
 
 import { getSalesContext } from "@/features/sales/server/context";
+import {
+  computePersistedSaleWithIntifact,
+  emitPersistedSaleToIntifact,
+} from "@/features/sales/server/intifact-emission";
 import { syncSaleIntifactStatus } from "@/features/sales/server/intifact-status";
 import { retryDocument } from "@/lib/intifact/client";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -114,6 +118,108 @@ export async function retryFiscalDocumentAction(
         retryError instanceof Error
           ? retryError.message
           : "No se pudo reintentar el documento.",
+    };
+  }
+}
+
+
+export async function retryPendingEmissionAction(
+  saleId: string,
+): Promise<DocumentActionResult> {
+  const context = await getSalesContext();
+  if (!context) {
+    return { success: false, message: "Tu sesión de usuario no es válida." };
+  }
+
+  if (context.role !== "owner") {
+    return {
+      success: false,
+      message: "Solo el owner puede reintentar una emisión incierta.",
+    };
+  }
+
+  const parsed = uuid.safeParse(saleId);
+  if (!parsed.success) {
+    return { success: false, message: "Comprobante inválido." };
+  }
+
+  try {
+    const reconciled = await syncSaleIntifactStatus(context, parsed.data);
+
+    if (reconciled.commercialStatus === "completed") {
+      return {
+        success: true,
+        message: "Intifact ya tenía el comprobante y la venta quedó completada.",
+      };
+    }
+
+    if (reconciled.commercialStatus === "failed") {
+      return {
+        success: false,
+        message:
+          "La operación ya tiene un fallo fiscal definitivo y no debe reintentarse con el mismo flujo.",
+      };
+    }
+
+    const supabase = await createClient();
+    const { data: sale, error } = await supabase
+      .from("sales")
+      .select(
+        "id, status, commercial_status, intifact_document_id, intifact_status",
+      )
+      .eq("id", parsed.data)
+      .eq("organization_id", context.organizationId)
+      .maybeSingle();
+
+    if (error || !sale) {
+      return { success: false, message: "Comprobante no encontrado." };
+    }
+
+    if (sale.intifact_document_id) {
+      return {
+        success: true,
+        message:
+          sale.status === "queue_failed"
+            ? "El documento existe en Intifact y está en COLA_FALLIDA. Usa Reintentar cola."
+            : "El documento ya existe en Intifact. Actualiza su estado; no se generó otro envío.",
+      };
+    }
+
+    if (
+      sale.commercial_status !== "pending" ||
+      sale.status !== "error"
+    ) {
+      return {
+        success: false,
+        message:
+          "La operación no está en un estado incierto que permita reemitirla.",
+      };
+    }
+
+    const computed = await computePersistedSaleWithIntifact(
+      context,
+      sale.id,
+    );
+    const emission = await emitPersistedSaleToIntifact(
+      context,
+      sale.id,
+      computed,
+    );
+
+    return {
+      success: true,
+      message:
+        emission.commercialStatus === "completed"
+          ? "El mismo comprobante fue aceptado y la venta quedó completada."
+          : "Se reintentó la misma identidad fiscal. La operación seguirá pendiente hasta obtener un estado terminal.",
+    };
+  } catch (retryError) {
+    return {
+      success: false,
+      message:
+        retryError instanceof Error
+          ? retryError.message
+          : "No se pudo reintentar la emisión pendiente.",
     };
   }
 }

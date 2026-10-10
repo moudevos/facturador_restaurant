@@ -42,6 +42,8 @@ invoice/send
    └─ timeout/resultado incierto
                  → sigue pending
                  → reconciliar por RUC+tipo+serie+correlativo
+                 → si no existe, owner puede reintentar /send
+                   con la MISMA identidad fiscal
                  → nunca crear otro correlativo automáticamente
 ```
 
