@@ -31,6 +31,6 @@ La integración decide por `code` y `retryable`, no por el texto del mensaje:
 - HTTP 401/403: revisar token/permisos.
 - HTTP 429: se alcanzó el límite del plan.
 
-ApiPeru indica que la consulta DNI usa padrón reducido SUNAT y otras fuentes públicas, no RENIEC. Por eso un DNI sin resultado puede ser válido en la realidad. Desde el flujo manual ese DNI se puede guardar, pero la interfaz lo identifica como dato ingresado manualmente y no como resultado verificado por ApiPeru.
+ApiPeru indica que la consulta DNI usa padrón reducido SUNAT y otras fuentes públicas, no RENIEC. Por eso un DNI sin resultado puede ser válido en la realidad. Desde el flujo manual ese DNI se puede guardar. SQL 016 persiste el origen en `customers.verification_source = 'manual'`; los clientes obtenidos por la consulta normal se guardan como `apiperu` y con `verified_at`.
 
 Para `Cliente varios` no se inventa un DNI/RUC. El snapshot de la venta conserva el nombre `CLIENTE VARIOS`, mientras que el request fiscal omite por completo `clienteTipoDoc`, `clienteNumDoc` y `clienteRazonSocial` en lugar de enviarlos como `null`.

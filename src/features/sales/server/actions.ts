@@ -312,9 +312,8 @@ export async function createManualCustomerAction(input: {
   }
 
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("create_customer", {
+  const { data, error } = await supabase.rpc("create_manual_customer", {
     p_organization_id: context.organizationId,
-    p_document_type: "1",
     p_document_number: parsed.data.documentNumber,
     p_name: parsed.data.name,
     p_phone: parsed.data.phone || null,

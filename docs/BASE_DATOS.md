@@ -75,4 +75,4 @@ No se permite cerrar una sesión con ventas comerciales pendientes.
 
 ## Cliente genérico
 
-SQL 016 normaliza el caso `Cliente varios`. La fila de venta conserva `customer_name = 'CLIENTE VARIOS'`, mientras `customer_id`, tipo y número de documento permanecen vacíos. La capa Intifact no convierte esos vacíos en un DNI ficticio ni en `clienteNumDoc: null`; simplemente omite los campos de identificación del cliente.
+SQL 016 normaliza el caso `Cliente varios`. La fila de venta conserva `customer_name = 'CLIENTE VARIOS'`, mientras `customer_id`, tipo y número de documento permanecen vacíos. También agrega `customers.verification_source` y `verified_at` para distinguir clientes provenientes de ApiPeru de altas manuales. La capa Intifact no convierte esos vacíos en un DNI ficticio ni en `clienteNumDoc: null`; simplemente omite los campos de identificación del cliente.
