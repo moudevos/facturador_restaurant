@@ -133,12 +133,6 @@ export default async function ReceiptPrintPage({
           <span className="meta-label">LOCAL:</span>
           <span>{receipt.branchName}</span>
         </div>
-        {receipt.showPaymentMethod && receipt.paymentLabel ? (
-          <div className="meta-line">
-            <span className="meta-label">PAGO:</span>
-            <span>{receipt.paymentLabel}</span>
-          </div>
-        ) : null}
       </section>
 
       <section className="client">
@@ -203,7 +197,9 @@ export default async function ReceiptPrintPage({
         ) : null}
 
         <div className="total-row">
-          <span>IGV (18%)</span>
+          <span>
+            IGV ({receipt.taxableAmount > 0 ? "18%" : "0%"})
+          </span>
           <span>S/ {money(receipt.igvAmount)}</span>
         </div>
 

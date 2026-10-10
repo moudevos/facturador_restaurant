@@ -475,8 +475,11 @@ export function buildEscPosReceipt(data: ReceiptData) {
   }
 
   text(
-    line("IGV (18%)", "S/ " + money(data.igvAmount), width) +
-      "\n",
+    line(
+      "IGV (" + (data.taxableAmount > 0 ? "18%" : "0%") + ")",
+      "S/ " + money(data.igvAmount),
+      width,
+    ) + "\n",
   );
 
   push(0x1b, 0x45, 0x01);
@@ -669,12 +672,6 @@ function wrapText(value: string, width: number) {
 
   if (current) lines.push(current);
   return lines.length ? lines : [""];
-}
-
-function right(value: string, width: number) {
-  return value.length >= width
-    ? value
-    : " ".repeat(width - value.length) + value;
 }
 
 function line(
