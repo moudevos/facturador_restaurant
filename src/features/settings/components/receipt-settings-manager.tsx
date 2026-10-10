@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useMemo, useState, type ComponentType, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ComponentType, type ReactNode } from "react";
 import {
   BadgeCheck,
   Bluetooth,
@@ -66,7 +66,15 @@ export function ReceiptSettingsManager({
     settings.show_payment_method,
   );
   const [saving, setSaving] = useState(false);
-  const [printerStatus, setPrinterStatus] = useState(() => getPrinterStatus());
+  const [printerStatus, setPrinterStatus] = useState({
+    bleSupported: false,
+    bleDeviceName: null as string | null,
+    androidBridge: false,
+  });
+
+  useEffect(() => {
+    setPrinterStatus(getPrinterStatus());
+  }, []);
 
   const selectedCount = selectedCodes.length;
   const allImported = useMemo(
