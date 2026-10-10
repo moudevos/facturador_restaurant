@@ -43,6 +43,14 @@ export async function getProductContext(): Promise<ProductContext | null> {
   };
 }
 
+function normalizeProductRow(row: Record<string, unknown>): Product {
+  const category = row.category;
+  return {
+    ...row,
+    category: Array.isArray(category) ? (category[0] ?? null) : (category ?? null),
+  } as unknown as Product;
+}
+
 export async function getProduct(
   id: string,
   organizationId: string,
@@ -55,7 +63,7 @@ export async function getProduct(
     .eq("organization_id", organizationId)
     .maybeSingle();
 
-  return data as Product | null;
+  return data ? normalizeProductRow(data as unknown as Record<string, unknown>) : null;
 }
 
 export async function listProductCategories(
@@ -113,7 +121,9 @@ export async function listProducts({
     .range(from, from + PRODUCTS_PER_PAGE - 1);
 
   return {
-    products: (data ?? []) as Product[],
+    products: (data ?? []).map((row) =>
+      normalizeProductRow(row as unknown as Record<string, unknown>),
+    ),
     count: count ?? 0,
     error,
   };

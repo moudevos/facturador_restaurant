@@ -85,7 +85,12 @@ export async function listActiveProducts(context: SalesContext): Promise<Product
     .limit(300);
 
   if (error) return [];
-  return (data ?? []) as Product[];
+  return (data ?? []).map((row) => ({
+    ...row,
+    category: Array.isArray(row.category)
+      ? (row.category[0] ?? null)
+      : (row.category ?? null),
+  })) as unknown as Product[];
 }
 
 export async function listActiveCustomers(context: SalesContext): Promise<Customer[]> {

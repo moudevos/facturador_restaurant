@@ -336,7 +336,7 @@ export function buildIntifactDetailItem(input: {
     cantidad: quantity,
     codProducto: productCode,
     ...(sunatProductCode ? { codProdSunat: sunatProductCode } : {}),
-    descripcion,
+    descripcion: description,
     montoValorUnitario: round(lineSubtotal / quantity, 6),
     montoBaseIgv: round(lineSubtotal),
     porcentajeIgv: affectation === "10" ? 18 : 0,
