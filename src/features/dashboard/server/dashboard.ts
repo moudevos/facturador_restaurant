@@ -1,3 +1,4 @@
+// Dashboard consolidado. Mantener una sola implementación para evitar conflictos de merge.
 import { createClient } from "@/lib/supabase/server";
 import { getBusinessDateISO } from "@/lib/date-time";
 import type { SalesContext } from "@/features/sales/server/context";

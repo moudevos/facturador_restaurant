@@ -16,7 +16,8 @@
     "test": "vitest",
     "test:unit": "vitest run",
     "test:e2e": "playwright test",
-    "check": "pnpm lint && pnpm typecheck && pnpm test:unit"
+    "check": "pnpm check:conflicts && pnpm lint && pnpm typecheck && pnpm test:unit",
+    "check:conflicts": "node scripts/check-conflict-markers.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.7",
