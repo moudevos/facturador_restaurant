@@ -4,7 +4,7 @@ let output = "";
 try {
   output = execFileSync(
     "git",
-    ["grep", "-nE", "^(<<<<<<< |=======|>>>>>>> )", "--", "."],
+    ["grep", "-nE", "^(<<<<<<< |=======|>>>>>>> )", "--", ".", ":(exclude)scripts/check-conflict-markers.mjs"],
     { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
   );
 } catch (error) {
