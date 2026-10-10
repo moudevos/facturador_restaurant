@@ -8,7 +8,7 @@ import { AppModal } from "@/components/ui/app-modal";
 import { useFeedback } from "@/components/feedback";
 import { createBranchAction, updateBranchAction } from "@/app/(dashboard)/configuracion/actions";
 import { listBranchesAction } from "../server/list-actions";
-import type { Branch, SettingsActionResult } from "../types";
+import type { Branch } from "../types";
 import { EmptySettingsState, SETTINGS_INPUT, StatusBadge } from "./shared";
 
 type BranchMutationInput = {
