@@ -358,7 +358,11 @@ function toBase64(bytes: Uint8Array) {
 }
 
 export function buildEscPosReceipt(data: ReceiptData) {
-  const width = data.paperWidth === "80" ? 48 : 32;
+  const width = data.paperWidth === "80" || data.paperWidth === "a4" ? 48 : 32;
+  const qtyWidth = 4;
+  const unitWidth = 7;
+  const totalWidth = 7;
+  const descWidth = width - qtyWidth - unitWidth - totalWidth - 3;
   const chunks: number[] = [];
   const encoder = new TextEncoder();
 
@@ -369,66 +373,86 @@ export function buildEscPosReceipt(data: ReceiptData) {
   push(0x1b, 0x40);
   push(0x1b, 0x61, 0x01);
   push(0x1b, 0x45, 0x01);
-  text(data.displayName + "\n");
+  text(data.displayName.toUpperCase() + "\n");
   push(0x1b, 0x45, 0x00);
 
   if (data.legalName !== data.displayName) {
     text(data.legalName + "\n");
   }
 
-  text("RUC " + data.ruc + "\n");
+  text("RUC: " + data.ruc + "\n");
+  text(data.branchName + "\n");
+  if (data.branchAddress) {
+    text(data.branchAddress + "\n");
+  }
+  push(0x1b, 0x45, 0x01);
   text(data.documentTypeLabel + "\n");
   text(data.documentNumber + "\n");
+  push(0x1b, 0x45, 0x00);
 
   if (data.isTest) {
-    push(0x1b, 0x45, 0x01);
     text("DOCUMENTO DE PRUEBA\nSIN VALIDEZ FISCAL\n");
-    push(0x1b, 0x45, 0x00);
+  }
+
+  text("-".repeat(width) + "\n");
+  push(0x1b, 0x61, 0x00);
+  text(
+    "FECHA: " +
+      data.issueDateLabel +
+      "  HORA: " +
+      data.issueTimeLabel +
+      "\n",
+  );
+  text("LOCAL: " + data.branchName + "\n");
+
+  text("CLIENTE: " + data.clientName + "\n");
+  if (data.clientDocument) {
+    text(
+      (data.clientDocumentLabel || "DOC") +
+        ": " +
+        data.clientDocument +
+        "\n",
+    );
   }
 
   text("-".repeat(width) + "\n");
 
-  push(0x1b, 0x61, 0x00);
-  text("CLIENTE\n");
-  text(data.clientName + "\n");
-
-  if (data.clientDocument) {
-    text("DOC: " + data.clientDocument + "\n");
-  }
-
-  text("FECHA: " + data.fiscalDate + "\n");
-
-  if (data.showPaymentMethod && data.paymentLabel) {
-    text("PAGO: " + data.paymentLabel + "\n");
-  }
-
+  text(
+    pad("CANT", qtyWidth) +
+      " " +
+      pad("DESCRIPCION", descWidth) +
+      " " +
+      padLeft("P.UNIT", unitWidth) +
+      " " +
+      padLeft("IMPORTE", totalWidth) +
+      "\n",
+  );
   text("-".repeat(width) + "\n");
 
   for (const item of data.items) {
-    if (data.showProductCode) {
-      text(item.code + " ");
-    }
+    const label = data.showProductCode
+      ? item.code + " " + item.description
+      : item.description;
+    const lines = wrapText(label, descWidth);
 
-    text(
-      item.quantity +
-        " x " +
-        item.description +
-        "\n",
-    );
-    text(right("S/ " + money(item.total), width) + "\n");
+    lines.forEach((description, index) => {
+      text(
+        pad(index === 0 ? quantity(item.quantity) : "", qtyWidth) +
+          " " +
+          pad(description, descWidth) +
+          " " +
+          padLeft(index === 0 ? money(item.unitPrice) : "", unitWidth) +
+          " " +
+          padLeft(index === 0 ? money(item.total) : "", totalWidth) +
+          "\n",
+      );
+    });
   }
 
   text("-".repeat(width) + "\n");
 
-  if (data.taxableAmount > 0) {
-    text(
-      line(
-        "GRAVADA",
-        "S/ " + money(data.taxableAmount),
-        width,
-      ) + "\n",
-    );
-  }
+  const subtotal = Math.max(0, data.totalAmount - data.igvAmount);
+  text(line("SUBTOTAL", "S/ " + money(subtotal), width) + "\n");
 
   if (data.exoneratedAmount > 0) {
     text(
@@ -451,7 +475,8 @@ export function buildEscPosReceipt(data: ReceiptData) {
   }
 
   text(
-    line("IGV", "S/ " + money(data.igvAmount), width) + "\n",
+    line("IGV (18%)", "S/ " + money(data.igvAmount), width) +
+      "\n",
   );
 
   push(0x1b, 0x45, 0x01);
@@ -461,16 +486,43 @@ export function buildEscPosReceipt(data: ReceiptData) {
   );
   push(0x1b, 0x45, 0x00);
 
-  push(0x1b, 0x61, 0x01);
-  text("\nRepresentacion impresa del comprobante electronico\n");
-  pushQr(chunks, data.verificationUrl);
   text("\n");
+
+  if (data.showPaymentMethod && data.paymentLabel) {
+    text("FORMA DE PAGO: " + data.paymentLabel + "\n");
+  }
+
+  if (data.receivedAmount !== null) {
+    text(
+      "MONTO RECIBIDO: S/ " +
+        money(data.receivedAmount) +
+        "\n",
+    );
+  } else if (data.paymentAmount !== null) {
+    text(
+      "MONTO PAGADO: S/ " +
+        money(data.paymentAmount) +
+        "\n",
+    );
+  }
+
+  if (data.changeAmount > 0) {
+    text("VUELTO: S/ " + money(data.changeAmount) + "\n");
+  }
+
+  push(0x1b, 0x61, 0x01);
+  push(0x1b, 0x45, 0x01);
+  text("\n!GRACIAS POR SU VISITA!\n");
+  push(0x1b, 0x45, 0x00);
 
   if (data.footerText) {
     text(data.footerText + "\n");
   }
 
+  text("\nRepresentacion impresa del comprobante electronico\n");
+  pushQr(chunks, data.verificationUrl);
   text("\n\n");
+
   push(0x1d, 0x56, 0x41, 0x03);
 
   return new Uint8Array(chunks);
@@ -485,6 +537,8 @@ function testReceipt(
     documentNumber: "TEST-00000001",
     documentTypeLabel: "PRUEBA DE IMPRESIÓN",
     fiscalDate: new Date().toISOString().slice(0, 10),
+    issueDateLabel: "10/10/2026",
+    issueTimeLabel: "14:47",
     acceptedAt: null,
     displayName: "Facturador Restaurant",
     legalName: "Prueba local",
@@ -492,8 +546,12 @@ function testReceipt(
     branchName: "Caja",
     branchAddress: null,
     clientName: "CLIENTE DE PRUEBA",
-    clientDocument: null,
+    clientDocument: "73531356",
+    clientDocumentLabel: "DNI",
     paymentLabel: "Efectivo",
+    paymentAmount: 10,
+    receivedAmount: 20,
+    changeAmount: 10,
     items: [
       {
         code: "P000001",
@@ -561,6 +619,56 @@ function ascii(value: string) {
 
 function money(value: number) {
   return value.toFixed(2);
+}
+
+function quantity(value: number) {
+  return Number.isInteger(value)
+    ? String(value)
+    : value.toFixed(3).replace(/0+$/, "").replace(/\.$/, "");
+}
+
+function pad(value: string, width: number) {
+  const normalized = value.slice(0, width);
+  return normalized + " ".repeat(Math.max(0, width - normalized.length));
+}
+
+function padLeft(value: string, width: number) {
+  const normalized = value.slice(-width);
+  return " ".repeat(Math.max(0, width - normalized.length)) + normalized;
+}
+
+function wrapText(value: string, width: number) {
+  const normalized = ascii(value).trim();
+  if (!normalized) return [""];
+
+  const words = normalized.split(/\s+/);
+  const lines: string[] = [];
+  let current = "";
+
+  for (const word of words) {
+    if (word.length > width) {
+      if (current) {
+        lines.push(current);
+        current = "";
+      }
+
+      for (let index = 0; index < word.length; index += width) {
+        lines.push(word.slice(index, index + width));
+      }
+      continue;
+    }
+
+    const candidate = current ? current + " " + word : word;
+    if (candidate.length <= width) {
+      current = candidate;
+    } else {
+      if (current) lines.push(current);
+      current = word;
+    }
+  }
+
+  if (current) lines.push(current);
+  return lines.length ? lines : [""];
 }
 
 function right(value: string, width: number) {

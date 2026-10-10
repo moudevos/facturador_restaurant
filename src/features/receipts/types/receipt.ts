@@ -17,6 +17,8 @@ export type ReceiptData = {
   documentNumber: string;
   documentTypeLabel: string;
   fiscalDate: string;
+  issueDateLabel: string;
+  issueTimeLabel: string;
   acceptedAt: string | null;
   displayName: string;
   legalName: string;
@@ -25,7 +27,11 @@ export type ReceiptData = {
   branchAddress: string | null;
   clientName: string;
   clientDocument: string | null;
+  clientDocumentLabel: string | null;
   paymentLabel: string | null;
+  paymentAmount: number | null;
+  receivedAmount: number | null;
+  changeAmount: number;
   items: ReceiptItem[];
   taxableAmount: number;
   exoneratedAmount: number;

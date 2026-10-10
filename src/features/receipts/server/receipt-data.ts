@@ -3,6 +3,23 @@ import type { SalesContext } from "@/features/sales/server/context";
 import { PAYMENT_LABELS } from "@/features/sales/utils/format";
 import { createClient } from "@/lib/supabase/server";
 
+function formatFiscalDate(value: string) {
+  const [year, month, day] = value.split("-");
+  if (!year || !month || !day) return value;
+  return day + "/" + month + "/" + year;
+}
+
+function formatIssueTime(value: string | null, timeZone: string) {
+  if (!value) return "--:--";
+
+  return new Intl.DateTimeFormat("es-PE", {
+    timeZone,
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(new Date(value));
+}
+
 export async function getReceiptData(
   context: SalesContext,
   saleId: string,
@@ -12,7 +29,7 @@ export async function getReceiptData(
   const { data: sale, error: saleError } = await supabase
     .from("sales")
     .select(
-      "id, organization_id, branch_id, document_type, series, correlative, status, commercial_status, fiscal_issue_date, accepted_at, customer_document_number, customer_name, taxable_amount, igv_amount, total_amount",
+      "id, organization_id, branch_id, document_type, series, correlative, status, commercial_status, fiscal_issue_date, issued_at, accepted_at, created_at, customer_document_type, customer_document_number, customer_name, taxable_amount, igv_amount, total_amount",
     )
     .eq("id", saleId)
     .eq("organization_id", context.organizationId)
@@ -55,7 +72,9 @@ export async function getReceiptData(
       .order("created_at"),
     supabase
       .from("sale_payments")
-      .select("payment_method")
+      .select(
+        "payment_method, amount, received_amount, change_amount",
+      )
       .eq("sale_id", saleId)
       .eq("organization_id", context.organizationId)
       .eq("status", "completed")
@@ -99,6 +118,18 @@ export async function getReceiptData(
       ? PAYMENT_LABELS[paymentMethod as keyof typeof PAYMENT_LABELS]
       : null;
 
+  const issueTimestamp =
+    sale.issued_at || sale.accepted_at || sale.created_at;
+
+  const clientDocumentLabel =
+    sale.customer_document_type === "6"
+      ? "RUC"
+      : sale.customer_document_type === "1"
+        ? "DNI"
+        : sale.customer_document_number
+          ? "DOC"
+          : null;
+
   return {
     saleId: sale.id,
     documentNumber:
@@ -108,6 +139,8 @@ export async function getReceiptData(
         ? "FACTURA ELECTRÓNICA"
         : "BOLETA DE VENTA ELECTRÓNICA",
     fiscalDate: sale.fiscal_issue_date,
+    issueDateLabel: formatFiscalDate(sale.fiscal_issue_date),
+    issueTimeLabel: formatIssueTime(issueTimestamp, context.timeZone),
     acceptedAt: sale.accepted_at,
     displayName: organization.trade_name || organization.legal_name,
     legalName: organization.legal_name,
@@ -116,7 +149,19 @@ export async function getReceiptData(
     branchAddress: branchResult.data?.address ?? null,
     clientName: sale.customer_name || "CLIENTE VARIOS",
     clientDocument: sale.customer_document_number,
+    clientDocumentLabel,
     paymentLabel,
+    paymentAmount:
+      paymentResult.data?.amount === null ||
+      paymentResult.data?.amount === undefined
+        ? null
+        : Number(paymentResult.data.amount),
+    receivedAmount:
+      paymentResult.data?.received_amount === null ||
+      paymentResult.data?.received_amount === undefined
+        ? null
+        : Number(paymentResult.data.received_amount),
+    changeAmount: Number(paymentResult.data?.change_amount ?? 0),
     items: items.map((item) => ({
       code: item.product_code,
       description: item.description,
