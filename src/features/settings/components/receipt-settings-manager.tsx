@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, useState, type ComponentType, type ReactNode } from "react";
+import { useMemo, useState, useSyncExternalStore, type ComponentType, type ReactNode } from "react";
 import {
   BadgeCheck,
   Bluetooth,
@@ -36,6 +36,24 @@ import type {
   SunatEstablishment,
 } from "../types";
 
+const SERVER_PRINTER_STATUS = {
+  bleSupported: false,
+  bleDeviceName: null as string | null,
+  androidBridge: false,
+};
+
+function subscribeHydration() {
+  return () => undefined;
+}
+
+function getClientHydrationSnapshot() {
+  return true;
+}
+
+function getServerHydrationSnapshot() {
+  return false;
+}
+
 export function ReceiptSettingsManager({
   isOwner,
   tradeName,
@@ -66,15 +84,22 @@ export function ReceiptSettingsManager({
     settings.show_payment_method,
   );
   const [saving, setSaving] = useState(false);
-  const [printerStatus, setPrinterStatus] = useState({
-    bleSupported: false,
-    bleDeviceName: null as string | null,
-    androidBridge: false,
-  });
-
-  useEffect(() => {
-    setPrinterStatus(getPrinterStatus());
-  }, []);
+  const [linkedBleDeviceName, setLinkedBleDeviceName] = useState<string | null>(
+    null,
+  );
+  const hydrated = useSyncExternalStore(
+    subscribeHydration,
+    getClientHydrationSnapshot,
+    getServerHydrationSnapshot,
+  );
+  const detectedPrinterStatus = hydrated
+    ? getPrinterStatus()
+    : SERVER_PRINTER_STATUS;
+  const printerStatus = {
+    ...detectedPrinterStatus,
+    bleDeviceName:
+      linkedBleDeviceName ?? detectedPrinterStatus.bleDeviceName,
+  };
 
   const selectedCount = selectedCodes.length;
   const allImported = useMemo(
@@ -212,7 +237,7 @@ export function ReceiptSettingsManager({
   async function linkPrinter() {
     try {
       const linked = await linkBlePrinter();
-      setPrinterStatus(getPrinterStatus());
+      setLinkedBleDeviceName(linked.name || "Impresora BLE");
       toast.success(
         "Impresora vinculada: " + (linked.name || "Bluetooth BLE") + ".",
       );

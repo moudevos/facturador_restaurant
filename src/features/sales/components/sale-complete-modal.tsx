@@ -79,9 +79,12 @@ export function SaleCompleteModal({
     });
   }, [sale]);
 
+  const pollingStatus = status?.status;
+  const pollingCommercialStatus = status?.commercialStatus;
+
   useEffect(() => {
-    if (!sale || !status) return;
-    if (isTerminal(status.status, status.commercialStatus)) return;
+    if (!sale || !pollingStatus || !pollingCommercialStatus) return;
+    if (isTerminal(pollingStatus, pollingCommercialStatus)) return;
 
     const saleId = sale.saleId;
     let cancelled = false;
@@ -136,7 +139,7 @@ export function SaleCompleteModal({
       cancelled = true;
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [sale, status?.commercialStatus, status?.status]);
+  }, [sale, pollingCommercialStatus, pollingStatus]);
 
   useEffect(() => {
     if (
