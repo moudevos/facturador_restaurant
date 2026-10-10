@@ -167,32 +167,26 @@ export async function emitPersistedSaleToIntifact(
       const lineSubtotal = Number(item.line_subtotal);
       const lineIgv = Number(item.line_igv);
       const lineTotal = Number(item.line_total);
-      const affectation = item.tax_affectation_code;
-
-      return {
-        unidad: item.unit_code,
-        cantidad: quantity,
-        ...(item.product_id ? { codProducto: item.product_id } : {}),
-        descripcion: item.description,
-        montoValorUnitario: round(lineSubtotal / quantity, 6),
-        montoBaseIgv: affectation === "10" ? round(lineSubtotal) : 0,
-        porcentajeIgv: affectation === "10" ? 18 : 0,
-        igv: round(lineIgv),
-        tipAfeIgv: affectation,
-        totalImpuestos: round(lineIgv),
-        montoPrecioUnitario: round(lineTotal / quantity, 6),
-        montoValorVenta: round(lineSubtotal),
-      };
+      return buildIntifactDetailItem({
+        productId: item.product_id,
+        description: item.description,
+        unitCode: item.unit_code,
+        affectation: item.tax_affectation_code,
+        quantity,
+        lineSubtotal,
+        lineIgv,
+        lineTotal,
+      });
     }),
-    montoOperGravadas: gravadas,
-    montoOperExoneradas: exoneradas,
-    montoOperInafectas: inafectas,
+    montoOperGravadas: Number(computeData.montoOperGravadas ?? gravadas),
+    montoOperExoneradas: Number(computeData.montoOperExoneradas ?? exoneradas),
+    montoOperInafectas: Number(computeData.montoOperInafectas ?? inafectas),
     montoOperGratuitas: 0,
-    montoIgv: igv,
-    totalImpuestos: igv,
-    valorVenta,
-    subTotal: total,
-    montoImpVenta: total,
+    montoIgv: Number(computeData.montoIgv ?? igv),
+    totalImpuestos: Number(computeData.totalImpuestos ?? igv),
+    valorVenta: Number(computeData.valorVenta ?? valorVenta),
+    subTotal: Number(computeData.subTotal ?? total),
+    montoImpVenta: Number(computeData.montoImpVenta ?? total),
     leyendas: [
       {
         legendCode: "1000",
@@ -300,4 +294,50 @@ export function mapIntifactStatus(status: string) {
 function round(value: number, decimals = 2) {
   const factor = 10 ** decimals;
   return Math.round((value + Number.EPSILON) * factor) / factor;
+}
+
+
+export function buildIntifactDetailItem(input: {
+  productId: string | null;
+  description: string;
+  unitCode: string;
+  affectation: "10" | "20" | "30";
+  quantity: number;
+  lineSubtotal: number;
+  lineIgv: number;
+  lineTotal: number;
+}) {
+  const {
+    productId,
+    description,
+    unitCode,
+    affectation,
+    quantity,
+    lineSubtotal,
+    lineIgv,
+    lineTotal,
+  } = input;
+
+  if (!Number.isFinite(quantity) || quantity <= 0) {
+    throw new Error("Cantidad inválida al construir el detalle fiscal.");
+  }
+
+  // SUNAT exige TaxSubtotal por cada línea gravada, exonerada o inafecta.
+  // Para 20/30 el impuesto es 0, pero la base NO es 0: es el valor de venta
+  // de la línea. Si mandamos base 0, Intifact puede omitir el tributo del XML
+  // y SUNAT rechaza con 3105.
+  return {
+    unidad: unitCode,
+    cantidad: quantity,
+    ...(productId ? { codProducto: productId } : {}),
+    descripcion,
+    montoValorUnitario: round(lineSubtotal / quantity, 6),
+    montoBaseIgv: round(lineSubtotal),
+    porcentajeIgv: affectation === "10" ? 18 : 0,
+    igv: round(lineIgv),
+    tipAfeIgv: affectation,
+    totalImpuestos: round(lineIgv),
+    montoPrecioUnitario: round(lineTotal / quantity, 6),
+    montoValorVenta: round(lineSubtotal),
+  };
 }
