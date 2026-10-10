@@ -13,6 +13,7 @@ La base de datos se administra mediante scripts SQL versionados y ejecutados man
 7. `sql/007_configuracion_administrable.sql`
 8. `sql/008_productos_catalogo.sql`
 9. `sql/009_egresos_financieros.sql`
+10. `sql/010_pos_sesiones_clientes_pagos.sql`
 
 Al terminar:
 
@@ -22,23 +23,18 @@ from public.schema_change_log
 order by script_code;
 ```
 
-Deben aparecer `001` a `009`.
+Deben aparecer `001` a `010`.
 
 ## Regla de cambios
 
-Un archivo aplicado no se modifica ni se reutiliza. El siguiente cambio debe usar un nuevo número secuencial. Esto conserva un registro reproducible incluso sin usar un motor de migraciones.
+Un archivo aplicado no se modifica ni se reutiliza. El siguiente cambio debe usar un nuevo número secuencial.
 
 ## Bootstrap
 
-Después de crear el primer usuario en Supabase Auth y ejecutar los scripts, abre `/configuracion`. Si el usuario todavía no pertenece a una organización, la aplicación permite crear de forma atómica:
+Después de crear el primer usuario en Supabase Auth y ejecutar los scripts, abre `/configuracion` para crear organización, local principal, owner y serie B001.
 
-- organización;
-- local principal;
-- propietario;
-- serie de boleta `B001`.
+## Venta POS
 
-`templates/crear_empresa_inicial.sql` se mantiene como alternativa manual para administración.
+`create_pos_sale(...)` valida la sesión abierta, cliente, método de pago y luego llama a `create_sale_draft(...)`. Los productos y precios se vuelven a leer desde la base de datos antes de reservar el correlativo. El cobro se persiste en `sale_payments`.
 
-## Venta atómica
-
-La función `public.create_sale_draft(...)` recibe productos y cantidades, obtiene los precios desde la base de datos, reserva el correlativo y guarda cabecera/detalle en una sola transacción PostgreSQL. Si falla cualquier paso, también se revierte el correlativo.
+La venta queda localmente registrada y pagada. La emisión electrónica Intifact sigue siendo una fase separada y no debe simularse como aceptada hasta recibir el estado fiscal real.

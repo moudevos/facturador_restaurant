@@ -14,23 +14,31 @@
 - [x] Alta/edición de productos.
 - [x] Configuración visual de empresa/local.
 - [x] Gestión básica de usuarios owner/cashier.
-- [ ] Dashboard conectado a vistas SQL.
+- [x] Clientes base para boletas/facturas.
+- [x] Dashboard conectado a datos reales de Supabase.
 
-## Fase 2 — venta y boleta
+## Fase 2 — operación de venta
 
-- [ ] Carrito con Zustand.
+- [x] Área de venta con apertura/cierre de sesión de caja.
+- [x] Fondo inicial, movimientos y arqueo.
+- [x] Historial de sesiones.
+- [x] POS independiente por sesión.
+- [x] Carrito con Zustand.
+- [x] Selector de productos y clientes.
+- [x] Cobro y persistencia del medio de pago.
+- [x] Reserva atómica del correlativo mediante PostgreSQL.
 - [ ] Preview fiscal con Intifact compute.
-- [ ] Crear venta atómica en PostgreSQL.
-- [ ] Emitir boleta con Intifact.
+- [ ] Emitir boleta/factura con Intifact.
 - [ ] Estados de emisión y retry seguro.
-- [ ] Ticket 80 mm.
+- [ ] Ticket fiscal 80 mm.
 
 ## Fase 3 — control
 
 - [ ] Historial y filtros de comprobantes.
 - [ ] Anulación de boletas.
 - [x] Registro/anulación de egresos.
-- [ ] Facturado, egresos y resultado simple por período.
+- [x] Resumen operativo de ventas, egresos y sesión en Dashboard.
+- [ ] Reportes por período y exportación.
 
 ## Fase 4 — endurecimiento para producción
 

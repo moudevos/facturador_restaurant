@@ -11,7 +11,8 @@ import {
   Package,
   PanelLeftClose,
   PanelLeftOpen,
-  PlusCircle,
+  Store,
+  UsersRound,
   ReceiptText,
   Settings,
   type LucideIcon,
@@ -29,13 +30,16 @@ const NAVIGATION: readonly NavGroup[] = [
   {
     title: "Ventas",
     items: [
-      { href: "/ventas", label: "Nueva venta", icon: PlusCircle },
+      { href: "/ventas", label: "Área de venta", icon: Store },
       { href: "/comprobantes", label: "Comprobantes", icon: FileText },
     ],
   },
   {
     title: "Catálogo",
-    items: [{ href: "/productos", label: "Productos", icon: Package }],
+    items: [
+      { href: "/clientes", label: "Clientes", icon: UsersRound },
+      { href: "/productos", label: "Productos", icon: Package },
+    ],
   },
   {
     title: "Finanzas",
@@ -49,7 +53,7 @@ const NAVIGATION: readonly NavGroup[] = [
 
 const STORAGE_KEY = "ara-burger:sidebar-collapsed";
 
-export function AppSidebar() {
+export function AppSidebar({ brandName = "Facturador Restaurant" }: { brandName?: string }) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(() => {
     if (typeof window === "undefined") return false;
@@ -99,15 +103,15 @@ export function AppSidebar() {
       {/* Marca */}
       <div className="mb-4 flex h-12 items-center">
         <div className="flex size-12 shrink-0 items-center justify-center">
-          <div className="flex size-9 items-center justify-center rounded-xl bg-neutral-900 text-sm font-bold text-white">
-            A
+          <div className="flex size-9 items-center justify-center rounded-xl bg-orange-500 text-sm font-bold text-white">
+            {brandName.slice(0, 1).toUpperCase()}
           </div>
         </div>
         <div
           className={`min-w-0 overflow-hidden whitespace-nowrap transition-all duration-200 ${collapsed ? "w-0 opacity-0" : "w-full opacity-100"
             }`}
         >
-          <p className="truncate text-sm font-semibold leading-tight text-neutral-900">Ara Burger</p>
+          <p className="truncate text-sm font-semibold leading-tight text-neutral-900">{brandName}</p>
           <p className="truncate text-xs text-neutral-500">Facturador Restaurant</p>
         </div>
       </div>
