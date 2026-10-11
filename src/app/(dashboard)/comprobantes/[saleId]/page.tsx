@@ -295,6 +295,24 @@ export default async function DocumentDetailPage({
           </div>
         ) : null}
 
+        {context.role === "owner" && document.intifact_error_response ? (
+          <details className="mt-4 rounded-[14px] border border-amber-200 bg-amber-50 p-3">
+            <summary className="cursor-pointer text-xs font-extrabold text-amber-900">
+              Diagnóstico HTTP Intifact
+              {document.intifact_last_http_status
+                ? ` · HTTP ${document.intifact_last_http_status}`
+                : ""}
+            </summary>
+            <p className="mt-2 text-xs leading-relaxed text-amber-900">
+              Respuesta del proveedor para este correlativo. No reintentes una
+              venta rechazada sin revisar el error fiscal.
+            </p>
+            <pre className="mt-2 max-h-72 overflow-auto whitespace-pre-wrap break-all rounded-lg bg-white p-3 text-[11px] text-[#14201b]">
+              {JSON.stringify(document.intifact_error_response, null, 2)}
+            </pre>
+          </details>
+        ) : null}
+
         {accepted || terminalWithArtifacts ? (
           <div className="mt-4 flex flex-wrap gap-2 border-t border-[#eee9df] pt-4">
             {accepted ? (
