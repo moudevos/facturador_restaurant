@@ -79,3 +79,33 @@ Las credenciales Intifact permanecen en servidor; el navegador descarga mediante
 ## Anulación
 
 La anulación no se trata como un simple cambio de estado local. Intifact genera un RC para boletas y una RA para facturas, ambos con ticket asíncrono. Ese flujo se implementará en una fase separada persistiendo ticket, estado y motivo de baja.
+
+## Captura de errores HTTP 400 (SQL 017)
+
+Antes de desplegar la versión que mostrará la respuesta estructurada,
+ejecutar `database/sql/017_diagnostico_intifact.sql` desde el editor SQL
+de Supabase (una vez, después del 016). No repetir la migración.
+
+En una emisión rechazada por Intifact con HTTP 400, se conserva:
+- `intifact_error_message`: error legible incluyendo campo(s) inválido(s).
+- `intifact_last_http_status`: código de respuesta HTTP del proveedor.
+- `intifact_error_response`: respuesta del proveedor (JSON completo salvo
+  credenciales y cuerpos mayores de 48 KiB, que se recortan).
+- `intifact_error_response_at`: instante del error.
+
+Los datos se guardan dentro de la **misma venta** y su correlativo. El
+owner puede desplegar "Diagnóstico HTTP Intifact" en el detalle de ese
+comprobante. La API key y el JSON enviado NO se almacenan en este campo.
+Si el 017 falta, la venta continúa registrando el error en texto; el
+intento de guardar el diagnóstico es no crítico.
+
+Para diagnosticar "Cliente varios", emitir **solo una prueba en TEST**
+inferior a S/ 700. El backend envía exclusivamente
+`clienteRazonSocial: "CLIENTE VARIOS"`, sin `clienteNumDoc` ni
+`clienteTipoDoc`; no enviar valores falsos `0`, `-` ni ceros sin
+confirmación del contrato de Intifact. Si falla, abrir el detalle de la
+venta y leer el HTTP 400 exacto antes de modificar el payload.
+
+Esta captura **no corrige por sí misma** la aceptación del comprador
+genérico. Tampoco recupera errores previos al despliegue ni reenvía
+automáticamente comprobantes rechazados o comercialmente fallidos.
