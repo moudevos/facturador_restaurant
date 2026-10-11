@@ -1,5 +1,11 @@
 # Reglas de desarrollo
 
+## Flujo de ramas
+- Hasta que el proyecto pase formalmente a producción, `main` es la rama de desarrollo y concentra los cambios.
+- Realizar commits y `push` directamente a `main`; no crear ramas de funcionalidades ni PR salvo solicitud explícita.
+- Cuando se despliegue `main` en producción, cambiar al flujo de ramas por tarea con revisión antes de fusionar.
+- Antes de hacer push, ejecutar `pnpm check` y comprobar que no haya migraciones SQL pendientes de aplicar manualmente.
+
 ## Arquitectura
 - Next.js App Router con TypeScript estricto.
 - Preferir Server Components. Usar `"use client"` solo cuando haya interacción, estado o APIs del navegador.
