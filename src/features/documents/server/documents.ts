@@ -151,10 +151,24 @@ export async function getDocumentDetail(
       .order("created_at"),
   ]);
 
+  // Optional read for owners: the base document still works before SQL 017
+  // is deployed. This diagnostic is not returned to regular cashiers.
+  const diagnostic = context.role === "owner"
+    ? await supabase
+        .from("sales")
+        .select("intifact_last_http_status, intifact_error_response, intifact_error_response_at")
+        .eq("id", saleId)
+        .eq("organization_id", context.organizationId)
+        .maybeSingle()
+    : null;
+
   if (itemsResult.error || paymentsResult.error) return null;
 
   return {
     ...(sale as Omit<FiscalDocumentDetail, "branch_name" | "items" | "payments">),
+    intifact_last_http_status: diagnostic?.data?.intifact_last_http_status ?? null,
+    intifact_error_response: diagnostic?.data?.intifact_error_response ?? null,
+    intifact_error_response_at: diagnostic?.data?.intifact_error_response_at ?? null,
     branch_name: branchResult.data
       ? `${branchResult.data.code} · ${branchResult.data.name}`
       : "Local",
