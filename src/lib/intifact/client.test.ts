@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { describeIntifactError, findDocumentByFiscalIdentity } from "./client";
+import { describeIntifactError, findDocumentByFiscalIdentity, sendInvoice, IntifactApiError } from "./client";
 
 const originalKey = process.env.INTIFACT_API_KEY;
 
@@ -18,7 +18,7 @@ function jsonResponse(data: unknown, totalPages: number) {
   return {
     ok: true,
     headers: new Headers({ "content-type": "application/json" }),
-    json: async () => ({
+    text: async () => JSON.stringify({
       success: true,
       data,
       pagination: { page: 1, limit: 100, totalPages },
@@ -68,7 +68,7 @@ describe("Intifact fiscal identity reconciliation", () => {
       ok: false,
       status: 429,
       headers: new Headers({ "content-type": "application/json" }),
-      json: async () => ({ message: "Rate limit" }),
+      text: async () => JSON.stringify({ message: "Rate limit" }),
     }) as Response));
 
     await expect(
@@ -88,5 +88,43 @@ describe("Intifact fiscal identity reconciliation", () => {
         errors: { clienteTipoDoc: ["Campo requerido"] },
       }, 400),
     ).toContain("clienteTipoDoc: Campo requerido");
+  });
+});
+
+describe("HTTP 400 full validation diagnostics", () => {
+  it("keeps nested provider response and request ID for the same fiscal attempt", async () => {
+    const providerResponse = {
+      message: "Error de validación",
+      data: {
+        errors: {
+          clienteTipoDoc: ["Campo requerido"],
+          clienteNumDoc: ["Tipo de documento del comprador inválido"],
+        },
+      },
+    };
+    vi.stubGlobal("fetch", vi.fn(async () => ({
+      ok: false,
+      status: 400,
+      headers: new Headers({
+        "content-type": "application/problem+json",
+        "x-request-id": "intifact-test-correlation",
+      }),
+      text: async () => JSON.stringify(providerResponse),
+    }) as Response));
+
+    let captured: unknown;
+    try {
+      await sendInvoice({ tipoDoc: "03", serie: "B001", correlativo: "99" });
+    } catch (error) {
+      captured = error;
+    }
+
+    expect(captured).toBeInstanceOf(IntifactApiError);
+    const apiError = captured as IntifactApiError;
+    expect(apiError.status).toBe(400);
+    expect(apiError.payload).toEqual(providerResponse);
+    expect(apiError.requestId).toBe("intifact-test-correlation");
+    expect(apiError.message).toContain("clienteTipoDoc: Campo requerido");
+    expect(apiError.message).toContain("clienteNumDoc");
   });
 });
