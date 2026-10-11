@@ -54,6 +54,61 @@ async function request(path: string, init: RequestInit = {}) {
   return response;
 }
 
+/**
+ * Include field-level validation details when the provider supplies them.
+ * The generic "Error de validación" alone is not actionable in the POS.
+ */
+export function describeIntifactError(payload: unknown, status: number): string {
+  if (!payload || typeof payload !== "object") {
+    return typeof payload === "string" && payload.trim()
+      ? payload.slice(0, 700)
+      : `Intifact respondió HTTP ${status}.`;
+  }
+
+  const row = payload as Record<string, unknown>;
+  const errorObject =
+    row.error && typeof row.error === "object"
+      ? (row.error as Record<string, unknown>)
+      : null;
+
+  const primary =
+    [row.message, row.error, errorObject?.message]
+      .find((value) => typeof value === "string" && value.trim()) as string | undefined;
+
+  function flatten(value: unknown): string[] {
+    if (typeof value === "string") return value.trim() ? [value.trim()] : [];
+    if (Array.isArray(value)) return value.flatMap(flatten);
+    if (!value || typeof value !== "object") return [];
+
+    const fields = value as Record<string, unknown>;
+    if (typeof fields.message === "string") {
+      const field =
+        typeof fields.path === "string"
+          ? fields.path
+          : typeof fields.field === "string"
+            ? fields.field
+            : "";
+      return [field ? `${field}: ${fields.message}` : fields.message];
+    }
+
+    return Object.entries(fields).flatMap(([key, item]) =>
+      flatten(item).map((message) => `${key}: ${message}`),
+    );
+  }
+
+  const details = [
+    row.errors,
+    row.details,
+    row.issues,
+    errorObject?.errors,
+    errorObject?.details,
+  ].flatMap(flatten).filter((detail) => detail !== primary);
+
+  return [primary || `Intifact respondió HTTP ${status}.`, ...new Set(details)]
+    .join(" — ")
+    .slice(0, 700);
+}
+
 async function requestJson<T>(path: string, init: RequestInit = {}): Promise<T> {
   const response = await request(path, init);
   const contentType = response.headers.get("content-type") ?? "";
@@ -62,13 +117,7 @@ async function requestJson<T>(path: string, init: RequestInit = {}): Promise<T> 
     : await response.text();
 
   if (!response.ok) {
-    const message =
-      typeof payload === "object" &&
-      payload !== null &&
-      "message" in payload &&
-      typeof (payload as { message?: unknown }).message === "string"
-        ? (payload as { message: string }).message
-        : `Intifact respondió HTTP ${response.status}.`;
+    const message = describeIntifactError(payload, response.status);
 
     throw new IntifactApiError(
       message,
@@ -320,35 +369,66 @@ export async function findDocumentByFiscalIdentity(input: {
     ruc: input.ruc,
     tipoDoc: input.documentType,
     serie: input.series,
-    page: "1",
-    limit: "20",
+    limit: "100",
   });
 
-  const response = await requestJson<
-    IntifactEnvelope<unknown> & { pagination?: unknown }
-  >(`/api/v1/documents?${params.toString()}`);
-
   const expectedCorrelative = String(input.correlative).replace(/^0+/, "") || "0";
+  const maxPages = 50;
 
-  for (const value of rowsFromUnknownData(response.data)) {
-    if (!value || typeof value !== "object") continue;
-    const row = value as Record<string, unknown>;
-    const id = typeof row.id === "string" ? row.id : null;
-    const estado =
-      typeof row.estadoSunat === "string"
-        ? row.estadoSunat
-        : typeof row.estado === "string"
-          ? row.estado
-          : "PENDIENTE";
-    const correlative =
-      typeof row.correlativo === "string" || typeof row.correlativo === "number"
-        ? String(row.correlativo).replace(/^0+/, "") || "0"
-        : null;
+  for (let page = 1; page <= maxPages; page += 1) {
+    params.set("page", String(page));
+    const response = await requestJson<
+      IntifactEnvelope<unknown> & {
+        pagination?: { totalPages?: number };
+      }
+    >(`/api/v1/documents?${params.toString()}`);
 
-    if (id && correlative === expectedCorrelative) {
-      return { id, estado };
+    if (!Array.isArray(response.data)) {
+      throw new Error(
+        "Intifact devolvió un listado de documentos inesperado. No es seguro reemitir.",
+      );
+    }
+
+    for (const value of response.data) {
+      if (!value || typeof value !== "object") continue;
+      const row = value as Record<string, unknown>;
+      const id = typeof row.id === "string" ? row.id : null;
+      const estado =
+        typeof row.estadoSunat === "string"
+          ? row.estadoSunat
+          : typeof row.estado === "string"
+            ? row.estado
+            : "PENDIENTE";
+      const correlative =
+        typeof row.correlativo === "string" || typeof row.correlativo === "number"
+          ? String(row.correlativo).replace(/^0+/, "") || "0"
+          : null;
+
+      // Defensive checks in addition to the RUC/type/series API filters.
+      if (row.tipoDoc && row.tipoDoc !== input.documentType) continue;
+      if (row.serie && row.serie !== input.series) continue;
+      const company =
+        row.company && typeof row.company === "object"
+          ? (row.company as Record<string, unknown>)
+          : null;
+      if (company?.ruc && company.ruc !== input.ruc) continue;
+
+      if (id && correlative === expectedCorrelative) {
+        return { id, estado };
+      }
+    }
+
+    const totalPages = response.pagination?.totalPages;
+    if (typeof totalPages === "number" && Number.isFinite(totalPages)) {
+      if (page >= totalPages) return null;
+    } else if (response.data.length < 100) {
+      return null;
     }
   }
 
-  return null;
+  // Avoid a false "not found" after hitting a scan limit: the caller must
+  // not issue another POST until the identity has been reconciled.
+  throw new Error(
+    "El historial de Intifact supera el límite de conciliación. No se reintentó la emisión.",
+  );
 }
