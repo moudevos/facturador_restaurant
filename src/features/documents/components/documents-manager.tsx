@@ -111,14 +111,14 @@ export function DocumentsManager({
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-2.5 xl:grid-cols-4">
         <SummaryCard
-          label="Comprobantes"
+          label="Registros locales"
           value={String(data.summary.recordCount)}
-          detail="En el filtro actual"
+          detail="Incluye borradores y errores"
         />
         <SummaryCard
           label="Aceptados"
           value={formatMoney(data.summary.acceptedAmount)}
-          detail={`${data.summary.acceptedCount} documentos`}
+          detail={`${data.summary.acceptedCount} aceptados por SUNAT`}
           tone="success"
         />
         <SummaryCard
@@ -137,7 +137,7 @@ export function DocumentsManager({
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-xs font-semibold text-[#7b8680]">
-          {data.count} {data.count === 1 ? "comprobante" : "comprobantes"}
+          {data.count} {data.count === 1 ? "registro local" : "registros locales"} (no todos fueron enviados a Intifact)
         </p>
 
         {pendingIds.length ? (
