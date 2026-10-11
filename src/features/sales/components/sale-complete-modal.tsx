@@ -89,18 +89,20 @@ export function SaleCompleteModal({
     if (isTerminal(sale.fiscalStatus, sale.commercialStatus)) return;
 
     const saleId = sale.saleId;
-    const controller = new AbortController();
+    let controller: AbortController | null = null;
     let cancelled = false;
     let attempt = 0;
 
     setPollingExhausted(false);
 
     async function poll() {
-      const timeout = window.setTimeout(() => controller.abort(), 12_000);
+      controller = new AbortController();
+      const signal = controller.signal;
+      const timeout = window.setTimeout(() => controller?.abort(), 12_000);
       try {
         const response = await fetch(
           `/api/intifact/sales/${encodeURIComponent(saleId)}/status`,
-          { cache: "no-store", signal: controller.signal },
+          { cache: "no-store", signal },
         );
         const payload = (await response.json()) as FiscalStatusResponse & { error?: string };
         if (!response.ok) throw new Error(payload.error || "No se pudo consultar Intifact.");
@@ -130,7 +132,7 @@ export function SaleCompleteModal({
     timerRef.current = window.setTimeout(poll, POLL_DELAYS[0]);
     return () => {
       cancelled = true;
-      controller.abort();
+      controller?.abort();
       if (timerRef.current) clearTimeout(timerRef.current);
     };
   }, [sale?.saleId]);
