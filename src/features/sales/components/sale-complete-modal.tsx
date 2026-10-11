@@ -79,67 +79,86 @@ export function SaleCompleteModal({
     });
   }, [sale]);
 
-  const pollingStatus = status?.status;
-  const pollingCommercialStatus = status?.commercialStatus;
+  const [refreshing, setRefreshing] = useState(false);
+  const [pollingExhausted, setPollingExhausted] = useState(false);
 
+  // A single polling lifecycle per sale ID. Previously, depending on each
+  // status update restarted the 5-second timer and reset the attempt counter.
   useEffect(() => {
-    if (!sale || !pollingStatus || !pollingCommercialStatus) return;
-    if (isTerminal(pollingStatus, pollingCommercialStatus)) return;
+    if (!sale) return;
+    if (isTerminal(sale.fiscalStatus, sale.commercialStatus)) return;
 
     const saleId = sale.saleId;
+    const controller = new AbortController();
     let cancelled = false;
     let attempt = 0;
 
+    setPollingExhausted(false);
+
     async function poll() {
+      const timeout = window.setTimeout(() => controller.abort(), 12_000);
       try {
         const response = await fetch(
           `/api/intifact/sales/${encodeURIComponent(saleId)}/status`,
-          { cache: "no-store" },
+          { cache: "no-store", signal: controller.signal },
         );
         const payload = (await response.json()) as FiscalStatusResponse & { error?: string };
-
-        if (!response.ok) {
-          throw new Error(payload.error || "No se pudo consultar Intifact.");
-        }
-
+        if (!response.ok) throw new Error(payload.error || "No se pudo consultar Intifact.");
         if (cancelled) return;
         setStatus(payload);
-
-        if (
-          !isTerminal(payload.status, payload.commercialStatus) &&
-          attempt < POLL_DELAYS.length - 1
-        ) {
-          attempt += 1;
-          timerRef.current = setTimeout(poll, POLL_DELAYS[attempt]);
-        }
+        if (isTerminal(payload.status, payload.commercialStatus)) return;
       } catch (error) {
         if (cancelled) return;
-        if (attempt < POLL_DELAYS.length - 1) {
-          attempt += 1;
-          timerRef.current = setTimeout(poll, POLL_DELAYS[attempt]);
-        } else {
-          setStatus((current) =>
-            current
-              ? {
-                  ...current,
-                  errorMessage:
-                    error instanceof Error
-                      ? error.message
-                      : "No se pudo actualizar el estado fiscal.",
-                }
-              : current,
-          );
+        if (attempt >= POLL_DELAYS.length - 1) {
+          setStatus((current) => current ? {
+            ...current,
+            errorMessage: error instanceof Error ? error.message : "No se pudo consultar el estado fiscal.",
+          } : current);
         }
+      } finally {
+        window.clearTimeout(timeout);
+      }
+      if (cancelled) return;
+      attempt += 1;
+      if (attempt < POLL_DELAYS.length) {
+        timerRef.current = window.setTimeout(poll, POLL_DELAYS[attempt]);
+      } else {
+        setPollingExhausted(true);
       }
     }
 
-    timerRef.current = setTimeout(poll, POLL_DELAYS[0]);
-
+    timerRef.current = window.setTimeout(poll, POLL_DELAYS[0]);
     return () => {
       cancelled = true;
+      controller.abort();
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [sale, pollingCommercialStatus, pollingStatus]);
+  }, [sale?.saleId]);
+
+  async function refreshFiscalStatus() {
+    if (!sale || refreshing) return;
+    setRefreshing(true);
+    try {
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), 12_000);
+      try {
+        const response = await fetch(
+          `/api/intifact/sales/${encodeURIComponent(sale.saleId)}/status`,
+          { cache: "no-store", signal: controller.signal },
+        );
+        const payload = (await response.json()) as FiscalStatusResponse & { error?: string };
+        if (!response.ok) throw new Error(payload.error || "No se pudo consultar Intifact.");
+        setStatus(payload);
+        setPollingExhausted(false);
+      } finally {
+        window.clearTimeout(timeout);
+      }
+    } catch (error) {
+      toast.warning(error instanceof Error ? error.message : "No se pudo actualizar el comprobante.");
+    } finally {
+      setRefreshing(false);
+    }
+  }
 
   useEffect(() => {
     if (
@@ -274,6 +293,24 @@ export function SaleCompleteModal({
             status={status}
             paymentMethod={sale.paymentMethod}
           />
+          {status && !isTerminal(status.status, status.commercialStatus) ? (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-[14px] border border-sky-200 bg-white px-3 py-2">
+              <p className="text-xs text-[#59665f]">
+                {pollingExhausted
+                  ? "El estado sigue pendiente. Puedes continuar vendiendo y revisarlo desde Comprobantes."
+                  : "La venta quedó registrada. No repitas el cobro mientras SUNAT procesa."}
+              </p>
+              <button
+                type="button"
+                onClick={() => void refreshFiscalStatus()}
+                disabled={refreshing}
+                className="rounded-xl border border-[#e8e3d7] px-3 py-2 text-xs font-bold disabled:opacity-50"
+              >
+                {refreshing ? "Consultando..." : "Consultar estado"}
+              </button>
+            </div>
+          ) : null}
+
 
           {pdfReady ? (
             <div className="rounded-[18px] border border-[#e8e3d7] bg-white p-4">
