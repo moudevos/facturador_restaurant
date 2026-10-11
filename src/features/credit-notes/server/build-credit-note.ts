@@ -47,6 +47,9 @@ export type FullCreditNoteInput = {
  */
 export function buildFullCreditNotePayload(input: FullCreditNoteInput) {
   const sale = input.sale;
+  if (sale.status !== "accepted" || sale.commercialStatus !== "completed") {
+    throw new Error("Solo un comprobante aceptado y una venta completada admiten NC.");
+  }
   const expectedSeriesPrefix = sale.documentType === "01" ? "FC" : "BC";
 
   if (!/^\d{11}$/.test(input.issuerRuc)) throw new Error("RUC emisor inválido.");
