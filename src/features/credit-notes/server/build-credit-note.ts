@@ -1,5 +1,5 @@
-import { buildIntifactCustomerFields } from "@/features/sales/server/intifact-customer";
-import { buildIntifactDetailItem } from "@/features/sales/server/intifact-detail";
+import { buildIntifactCustomerFields } from "../../sales/server/intifact-customer";
+import { buildIntifactDetailItem } from "../../sales/server/intifact-detail";
 
 export type FullCreditNoteReason = "01" | "06";
 
