@@ -401,6 +401,13 @@ export async function createPosSaleAction(input: {
     };
   }
 
+  if (!Number.isFinite(Number(computeData.montoImpVenta))) {
+    return {
+      success: false,
+      message: "Intifact no devolvió un monto total válido. No se reservó correlativo.",
+    };
+  }
+
   if (
     parsed.data.documentType === "03" &&
     !parsed.data.customerId &&
