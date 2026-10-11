@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getSalesContext } from "./context";
 import type { DocumentType, PaymentMethod } from "../types/sales";
 import { emitPersistedSaleToIntifact, validateWithIntifactCompute } from "./intifact-emission";
+import { assertIntifactIssuerReady } from "./intifact-preflight";
 
 export type SalesActionResult<T = undefined> = {
   success: boolean;
@@ -388,6 +389,7 @@ export async function createPosSaleAction(input: {
   try {
     assertIntifactConfigured();
     createAdminClient();
+    await assertIntifactIssuerReady(context);
     computeData = await validateWithIntifactCompute(context, parsed.data.items);
   } catch (error) {
     return {
