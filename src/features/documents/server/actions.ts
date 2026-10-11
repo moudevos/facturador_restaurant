@@ -187,7 +187,7 @@ export async function retryPendingEmissionAction(
 
     if (
       sale.commercial_status !== "pending" ||
-      sale.status !== "error"
+      !["error", "draft"].includes(sale.status)
     ) {
       return {
         success: false,
