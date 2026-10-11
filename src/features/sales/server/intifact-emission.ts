@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 
 import { computeInvoice, findDocumentByFiscalIdentity, IntifactApiError, sendInvoice } from "@/lib/intifact/client";
+import { buildIntifactHttpDiagnostic } from "@/lib/intifact/error-diagnostics";
 import type { IntifactComputeData } from "@/lib/intifact/types";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -397,14 +398,47 @@ export async function emitPersistedSaleToIntifact(
       error instanceof IntifactApiError &&
       [400, 401, 403, 404].includes(error.status);
 
-    await admin
+    const { error: statusWriteError } = await admin
       .from("sales")
       .update({
         status: "error",
         intifact_error_message: message,
         intifact_last_attempt_at: attemptAt,
       })
-      .eq("id", saleId);
+      .eq("id", saleId)
+      .eq("organization_id", context.organizationId);
+
+    if (statusWriteError) {
+      throw new Error("Intifact rechazó la emisión, pero no se pudo guardar el error fiscal.");
+    }
+
+    if (error instanceof IntifactApiError) {
+      // HTTP 400 bodies normally identify exact invalid fields. Persist the
+      // complete redacted provider response, not our outbound customer payload.
+      // SQL 017 is required for this second, non-critical diagnostic write.
+      const diagnostic = buildIntifactHttpDiagnostic(
+        error.status,
+        error.payload,
+        error.requestId,
+      );
+      const { error: diagnosticWriteError } = await admin
+        .from("sales")
+        .update({
+          intifact_last_http_status: error.status,
+          intifact_error_response: diagnostic,
+          intifact_error_response_at: attemptAt,
+        })
+        .eq("id", saleId)
+        .eq("organization_id", context.organizationId);
+
+      if (diagnosticWriteError) {
+        console.warn("No se guardó el diagnóstico HTTP de Intifact. Verificar SQL 017.", {
+          saleId,
+          httpStatus: error.status,
+          dbCode: diagnosticWriteError.code,
+        });
+      }
+    }
 
     if (definitiveHttpFailure) {
       await reverseFailedSale(saleId, message);
