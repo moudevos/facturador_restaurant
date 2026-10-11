@@ -8,11 +8,11 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "node scripts/clean-next-dev-types.mjs && next build",
     "start": "next start",
     "lint": "eslint .",
     "typegen": "next typegen",
-    "typecheck": "pnpm typegen && tsc --noEmit",
+    "typecheck": "node scripts/clean-next-dev-types.mjs && pnpm typegen && tsc --noEmit",
     "test": "vitest",
     "test:unit": "vitest run",
     "test:e2e": "playwright test",
