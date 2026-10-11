@@ -123,19 +123,19 @@ export function SaleCompleteModal({
       if (cancelled) return;
       attempt += 1;
       if (attempt < POLL_DELAYS.length) {
-        timerRef.current = window.setTimeout(poll, POLL_DELAYS[attempt]);
+        timerRef.current = setTimeout(poll, POLL_DELAYS[attempt]);
       } else {
         setPollingExhausted(true);
       }
     }
 
-    timerRef.current = window.setTimeout(poll, POLL_DELAYS[0]);
+    timerRef.current = setTimeout(poll, POLL_DELAYS[0]);
     return () => {
       cancelled = true;
       controller?.abort();
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [sale?.saleId]);
+  }, [sale]);
 
   async function refreshFiscalStatus() {
     if (!sale || refreshing) return;
