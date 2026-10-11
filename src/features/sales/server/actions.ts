@@ -401,6 +401,17 @@ export async function createPosSaleAction(input: {
     };
   }
 
+  if (
+    parsed.data.documentType === "03" &&
+    !parsed.data.customerId &&
+    Number(computeData.montoImpVenta) > 700
+  ) {
+    return {
+      success: false,
+      message: "SUNAT exige identificar al comprador cuando la boleta supera S/ 700. Selecciona un cliente con documento antes de cobrar.",
+    };
+  }
+
   const supabase = await createClient();
 
   const isTest = process.env.INTIFACT_API_KEY?.startsWith("fact_test_") ?? false;
