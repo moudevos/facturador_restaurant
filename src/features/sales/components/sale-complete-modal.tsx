@@ -274,7 +274,7 @@ export function SaleCompleteModal({
         <div className="space-y-4">
           <div className="rounded-[18px] bg-[#14201b] p-4 text-white">
             <p className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-[#9fb0a8]">
-              Total cobrado
+              Importe de la operación
             </p>
             <div className="mt-1 flex items-end justify-between gap-3">
               <p className="erp-mono text-[28px] font-bold tracking-[-0.03em] text-orange-400">
