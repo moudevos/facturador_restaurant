@@ -12,7 +12,7 @@ describe("buildIntifactCustomerFields", () => {
       address: null,
     });
 
-    expect(fields).toEqual({});
+    expect(fields).toEqual({ clienteRazonSocial: "CLIENTE VARIOS" });
     expect(fields).not.toHaveProperty("clienteNumDoc");
     expect(fields).not.toHaveProperty("clienteTipoDoc");
   });
