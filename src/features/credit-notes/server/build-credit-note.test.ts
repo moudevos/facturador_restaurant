@@ -47,7 +47,7 @@ describe("Full note of credit", () => {
     expect(payload.afectadoNumDoc).toBe("B001-8");
     expect(payload.montoImpVenta).toBe(118);
     expect(payload.montoIgv).toBe(18);
-    expect(payload.clienteRazonSocial).toBe("CLIENTE VARIOS");
+    expect(payload).toHaveProperty("clienteRazonSocial", "CLIENTE VARIOS");
     expect(payload).not.toHaveProperty("clienteNumDoc");
   });
 
@@ -64,7 +64,7 @@ describe("Full note of credit", () => {
     expect(() => buildFullCreditNotePayload({ ...common, sale: factura }))
       .toThrow("FC");
     const payload = buildFullCreditNotePayload({ ...common, sale: factura, noteSeries: "FC01" });
-    expect(payload.clienteNumDoc).toBe("20100012345");
+    expect(payload).toHaveProperty("clienteNumDoc", "20100012345");
   });
 
   it("blocks inconsistent original amounts", () => {
