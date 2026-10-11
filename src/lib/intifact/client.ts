@@ -315,6 +315,26 @@ export async function listCompanies(): Promise<IntifactCompany[]> {
   });
 }
 
+/**
+ * Checks the logo configured in Intifact's issuer portal. This is different
+ * from the organization's receipt logo stored in Supabase.
+ */
+export async function hasIntifactCompanyLogo(companyId: string): Promise<boolean> {
+  const response = await request(
+    `/api/v1/companies/${encodeURIComponent(companyId)}/logo`,
+  );
+  if (response.status === 404) return false;
+  if (!response.ok) {
+    throw new IntifactApiError(
+      `No se pudo consultar el logo de Intifact (HTTP ${response.status}).`,
+      response.status,
+      null,
+      response.headers.get("retry-after"),
+    );
+  }
+  return true;
+}
+
 export async function listCompanyBranches(
   companyId: string,
 ): Promise<IntifactCompanyBranch[]> {
