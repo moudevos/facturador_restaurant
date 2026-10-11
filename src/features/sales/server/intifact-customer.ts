@@ -10,7 +10,10 @@ export function buildIntifactCustomerFields(
   customer: FiscalCustomerSnapshot,
 ): Record<string, string> {
   if (!customer.customerId) {
-    return {};
+    // SUNAT allows a boleta without buyer identification for consumer
+    // transactions <= S/ 700. Preserve the real display name and never
+    // forge a DNI/RUC or send a null document number.
+    return { clienteRazonSocial: customer.name?.trim() || "CLIENTE VARIOS" };
   }
 
   if (

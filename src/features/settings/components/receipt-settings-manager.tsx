@@ -25,6 +25,7 @@ import {
 } from "@/lib/printing";
 import {
   getVerifiedEstablishmentsAction,
+  inspectFiscalPdfBrandingAction,
   importSunatEstablishmentsAction,
   saveReceiptSettingsAction,
   uploadReceiptLogoAction,
@@ -72,6 +73,11 @@ export function ReceiptSettingsManager({
   const [establishments, setEstablishments] = useState<SunatEstablishment[]>([]);
   const [selectedCodes, setSelectedCodes] = useState<string[]>([]);
   const [logoUrl, setLogoUrl] = useState(settings.logo_url);
+  const [brandingStatus, setBrandingStatus] = useState<{
+    environment: "TEST" | "LIVE" | "UNKNOWN";
+    localLogo: boolean;
+    intifactLogo: boolean;
+  } | null>(null);
   const [tradeNameValue, setTradeNameValue] = useState(tradeName ?? "");
   const [footerText, setFooterText] = useState(settings.footer_text ?? "");
   const [paperWidth, setPaperWidth] = useState(settings.paper_width);
@@ -232,6 +238,16 @@ export function ReceiptSettingsManager({
 
     if (result.logoUrl) setLogoUrl(result.logoUrl);
     toast.success(result.message);
+  }
+
+  async function inspectBranding() {
+    const result = await withLoading(() => inspectFiscalPdfBrandingAction(), {
+      title: "Verificando PDF oficial",
+      message: "Consultando el logo del emisor registrado en Intifact...",
+    });
+    if (result.data) setBrandingStatus(result.data);
+    if (result.success) toast.success(result.message);
+    else toast.warning(result.message);
   }
 
   async function linkPrinter() {
@@ -478,6 +494,24 @@ export function ReceiptSettingsManager({
               ) : null}
             </div>
           </label>
+        </div>
+
+        <div className="mt-3 rounded-[15px] border border-amber-200 bg-amber-50 p-3 text-xs leading-relaxed text-amber-900">
+          El logo cargado aquí se usa en el ticket local del POS. El PDF A4/58/80 generado por Intifact utiliza el logo configurado en su portal de Empresas. Los documentos emitidos con una key TEST son de prueba y pueden incluir marca de agua; no se debe eliminar de un comprobante de prueba.
+          {isOwner ? (
+            <button
+              type="button"
+              onClick={() => void inspectBranding()}
+              className="mt-2 block rounded-[10px] border border-amber-300 bg-white px-3 py-2 font-bold"
+            >
+              Comprobar logo y ambiente de Intifact
+            </button>
+          ) : null}
+          {brandingStatus ? (
+            <p className="mt-2 font-bold">
+              Ambiente: {brandingStatus.environment} · Logo ticket local: {brandingStatus.localLogo ? "sí" : "no"} · Logo en Intifact: {brandingStatus.intifactLogo ? "sí" : "no"}
+            </p>
+          ) : null}
         </div>
 
         <label className="mt-4 block">

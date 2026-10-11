@@ -1,3 +1,5 @@
+import { formatIntifactError } from "./error-diagnostics";
+
 import type {
   IntifactComputeData,
   IntifactComputeRequest,
@@ -13,13 +15,15 @@ export class IntifactApiError extends Error {
   status: number;
   payload: unknown;
   retryAfter: string | null;
+  requestId: string | null;
 
-  constructor(message: string, status: number, payload: unknown, retryAfter: string | null) {
+  constructor(message: string, status: number, payload: unknown, retryAfter: string | null, requestId: string | null = null) {
     super(message);
     this.name = "IntifactApiError";
     this.status = status;
     this.payload = payload;
     this.retryAfter = retryAfter;
+    this.requestId = requestId;
   }
 }
 
@@ -54,27 +58,32 @@ async function request(path: string, init: RequestInit = {}) {
   return response;
 }
 
+/** Provider message plus field-level validation details (safe for POS). */
+export function describeIntifactError(payload: unknown, status: number): string {
+  return formatIntifactError(payload, status);
+}
+
 async function requestJson<T>(path: string, init: RequestInit = {}): Promise<T> {
   const response = await request(path, init);
-  const contentType = response.headers.get("content-type") ?? "";
-  const payload = contentType.includes("application/json")
-    ? await response.json()
-    : await response.text();
+  // Parse JSON even if the gateway sends the wrong Content-Type.
+  // Keep non-JSON validation bodies too, rather than losing HTTP 400 context.
+  const raw = await response.text();
+  let payload: unknown = raw;
+  try {
+    payload = JSON.parse(raw);
+  } catch {
+    // Proxy/gateway may return plain text or HTML.
+  }
 
   if (!response.ok) {
-    const message =
-      typeof payload === "object" &&
-      payload !== null &&
-      "message" in payload &&
-      typeof (payload as { message?: unknown }).message === "string"
-        ? (payload as { message: string }).message
-        : `Intifact respondió HTTP ${response.status}.`;
+    const message = describeIntifactError(payload, response.status);
 
     throw new IntifactApiError(
       message,
       response.status,
       payload,
       response.headers.get("retry-after"),
+      response.headers.get("x-request-id") ?? response.headers.get("x-correlation-id"),
     );
   }
 
@@ -266,6 +275,26 @@ export async function listCompanies(): Promise<IntifactCompany[]> {
   });
 }
 
+/**
+ * Checks the logo configured in Intifact's issuer portal. This is different
+ * from the organization's receipt logo stored in Supabase.
+ */
+export async function hasIntifactCompanyLogo(companyId: string): Promise<boolean> {
+  const response = await request(
+    `/api/v1/companies/${encodeURIComponent(companyId)}/logo`,
+  );
+  if (response.status === 404) return false;
+  if (!response.ok) {
+    throw new IntifactApiError(
+      `No se pudo consultar el logo de Intifact (HTTP ${response.status}).`,
+      response.status,
+      null,
+      response.headers.get("retry-after"),
+    );
+  }
+  return true;
+}
+
 export async function listCompanyBranches(
   companyId: string,
 ): Promise<IntifactCompanyBranch[]> {
@@ -320,35 +349,66 @@ export async function findDocumentByFiscalIdentity(input: {
     ruc: input.ruc,
     tipoDoc: input.documentType,
     serie: input.series,
-    page: "1",
-    limit: "20",
+    limit: "100",
   });
 
-  const response = await requestJson<
-    IntifactEnvelope<unknown> & { pagination?: unknown }
-  >(`/api/v1/documents?${params.toString()}`);
-
   const expectedCorrelative = String(input.correlative).replace(/^0+/, "") || "0";
+  const maxPages = 50;
 
-  for (const value of rowsFromUnknownData(response.data)) {
-    if (!value || typeof value !== "object") continue;
-    const row = value as Record<string, unknown>;
-    const id = typeof row.id === "string" ? row.id : null;
-    const estado =
-      typeof row.estadoSunat === "string"
-        ? row.estadoSunat
-        : typeof row.estado === "string"
-          ? row.estado
-          : "PENDIENTE";
-    const correlative =
-      typeof row.correlativo === "string" || typeof row.correlativo === "number"
-        ? String(row.correlativo).replace(/^0+/, "") || "0"
-        : null;
+  for (let page = 1; page <= maxPages; page += 1) {
+    params.set("page", String(page));
+    const response = await requestJson<
+      IntifactEnvelope<unknown> & {
+        pagination?: { totalPages?: number };
+      }
+    >(`/api/v1/documents?${params.toString()}`);
 
-    if (id && correlative === expectedCorrelative) {
-      return { id, estado };
+    if (!Array.isArray(response.data)) {
+      throw new Error(
+        "Intifact devolvió un listado de documentos inesperado. No es seguro reemitir.",
+      );
+    }
+
+    for (const value of response.data) {
+      if (!value || typeof value !== "object") continue;
+      const row = value as Record<string, unknown>;
+      const id = typeof row.id === "string" ? row.id : null;
+      const estado =
+        typeof row.estadoSunat === "string"
+          ? row.estadoSunat
+          : typeof row.estado === "string"
+            ? row.estado
+            : "PENDIENTE";
+      const correlative =
+        typeof row.correlativo === "string" || typeof row.correlativo === "number"
+          ? String(row.correlativo).replace(/^0+/, "") || "0"
+          : null;
+
+      // Defensive checks in addition to the RUC/type/series API filters.
+      if (row.tipoDoc && row.tipoDoc !== input.documentType) continue;
+      if (row.serie && row.serie !== input.series) continue;
+      const company =
+        row.company && typeof row.company === "object"
+          ? (row.company as Record<string, unknown>)
+          : null;
+      if (company?.ruc && company.ruc !== input.ruc) continue;
+
+      if (id && correlative === expectedCorrelative) {
+        return { id, estado };
+      }
+    }
+
+    const totalPages = response.pagination?.totalPages;
+    if (typeof totalPages === "number" && Number.isFinite(totalPages)) {
+      if (page >= totalPages) return null;
+    } else if (response.data.length < 100) {
+      return null;
     }
   }
 
-  return null;
+  // Avoid a false "not found" after hitting a scan limit: the caller must
+  // not issue another POST until the identity has been reconciled.
+  throw new Error(
+    "El historial de Intifact supera el límite de conciliación. No se reintentó la emisión.",
+  );
 }

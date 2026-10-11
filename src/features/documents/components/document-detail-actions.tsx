@@ -29,7 +29,7 @@ export function DocumentDetailActions({
     (status === "error" && commercialStatus === "pending");
   const canRetry = isOwner && status === "queue_failed";
   const canRetryPending =
-    isOwner && status === "error" && commercialStatus === "pending";
+    isOwner && ["draft", "error"].includes(status) && commercialStatus === "pending";
 
   async function sync() {
     const result = await withLoading(() => syncDocumentsAction([saleId]), {
@@ -45,7 +45,7 @@ export function DocumentDetailActions({
     const accepted = await confirm({
       title: "Reintentar emisión pendiente",
       description:
-        "Primero se volverá a reconciliar con Intifact. Solo si el documento todavía no existe se enviará nuevamente la misma serie, correlativo y fecha fiscal.",
+        "Primero se conciliará con Intifact. Solo si la consulta completa confirma que el documento no existe, se enviará con la misma serie, correlativo y fecha fiscal.",
       tone: "warning",
       confirmText: "Reintentar de forma segura",
       cancelText: "Cancelar",

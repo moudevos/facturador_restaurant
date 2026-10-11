@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getSalesContext } from "./context";
 import type { DocumentType, PaymentMethod } from "../types/sales";
 import { emitPersistedSaleToIntifact, validateWithIntifactCompute } from "./intifact-emission";
+import { assertIntifactIssuerReady } from "./intifact-preflight";
 
 export type SalesActionResult<T = undefined> = {
   success: boolean;
@@ -388,6 +389,7 @@ export async function createPosSaleAction(input: {
   try {
     assertIntifactConfigured();
     createAdminClient();
+    await assertIntifactIssuerReady(context);
     computeData = await validateWithIntifactCompute(context, parsed.data.items);
   } catch (error) {
     return {
@@ -396,6 +398,24 @@ export async function createPosSaleAction(input: {
         error instanceof Error
           ? error.message
           : "No pudimos validar la venta con Intifact.",
+    };
+  }
+
+  if (!Number.isFinite(Number(computeData.montoImpVenta))) {
+    return {
+      success: false,
+      message: "Intifact no devolvió un monto total válido. No se reservó correlativo.",
+    };
+  }
+
+  if (
+    parsed.data.documentType === "03" &&
+    !parsed.data.customerId &&
+    Number(computeData.montoImpVenta) > 700
+  ) {
+    return {
+      success: false,
+      message: "SUNAT exige identificar al comprador cuando la boleta supera S/ 700. Selecciona un cliente con documento antes de cobrar.",
     };
   }
 

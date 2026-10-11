@@ -73,6 +73,9 @@ export type FiscalDocumentDetail = FiscalDocumentListItem & {
   issued_at: string | null;
   accepted_at: string | null;
   voided_at: string | null;
+  intifact_last_http_status: number | null;
+  intifact_error_response: unknown | null;
+  intifact_error_response_at: string | null;
   items: Array<{
     id: string;
     product_code: string;

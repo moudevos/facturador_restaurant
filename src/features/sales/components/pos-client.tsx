@@ -104,7 +104,8 @@ export function PosClient({
   const canCharge =
     items.length > 0 &&
     Boolean(selectedSeries) &&
-    (documentType === "03" || canInvoice);
+    (documentType === "03" || canInvoice) &&
+    (documentType !== "03" || Boolean(customer) || totals.total <= 700);
   const initial = tradeName.trim().charAt(0).toUpperCase() || "R";
 
   function chooseCustomer(next: Customer | null) {
@@ -143,6 +144,12 @@ export function PosClient({
 
       setPaymentOpen(false);
       setCompletedSale(result.data);
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "No se recibió la confirmación de la venta. Verifica Comprobantes antes de cobrar otra vez.",
+      );
     } finally {
       setPendingPayment(false);
     }
@@ -389,6 +396,11 @@ export function PosClient({
             {!selectedSeries ? (
               <div className="rounded-[15px] border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-800">
                 Configura una serie activa para este tipo de comprobante antes de cobrar.
+              </div>
+            ) : null}
+            {documentType === "03" && !customer && totals.total > 700 ? (
+              <div className="rounded-[15px] border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-800">
+                Por disposición de SUNAT, las boletas superiores a S/ 700 deben identificar al comprador. Selecciona un cliente con documento para continuar.
               </div>
             ) : null}
 

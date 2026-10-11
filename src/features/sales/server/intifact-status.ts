@@ -50,30 +50,32 @@ export async function syncSaleIntifactStatus(
   let documentId = sale.intifact_document_id;
 
   if (!documentId) {
-    try {
-      const recovered = await findDocumentByFiscalIdentity({
-        ruc: organization.ruc,
-        documentType: sale.document_type,
-        series: sale.series,
-        correlative: sale.correlative,
-      });
+    // Fail closed: a failed/incomplete provider lookup must NOT be treated
+    // as "not found", particularly before retrying the same fiscal identity.
+    const recovered = await findDocumentByFiscalIdentity({
+      ruc: organization.ruc,
+      documentType: sale.document_type,
+      series: sale.series,
+      correlative: sale.correlative,
+    });
 
-      if (recovered) {
-        documentId = recovered.id;
+    if (recovered) {
+      documentId = recovered.id;
 
-        const admin = createAdminClient();
-        await admin
-          .from("sales")
-          .update({
-            intifact_document_id: recovered.id,
-            intifact_status: recovered.estado,
-            intifact_last_checked_at: new Date().toISOString(),
-          })
-          .eq("id", saleId)
-          .eq("organization_id", context.organizationId);
+      const admin = createAdminClient();
+      const { error: recoveryError } = await admin
+        .from("sales")
+        .update({
+          intifact_document_id: recovered.id,
+          intifact_status: recovered.estado,
+          intifact_last_checked_at: new Date().toISOString(),
+        })
+        .eq("id", saleId)
+        .eq("organization_id", context.organizationId);
+
+      if (recoveryError) {
+        throw new Error("No se pudo guardar el documento recuperado de Intifact.");
       }
-    } catch {
-      // Una consulta de reconciliación fallida no debe crear otro correlativo.
     }
   }
 
