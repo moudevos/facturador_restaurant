@@ -29,6 +29,27 @@ Esta fecha se calcula en la zona horaria de la organización al crear la venta y
 - `error`: error local o de comunicación que requiere revisión.
 - `voided`: anulado.
 
+## Prevención y recuperación de correlativos
+
+Antes de llamar a `create_pos_sale`, el servidor comprueba que el RUC emisor figure
+en Intifact bajo la API key del entorno activo. `invoice/compute` por sí solo
+no verifica el RUC. Si falla la verificación, no se reserva correlativo.
+
+La conciliación por identidad fiscal consulta todas las páginas pertinentes del
+listado Intifact (hasta 5000 registros por RUC/tipo/serie); si no puede terminar
+la consulta, **falla de forma cerrada** y prohíbe reemitir basándose en un falso
+"no encontrado".
+
+Un owner puede recuperar una venta `draft/pending` nunca enviada y una venta
+`error/pending` mediante **Reintentar emisión**. Primero concilia con Intifact
+y después reutiliza el mismo RUC/tipo/serie/correlativo y fecha fiscal.
+No se reenvía un documento efectivamente `rejected` ni uno con estado comercial
+`failed`.
+
+Números asignados localmente y comprobantes emitidos/aceptados son métricas
+distintas: no deben coincidir necesariamente. No reiniciar ni reducir secuencias
+para tapar diferencias históricas.
+
 ## Sin webhooks
 
 El botón "Actualizar pendientes" consulta como máximo 10 documentos por acción para mantenerse conservador frente al rate limit del plan Free de Intifact.
