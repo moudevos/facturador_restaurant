@@ -1,3 +1,5 @@
+import { formatIntifactError } from "./error-diagnostics";
+
 import type {
   IntifactComputeData,
   IntifactComputeRequest,
@@ -13,13 +15,15 @@ export class IntifactApiError extends Error {
   status: number;
   payload: unknown;
   retryAfter: string | null;
+  requestId: string | null;
 
-  constructor(message: string, status: number, payload: unknown, retryAfter: string | null) {
+  constructor(message: string, status: number, payload: unknown, retryAfter: string | null, requestId: string | null = null) {
     super(message);
     this.name = "IntifactApiError";
     this.status = status;
     this.payload = payload;
     this.retryAfter = retryAfter;
+    this.requestId = requestId;
   }
 }
 
@@ -54,67 +58,22 @@ async function request(path: string, init: RequestInit = {}) {
   return response;
 }
 
-/**
- * Include field-level validation details when the provider supplies them.
- * The generic "Error de validación" alone is not actionable in the POS.
- */
+/** Provider message plus field-level validation details (safe for POS). */
 export function describeIntifactError(payload: unknown, status: number): string {
-  if (!payload || typeof payload !== "object") {
-    return typeof payload === "string" && payload.trim()
-      ? payload.slice(0, 700)
-      : `Intifact respondió HTTP ${status}.`;
-  }
-
-  const row = payload as Record<string, unknown>;
-  const errorObject =
-    row.error && typeof row.error === "object"
-      ? (row.error as Record<string, unknown>)
-      : null;
-
-  const primary =
-    [row.message, row.error, errorObject?.message]
-      .find((value) => typeof value === "string" && value.trim()) as string | undefined;
-
-  function flatten(value: unknown): string[] {
-    if (typeof value === "string") return value.trim() ? [value.trim()] : [];
-    if (Array.isArray(value)) return value.flatMap(flatten);
-    if (!value || typeof value !== "object") return [];
-
-    const fields = value as Record<string, unknown>;
-    if (typeof fields.message === "string") {
-      const field =
-        typeof fields.path === "string"
-          ? fields.path
-          : typeof fields.field === "string"
-            ? fields.field
-            : "";
-      return [field ? `${field}: ${fields.message}` : fields.message];
-    }
-
-    return Object.entries(fields).flatMap(([key, item]) =>
-      flatten(item).map((message) => `${key}: ${message}`),
-    );
-  }
-
-  const details = [
-    row.errors,
-    row.details,
-    row.issues,
-    errorObject?.errors,
-    errorObject?.details,
-  ].flatMap(flatten).filter((detail) => detail !== primary);
-
-  return [primary || `Intifact respondió HTTP ${status}.`, ...new Set(details)]
-    .join(" — ")
-    .slice(0, 700);
+  return formatIntifactError(payload, status);
 }
 
 async function requestJson<T>(path: string, init: RequestInit = {}): Promise<T> {
   const response = await request(path, init);
-  const contentType = response.headers.get("content-type") ?? "";
-  const payload = contentType.includes("application/json")
-    ? await response.json()
-    : await response.text();
+  // Parse JSON even if the gateway sends the wrong Content-Type.
+  // Keep non-JSON validation bodies too, rather than losing HTTP 400 context.
+  const raw = await response.text();
+  let payload: unknown = raw;
+  try {
+    payload = JSON.parse(raw);
+  } catch {
+    // Proxy/gateway may return plain text or HTML.
+  }
 
   if (!response.ok) {
     const message = describeIntifactError(payload, response.status);
@@ -124,6 +83,7 @@ async function requestJson<T>(path: string, init: RequestInit = {}): Promise<T> 
       response.status,
       payload,
       response.headers.get("retry-after"),
+      response.headers.get("x-request-id") ?? response.headers.get("x-correlation-id"),
     );
   }
 
