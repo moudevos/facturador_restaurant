@@ -11,6 +11,7 @@ import {
 import {
   listCompanies,
   listCompanyBranches,
+  hasIntifactCompanyLogo,
 } from "@/lib/intifact/client";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -533,6 +534,71 @@ export async function uploadReceiptLogoAction(
         error instanceof Error
           ? error.message
           : "No se pudo actualizar el logo.",
+    };
+  }
+}
+
+/**
+ * Read-only readiness check. A configured logo does not certify that a PDF
+ * lacks TEST watermark; only the Intifact environment and an actual LIVE PDF
+ * can establish that.
+ */
+export async function inspectFiscalPdfBrandingAction(): Promise<
+  SettingsActionResult & {
+    data?: { environment: "TEST" | "LIVE" | "UNKNOWN"; localLogo: boolean; intifactLogo: boolean };
+  }
+> {
+  const context = await requireOwner();
+  if (!context) return { success: false, message: "Solo el owner puede revisar el logo fiscal." };
+
+  const apiKey = process.env.INTIFACT_API_KEY ?? "";
+  const environment = apiKey.startsWith("fact_test_")
+    ? "TEST" as const
+    : apiKey.startsWith("fact_live_")
+      ? "LIVE" as const
+      : "UNKNOWN" as const;
+
+  const supabase = await createClient();
+  const [orgResult, receiptResult] = await Promise.all([
+    supabase.from("organizations")
+      .select("intifact_company_id")
+      .eq("id", context.organizationId)
+      .maybeSingle(),
+    supabase.from("receipt_settings")
+      .select("logo_path")
+      .eq("organization_id", context.organizationId)
+      .maybeSingle(),
+  ]);
+
+  if (orgResult.error || receiptResult.error) {
+    return { success: false, message: "No se pudo leer la configuración fiscal." };
+  }
+
+  const companyId = orgResult.data?.intifact_company_id;
+  if (!companyId) {
+    return {
+      success: false,
+      message: "Vincula primero el emisor con Intifact. El logo local no configura el PDF oficial.",
+    };
+  }
+
+  try {
+    const intifactLogo = await hasIntifactCompanyLogo(companyId);
+    return {
+      success: true,
+      message: intifactLogo
+        ? "Intifact tiene un logo accesible para el emisor."
+        : "Falta subir el logo del emisor en el portal de Intifact.",
+      data: {
+        environment,
+        localLogo: Boolean(receiptResult.data?.logo_path),
+        intifactLogo,
+      },
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : "No se pudo comprobar el logo de Intifact.",
     };
   }
 }
