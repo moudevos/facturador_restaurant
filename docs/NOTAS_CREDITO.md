@@ -22,7 +22,7 @@ https://docs.intifact.com/docs/facturacion/notes
 
 ## Bloqueos para habilitar "Emitir NC" en la interfaz
 
-1. Crear una migración SQL **017** que incluya `credit_notes`, una secuencia
+1. Crear una migración SQL **018** que incluya `credit_notes`, una secuencia
    por RUC/local/tipo/serie, campos de auditoría, RLS y restricciones de
    unicidad fiscal e idempotencia. No cambiar los scripts aplicados 001–016.
 2. Una RPC atómica debe reservar el correlativo de NC y crear su registro
