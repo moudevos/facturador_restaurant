@@ -28,6 +28,11 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      - name: Modern Web Guidance scan (informativo)
+        continue-on-error: true
+        env:
+          DISABLE_TELEMETRY: "1"
+        run: npx --yes modern-web-guidance@latest legacy-scan src --json
       - name: Quality checks
         run: pnpm check
       - name: Production build
