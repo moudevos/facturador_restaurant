@@ -101,6 +101,10 @@ export default async function HistorialInterno({
               <p className="mt-1 text-xs text-[#63746a]">
                 {reversal?"Anulada con reversión "+reversal.business_date:"Venta registrada"}
               </p>
+              <Link href={"/historial-interno/"+order.id+"/ticket"}
+                className="mt-2 inline-flex min-h-9 items-center text-xs font-bold text-orange-700 underline underline-offset-4">
+                Ver / reimprimir ticket
+              </Link>
             </div>
             <div className="text-right">
               <strong className="erp-mono block text-lg text-[#14201b]">{formatMoney(Number(order.total_amount))}</strong>
