@@ -29,7 +29,6 @@ export function ExpensesManager({
   filters,
   isOwner,
   branches,
-  timeZone,
   initialData,
 }: {
   organizationId: string;
