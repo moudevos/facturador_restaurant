@@ -23,6 +23,9 @@ Secuencia actual:
 014_configuracion_fiscal_comprobante_pwa.sql
 015_motor_transaccional_ventas.sql
 016_clientes_manuales_y_cliente_generico.sql
+017_finanzas_restaurante.sql
+018_ventas_internas.sql
+019_egresos_credito_adjuntos.sql
 ```
 
 ## Regla inmutable
@@ -76,3 +79,10 @@ No se permite cerrar una sesión con ventas comerciales pendientes.
 ## Cliente genérico
 
 SQL 016 normaliza el caso `Cliente varios`. La fila de venta conserva `customer_name = 'CLIENTE VARIOS'`, mientras `customer_id`, tipo y número de documento permanecen vacíos. También agrega `customers.verification_source` y `verified_at` para distinguir clientes provenientes de ApiPeru de altas manuales. La capa Intifact no convierte esos vacíos en un DNI ficticio ni en `clienteNumDoc: null`; simplemente omite los campos de identificación del cliente.
+
+
+## Rediseño POS interno (SQL 017–019)
+
+Ver [REDISENO_RESTAURANTE.md](REDISENO_RESTAURANTE.md) para alcance, dependencias, instalacion manual, pruebas de caja y limitaciones fiscales. Los nuevos SQL son acumulativos: nunca editar ni reejecutar 001–016.
+
+La venta interna vive en `restaurant_orders` y genera el movimiento real de efectivo al cobrar; los comprobantes fiscales existentes siguen en `sales`. La consulta `v_restaurant_daily_result` suma ventas internas y fiscales no enlazadas, otros ingresos, egresos y ajustes. Los abonos de deudas no vuelven a sumar egresos.
