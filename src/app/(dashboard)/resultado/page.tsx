@@ -54,9 +54,21 @@ export default async function ResultadoPage({
         .limit(1000)
     : { data: [], error: null };
 
-  const rows = (data ?? []) as DailyRow[];
-  const income = rows.reduce((sum, row) => sum + Number(row.income_amount), 0);
-  const expenses = rows.reduce((sum, row) => sum + Number(row.expense_amount), 0);
+  // La vista devuelve una fila por local y día; el resumen muestra un único
+  // día consolidado para todos los locales autorizados.
+  const daily = new Map<string, { business_date:string; income_amount:number; expense_amount:number; result_amount:number }>();
+  for (const row of ((data ?? []) as DailyRow[])) {
+    const previous = daily.get(row.business_date) ?? {
+      business_date:row.business_date, income_amount:0, expense_amount:0, result_amount:0,
+    };
+    previous.income_amount += Number(row.income_amount);
+    previous.expense_amount += Number(row.expense_amount);
+    previous.result_amount += Number(row.result_amount);
+    daily.set(row.business_date, previous);
+  }
+  const rows = [...daily.values()].sort((a,b) => b.business_date.localeCompare(a.business_date));
+  const income = rows.reduce((sum, row) => sum + row.income_amount, 0);
+  const expenses = rows.reduce((sum, row) => sum + row.expense_amount, 0);
   const net = income - expenses;
 
   const stats = [
