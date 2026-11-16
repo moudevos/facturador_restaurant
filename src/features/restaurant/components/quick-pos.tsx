@@ -13,7 +13,7 @@ type Method = { id:string; name:string; kind:string };
 type Customer = { id:string; name:string; document_number:string };
 type Line = { key:string; productId:string; quantity:number; addonIds:string[]; discountRuleId:string|null; notes:string };
 type Pay = { amount:string; reference:string };
-type Receipt = { id:string; date:string; lines:{name:string;qty:number;total:number;notes:string}[]; payments:{name:string;amount:number}[]; total:number };
+type Receipt = { id:string; date:string; lines:{name:string;qty:number;total:number;notes:string}[]; payments:{name:string;amount:number}[]; total:number; saleDiscount:number };
 
 const c = (n:number|string) => Math.round(Number(n)*100);
 const display = (n:number) => formatMoney(n/100);
@@ -100,6 +100,7 @@ export function QuickPos({
           total:lineAmount(l),notes:[...l.addonIds.map(id=>addonMap.get(id)?.name??""),l.notes].filter(Boolean).join(", ")})),
         payments:payEntries.map(p=>({name:methods.find(m=>m.id===p.methodId)?.name??"Otro",amount:c(p.amount)})),
         total,
+        saleDiscount: discount(ruleMap.get(saleRule),subtotal),
       });
       setCart([]);setPayments({});setSaleRule("");setCustomer("");token.current="";
     } catch {
@@ -265,6 +266,7 @@ export function QuickPos({
           {l.notes?<p className="text-[10px]">{l.notes}</p>:null}
         </div>)}
         <hr className="my-2 border-dashed"/>
+        {receipt.saleDiscount>0?<p className="flex justify-between text-xs"><span>Descuento venta</span><span>−{display(receipt.saleDiscount)}</span></p>:null}
         <p className="flex justify-between text-sm font-black"><span>TOTAL</span><span>{display(receipt.total)}</span></p>
         {receipt.payments.map((p,i)=><p key={i} className="flex justify-between text-xs"><span>{p.name}</span><span>{display(p.amount)}</span></p>)}
         <p className="mt-3 text-center text-xs">Gracias por su compra</p>
