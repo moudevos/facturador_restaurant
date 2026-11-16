@@ -20,7 +20,7 @@ export type DashboardData = {
   todayDocuments: number;
   last7Days: DashboardDay[];
   openSessions: SalesSessionSummary[];
-  recentSales: RecentSale[];
+  recentSales: Array<RecentSale & { internalTicket?: string }>;
   recentExpenses: Array<{
     id: string;
     expense_date: string;
@@ -52,7 +52,7 @@ export async function getDashboardData(context: SalesContext): Promise<Dashboard
 
   const newSignal = () => AbortSignal.timeout(DASHBOARD_QUERY_TIMEOUT_MS);
 
-  const [collectionsResult, financialResult, sessionResult, salesResult, expensesResult] =
+  const [collectionsResult, financialResult, sessionResult, salesResult, expensesResult, resultResult, internalSalesResult] =
     await Promise.all([
       supabase
         .from("v_daily_collections")
@@ -87,18 +87,32 @@ export async function getDashboardData(context: SalesContext): Promise<Dashboard
         .order("created_at", { ascending: false })
         .limit(6)
         .abortSignal(newSignal()),
+      supabase
+        .from("v_restaurant_daily_result")
+        .select("business_date,income_amount,expense_amount,result_amount")
+        .eq("organization_id",context.organizationId)
+        .gte("business_date",monthStart)
+        .lte("business_date",businessDate)
+        .abortSignal(newSignal()),
+      supabase
+        .from("restaurant_orders")
+        .select("id,total_amount,created_at")
+        .eq("organization_id",context.organizationId)
+        .order("created_at",{ascending:false})
+        .limit(6)
+        .abortSignal(newSignal()),
     ]);
 
   const collections = collectionsResult.data ?? [];
   const financial = financialResult.data ?? [];
+  const resultRows = resultResult.data ?? [];
 
-  const todayCollected = collections
+  const todayCollected = resultRows
     .filter((row) => row.business_date === businessDate)
-    .reduce((sum, row) => sum + Number(row.collected_amount), 0);
+    .reduce((sum, row) => sum + Number(row.income_amount), 0);
 
-  const monthCollected = collections.reduce(
-    (sum, row) => sum + Number(row.collected_amount),
-    0,
+  const monthCollected = resultRows.reduce(
+    (sum, row) => sum + Number(row.income_amount), 0,
   );
 
   const todayRows = financial.filter((row) => row.business_date === businessDate);
@@ -111,25 +125,24 @@ export async function getDashboardData(context: SalesContext): Promise<Dashboard
     0,
   );
 
-  const monthExpenses = financial.reduce(
-    (sum, row) => sum + Number(row.expense_amount),
-    0,
+  const monthExpenses = resultRows.reduce(
+    (sum, row) => sum + Number(row.expense_amount), 0,
   );
-  const monthSimpleResult = financial.reduce(
-    (sum, row) => sum + Number(row.simple_result),
-    0,
+  const monthSimpleResult = resultRows.reduce(
+    (sum, row) => sum + Number(row.result_amount), 0,
   );
 
   const last7Days = days.map((date) => {
-    const rows = collections.filter((row) => row.business_date === date);
+    const rows = resultRows.filter((row) => row.business_date === date);
+    const countRows = collections.filter((row) => row.business_date === date);
     return {
       date,
-      amount: rows.reduce((sum, row) => sum + Number(row.collected_amount), 0),
-      count: rows.reduce((sum, row) => sum + Number(row.sales_count), 0),
+      amount: rows.reduce((sum, row) => sum + Number(row.income_amount), 0),
+      count: countRows.reduce((sum, row) => sum + Number(row.sales_count), 0),
     };
   });
 
-  const recentSales: RecentSale[] = (salesResult.data ?? []).map((row) => {
+  const legacySales: RecentSale[] = (salesResult.data ?? []).map((row) => {
     const payments = Array.isArray(row.sale_payments) ? row.sale_payments : [];
     const first = payments[0] as { payment_method?: RecentSale["payment_method"] } | undefined;
     return {
@@ -143,7 +156,24 @@ export async function getDashboardData(context: SalesContext): Promise<Dashboard
     };
   });
 
+  const internalSales: Array<RecentSale & { internalTicket: string }> =
+    (internalSalesResult.data ?? []).map((row) => ({
+      id: row.id,
+      series: "INT",
+      correlative: 0,
+      customer_name: "Venta interna",
+      total_amount: row.total_amount,
+      created_at: row.created_at,
+      payment_method: null,
+      internalTicket: row.id.slice(0, 8).toUpperCase(),
+    }));
+  const recentSales = [...legacySales, ...internalSales]
+    .sort((a, b) => b.created_at.localeCompare(a.created_at))
+    .slice(0, 6);
+
   const hasError = [
+    resultResult.error,
+    internalSalesResult.error,
     collectionsResult.error,
     financialResult.error,
     sessionResult.error,
