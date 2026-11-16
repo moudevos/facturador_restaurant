@@ -163,6 +163,7 @@ grant insert,update on public.restaurant_payment_methods,public.restaurant_disco
   public.restaurant_combo_components,public.restaurant_product_addons,
   public.restaurant_expense_categories to authenticated;
 grant insert on public.restaurant_other_income to authenticated;
+grant delete on public.restaurant_combo_components to authenticated;
 
 create policy restaurant_payment_methods_owner on public.restaurant_payment_methods
   for all to authenticated using (public.is_org_owner(organization_id))
