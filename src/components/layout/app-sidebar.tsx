@@ -14,6 +14,7 @@ import {
   LoaderCircle,
   LogOut,
   Package,
+  Printer,
   PanelLeftClose,
   PanelLeftOpen,
   ReceiptText,
@@ -49,6 +50,7 @@ const NAVIGATION: readonly NavGroup[] = [
     title: "Catálogo",
     items: [
       { href: "/productos", label: "Productos", icon: Package },
+      { href: "/combos", label: "Combos y adicionales", icon: Package },
       { href: "/clientes", label: "Clientes", icon: UsersRound },
     ],
   },
@@ -57,6 +59,7 @@ const NAVIGATION: readonly NavGroup[] = [
     items: [
       { href: "/ingresos", label: "Ingresos", icon: ArrowDownLeft },
       { href: "/egresos", label: "Egresos", icon: ReceiptText },
+      { href: "/egresos/deudas", label: "Cuentas por pagar", icon: CreditCard },
     ],
   },
   {
@@ -64,6 +67,8 @@ const NAVIGATION: readonly NavGroup[] = [
     items: [
       { href: "/metodos-pago", label: "Métodos de pago", icon: CreditCard },
       { href: "/descuentos", label: "Descuentos", icon: BadgePercent },
+      { href: "/categorias-egresos", label: "Categorías de egresos", icon: ReceiptText },
+      { href: "/impresion-ticket", label: "Impresión de tickets", icon: Printer },
       { href: "/configuracion", label: "Configuración", icon: Settings },
     ],
   },
