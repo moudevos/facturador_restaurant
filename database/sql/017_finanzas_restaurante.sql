@@ -256,6 +256,18 @@ with (security_invoker=true) as
 
 grant select on public.v_restaurant_result_movements to authenticated;
 
+
+-- Agregado diario: evita límites de paginación en meses con muchas ventas.
+create view public.v_restaurant_daily_result
+with (security_invoker=true) as
+select organization_id, branch_id, business_date,
+  coalesce(sum(signed_amount) filter (where movement_type in ('sale','other_income','sale_reversal')),0)::numeric(14,2) as income_amount,
+  coalesce(-sum(signed_amount) filter (where movement_type in ('expense','expense_reversal')),0)::numeric(14,2) as expense_amount,
+  coalesce(sum(signed_amount),0)::numeric(14,2) as result_amount
+from public.v_restaurant_result_movements
+group by organization_id,branch_id,business_date;
+grant select on public.v_restaurant_daily_result to authenticated;
+
 insert into public.schema_change_log (script_code,script_name,description)
 values ('017','finanzas_restaurante','P&L simple, otros ingresos, medios de pago configurables, descuentos, combos, categorías y abonos de deudas.');
 
