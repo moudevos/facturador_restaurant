@@ -4,11 +4,17 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
+  ArrowDownLeft,
+  BadgePercent,
+  ChartNoAxesCombined,
+  CreditCard,
   FileText,
+  History,
   LayoutDashboard,
   LoaderCircle,
   LogOut,
   Package,
+  Printer,
   PanelLeftClose,
   PanelLeftOpen,
   ReceiptText,
@@ -26,39 +32,55 @@ type NavGroup = { title: string; items: readonly NavItem[] };
 const NAVIGATION: readonly NavGroup[] = [
   {
     title: "General",
-    items: [{ href: "/dashboard", label: "Dashboard", icon: LayoutDashboard }],
+    items: [
+      { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+      { href: "/resultado", label: "Resultado (P&L)", icon: ChartNoAxesCombined },
+    ],
   },
   {
-    title: "Ventas",
+    title: "Operación",
     items: [
-      { href: "/ventas", label: "Área de venta", icon: Store },
-      { href: "/comprobantes", label: "Comprobantes", icon: FileText },
+      { href: "/pos-rapido", label: "POS · Venta rápida", icon: Store },
+      { href: "/ventas", label: "Caja y sesiones", icon: ReceiptText },
+      { href: "/historial-interno", label: "Historial interno", icon: History },
+      { href: "/comprobantes", label: "Comprobantes SUNAT", icon: FileText },
     ],
   },
   {
     title: "Catálogo",
     items: [
-      { href: "/clientes", label: "Clientes", icon: UsersRound },
       { href: "/productos", label: "Productos", icon: Package },
+      { href: "/combos", label: "Combos y adicionales", icon: Package },
+      { href: "/clientes", label: "Clientes", icon: UsersRound },
     ],
   },
   {
     title: "Finanzas",
-    items: [{ href: "/egresos", label: "Egresos", icon: ReceiptText }],
+    items: [
+      { href: "/ingresos", label: "Ingresos", icon: ArrowDownLeft },
+      { href: "/egresos", label: "Egresos", icon: ReceiptText },
+      { href: "/egresos/deudas", label: "Cuentas por pagar", icon: CreditCard },
+    ],
   },
   {
     title: "Sistema",
-    items: [{ href: "/configuracion", label: "Configuración", icon: Settings }],
+    items: [
+      { href: "/metodos-pago", label: "Métodos de pago", icon: CreditCard },
+      { href: "/descuentos", label: "Descuentos", icon: BadgePercent },
+      { href: "/categorias-egresos", label: "Categorías de egresos", icon: ReceiptText },
+      { href: "/impresion-ticket", label: "Impresión de tickets", icon: Printer },
+      { href: "/configuracion", label: "Configuración", icon: Settings },
+    ],
   },
 ] as const;
 
 const MOBILE_NAVIGATION: readonly NavItem[] = [
   { href: "/dashboard", label: "Inicio", icon: LayoutDashboard },
-  { href: "/ventas", label: "Venta", icon: Store },
-  { href: "/comprobantes", label: "Comprob.", icon: FileText },
-  { href: "/clientes", label: "Clientes", icon: UsersRound },
-  { href: "/productos", label: "Productos", icon: Package },
+  { href: "/pos-rapido", label: "POS", icon: Store },
+  { href: "/ventas", label: "Caja", icon: ReceiptText },
+  { href: "/ingresos", label: "Ingresos", icon: ArrowDownLeft },
   { href: "/egresos", label: "Egresos", icon: ReceiptText },
+  { href: "/resultado", label: "Resultado", icon: ChartNoAxesCombined },
 ] as const;
 
 const STORAGE_KEY = "facturador:sidebar-collapsed";
@@ -137,7 +159,7 @@ export function AppSidebar({
             }`}
           >
             <p className="truncate text-sm font-extrabold leading-tight text-white">{brandName}</p>
-            <p className="mt-0.5 truncate text-[11px] text-[#9fb0a8]">Facturador Restaurant</p>
+            <p className="mt-0.5 truncate text-[11px] text-[#9fb0a8]">Gestión del restaurante</p>
           </div>
         </div>
 

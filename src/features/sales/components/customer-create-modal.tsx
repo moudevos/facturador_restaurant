@@ -243,7 +243,7 @@ export function CustomerCreateModal({
                     )
                   }
                   onKeyDown={(event) => {
-                    if (event.key === "Enter" && inferredType) {
+                    if (event.key === "Enter" && !event.nativeEvent.isComposing && event.nativeEvent.keyCode !== 229 && inferredType) {
                       event.preventDefault();
                       void lookup();
                     }

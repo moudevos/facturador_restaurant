@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   AlertCircle,
@@ -14,7 +13,7 @@ import {
 
 import { useFeedback } from "@/components/feedback";
 import type { Branch } from "@/features/settings/types";
-import { createExpenseAction, voidExpenseAction } from "../server/actions";
+import { voidExpenseAction } from "../server/actions";
 import { listExpensesAction } from "../server/list-action";
 import {
   EXPENSES_PER_PAGE,
@@ -23,7 +22,6 @@ import {
   type ExpenseListData,
 } from "../types/expense";
 import { formatExpenseAmount } from "../utils/expense-format";
-import { ExpenseCreateModal } from "./expense-create-modal";
 import { ExpensesTable } from "./expenses-table";
 
 export function ExpensesManager({
@@ -31,7 +29,6 @@ export function ExpensesManager({
   filters,
   isOwner,
   branches,
-  timeZone,
   initialData,
 }: {
   organizationId: string;
@@ -43,7 +40,6 @@ export function ExpensesManager({
 }) {
   const queryClient = useQueryClient();
   const { toast, confirm } = useFeedback();
-  const [createOpen, setCreateOpen] = useState(false);
 
   const expensesQuery = useQuery({
     queryKey: ["expenses", organizationId, filters],
@@ -51,14 +47,12 @@ export function ExpensesManager({
     initialData,
   });
 
-  const createMutation = useMutation({ mutationFn: createExpenseAction });
   const voidMutation = useMutation({ mutationFn: voidExpenseAction });
 
   const data = expensesQuery.data;
   const totalPages = Math.max(1, Math.ceil(data.count / EXPENSES_PER_PAGE));
   const from = data.expenses.length ? (filters.page - 1) * EXPENSES_PER_PAGE + 1 : 0;
   const to = from + data.expenses.length - 1;
-  const activeBranches = branches.filter((branch) => branch.active);
 
   function pageHref(page: number) {
     const params = new URLSearchParams();
@@ -70,16 +64,6 @@ export function ExpensesManager({
     if (filters.dateTo) params.set("hasta", filters.dateTo);
     if (page > 1) params.set("page", String(page));
     return `/egresos?${params.toString()}`;
-  }
-
-  async function createExpense(formData: FormData) {
-    const result = await createMutation.mutateAsync(formData);
-    if (!result.success) return result;
-
-    await queryClient.invalidateQueries({ queryKey: ["expenses", organizationId] });
-    setCreateOpen(false);
-    toast.success(result.message);
-    return result;
   }
 
   async function voidExpense(expense: Expense) {
@@ -124,15 +108,11 @@ export function ExpensesManager({
         </div>
 
         {isOwner ? (
-          <button
-            type="button"
-            onClick={() => setCreateOpen(true)}
-            disabled={activeBranches.length === 0}
-            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[15px] bg-orange-500 px-5 text-sm font-extrabold text-white shadow-[0_8px_20px_-10px_#e86400] transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50 sm:min-w-44"
-          >
+          <Link href="/egresos/registro"
+            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[15px] bg-orange-500 px-5 text-sm font-extrabold text-white shadow-[0_8px_20px_-10px_#e86400] hover:bg-orange-600 sm:min-w-44">
             <Plus className="size-4" aria-hidden="true" />
             Registrar egreso
-          </button>
+          </Link>
         ) : null}
       </div>
 
@@ -184,20 +164,11 @@ export function ExpensesManager({
           </div>
           <p className="mt-4 font-medium text-[#14201b]">No hay egresos con estos filtros</p>
           <p className="mt-1 text-sm text-[#7b8680]">
-            Ajusta el período o registra una nueva salida de dinero.
+            Ajusta el período o registra una nueva compra o gasto.
           </p>
         </div>
       )}
 
-      <ExpenseCreateModal
-        open={createOpen}
-        isSaving={createMutation.isPending}
-        branches={activeBranches}
-        timeZone={timeZone}
-        onClose={() => setCreateOpen(false)}
-        onCreate={createExpense}
-        onCreated={() => undefined}
-      />
     </div>
   );
 }

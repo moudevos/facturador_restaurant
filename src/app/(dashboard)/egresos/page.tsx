@@ -15,6 +15,7 @@ import {
   type ExpenseStatusFilter,
 } from "@/features/expenses/types/expense";
 import { getBusinessDateISO } from "@/lib/date-time";
+import { createClient } from "@/lib/supabase/server";
 
 function first(value: string | string[] | undefined) {
   return typeof value === "string" ? value : "";
@@ -41,8 +42,17 @@ export default async function ExpensesPage({
   const status: ExpenseStatusFilter =
     rawStatus === "anulados" || rawStatus === "todos" ? rawStatus : "activos";
 
+  const supabase = await createClient();
+  const { data: definedCategories } = await supabase
+    .from("restaurant_expense_categories")
+    .select("code,name")
+    .eq("organization_id", context.organizationId)
+    .order("name");
+  const categoryOptions = definedCategories?.length
+    ? definedCategories.map((item) => ({ value: item.code, label: item.name }))
+    : [...EXPENSE_CATEGORIES];
   const rawCategory = first(params.categoria);
-  const category = EXPENSE_CATEGORIES.some((item) => item.value === rawCategory)
+  const category = categoryOptions.some((item) => item.value === rawCategory)
     ? (rawCategory as ExpenseCategory)
     : "";
 
@@ -68,9 +78,21 @@ export default async function ExpensesPage({
       <header>
         <h1 className="text-2xl font-bold tracking-[-0.02em] text-[#14201b]">Egresos</h1>
         <p className="mt-1 text-sm text-[#7b8680]">
-          Registro de compras y salidas de dinero. Los egresos financieros se anulan; no se editan ni eliminan.
+          Compras y gastos del restaurante, sin afectar automáticamente el arqueo de caja.
         </p>
       </header>
+
+      <nav aria-label="Gestión de egresos" className="flex flex-wrap gap-2">
+        <Link href="/egresos/registro" className="inline-flex min-h-11 items-center rounded-xl bg-orange-600 px-4 text-sm font-bold text-white">
+          Registrar gasto o compra
+        </Link>
+        <Link href="/egresos/deudas" className="inline-flex min-h-11 items-center rounded-xl border border-[#e8e3d7] bg-white px-4 text-sm font-bold text-[#14201b]">
+          Cuentas por pagar
+        </Link>
+        <Link href="/categorias-egresos" className="inline-flex min-h-11 items-center rounded-xl border border-[#e8e3d7] bg-white px-4 text-sm font-bold text-[#14201b]">
+          Categorías
+        </Link>
+      </nav>
 
       {!isOwner ? (
         <div className="rounded-[14px] border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
@@ -123,7 +145,7 @@ export default async function ExpensesPage({
             Categoría
             <select name="categoria" defaultValue={filters.category} className="mt-1.5 h-10 w-full rounded-[13px] border border-[#e8e3d7] bg-white px-3 text-sm outline-none focus:border-orange-500">
               <option value="">Todas</option>
-              {EXPENSE_CATEGORIES.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
+              {categoryOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
             </select>
           </label>
         </div>

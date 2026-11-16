@@ -141,20 +141,14 @@ export function SaleCompleteModal({
     if (!sale || refreshing) return;
     setRefreshing(true);
     try {
-      const controller = new AbortController();
-      const timeout = window.setTimeout(() => controller.abort(), 12_000);
-      try {
-        const response = await fetch(
-          `/api/intifact/sales/${encodeURIComponent(sale.saleId)}/status`,
-          { cache: "no-store", signal: controller.signal },
-        );
-        const payload = (await response.json()) as FiscalStatusResponse & { error?: string };
-        if (!response.ok) throw new Error(payload.error || "No se pudo consultar Intifact.");
-        setStatus(payload);
-        setPollingExhausted(false);
-      } finally {
-        window.clearTimeout(timeout);
-      }
+      const response = await fetch(
+        `/api/intifact/sales/${encodeURIComponent(sale.saleId)}/status`,
+        { cache: "no-store", signal: AbortSignal.timeout(12_000) },
+      );
+      const payload = (await response.json()) as FiscalStatusResponse & { error?: string };
+      if (!response.ok) throw new Error(payload.error || "No se pudo consultar Intifact.");
+      setStatus(payload);
+      setPollingExhausted(false);
     } catch (error) {
       toast.warning(error instanceof Error ? error.message : "No se pudo actualizar el comprobante.");
     } finally {

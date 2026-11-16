@@ -12,6 +12,18 @@ Aplicación web para emisión y control de boletas de un restaurante pequeño. E
 - Intifact para facturación electrónica.
 - pnpm + Node.js 22+.
 
+## Rediseño de restaurante (rama de desarrollo)
+
+En la rama `feat/restaurant-pos-finanzas-redesign` se añaden un POS para ventas internas y
+pantallas de ingresos, egresos, cuentas por pagar, descuentos, métodos de pago, combos y
+resultado operativo **ingresos − egresos**. Se conserva el facturador original mientras
+se desarrolla el puente fiscal para emitir posteriormente desde un ticket interno.
+
+**No es aún una versión de producción:** falta validar SQL 017–019 en Supabase y el circuito
+de facturación posterior desde ventas internas. Consulta
+[docs/REDISENO_RESTAURANTE.md](docs/REDISENO_RESTAURANTE.md) para
+instalación SQL manual, pruebas y limitaciones.
+
 ## Inicio local
 
 ```bash
