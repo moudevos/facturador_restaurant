@@ -15,24 +15,24 @@ ni fiscal. Para efectos tributarios hay que reconciliar IGV y documentos.
 
 ## Lo que se puede probar en esta rama
 
-- \`/pos-rapido\`: caja abierta obligatoria, búsqueda de productos,
+- `/pos-rapido`: caja abierta obligatoria, búsqueda de productos,
   combos cuyo precio es fijo o la suma de sus componentes, adicionales gratuitos
   o con precio, notas, descuentos por línea y venta, cobros mixtos y comprobante
   **interno** de 58/80 mm.
-- \`/ventas\`: caja actual conservada del proyecto original. Las ventas internas
-  en efectivo se registran como movimiento \`cash_in\` y figuran en el arqueo.
+- `/ventas`: caja actual conservada del proyecto original. Las ventas internas
+  en efectivo se registran como movimiento `cash_in` y figuran en el arqueo.
   El registro de un egreso no mueve la caja.
-- \`/historial-interno\`: visualizar operaciones, revertir venta interna
+- `/historial-interno`: visualizar operaciones, revertir venta interna
   sin comprobante fiscal y registrar devoluciones parciales o totales.
   La reversión del día actual no modifica un arqueo cerrado.
-- \`/ingresos\`: otros ingresos, distintos de las ventas del POS.
-- \`/egresos/registro\`: registrar compras y gastos, fecha real,
+- `/ingresos`: otros ingresos, distintos de las ventas del POS.
+- `/egresos/registro`: registrar compras y gastos, fecha real,
   categoría personalizada, pago opcional, crédito y archivo privado.
-- \`/egresos/deudas\`: saldo y abonos parciales sin duplicar egreso.
-- \`/resultado\`: vista de ingresos, egresos y resultado por período.
-- \`/metodos-pago\`, \`/descuentos\`, \`/categorias-egresos\`,
-  \`/combos\` e \`/impresion-ticket\`: configuraciones.
-- \`/comprobantes\`: circuito fiscal ya existente. No se eliminó ni se
+- `/egresos/deudas`: saldo y abonos parciales sin duplicar egreso.
+- `/resultado`: vista de ingresos, egresos y resultado por período.
+- `/metodos-pago`, `/descuentos`, `/categorias-egresos`,
+  `/combos` e `/impresion-ticket`: configuraciones.
+- `/comprobantes`: circuito fiscal ya existente. No se eliminó ni se
   sobreescribió.
 
 ## Límites importantes antes de llevar a producción
@@ -58,52 +58,52 @@ confirmar configuración de papel/márgenes y dispositivo en el equipo local.
 ## Instalación de SQL sin migraciones automáticas
 
 1. Realizar **backup** o usar una base de ensayo.
-2. Comprobar que \`public.schema_change_log\` registra \`001\` a \`016\`.
+2. Comprobar que `public.schema_change_log` registra `001` a `016`.
 3. Ejecutar **en este orden**, una sola vez, desde Supabase SQL Editor:
 
-   - \`database/sql/017_finanzas_restaurante.sql\`
-   - \`database/sql/018_ventas_internas.sql\`
-   - \`database/sql/019_egresos_credito_adjuntos.sql\`
+   - `database/sql/017_finanzas_restaurante.sql`
+   - `database/sql/018_ventas_internas.sql`
+   - `database/sql/019_egresos_credito_adjuntos.sql`
 
-4. Cada archivo tiene \`begin/commit\`, validación de prerequisitos y
-   \`schema_change_log\`. No reejecutar scripts aplicados.
+4. Cada archivo tiene `begin/commit`, validación de prerequisitos y
+   `schema_change_log`. No reejecutar scripts aplicados.
 5. Para verificar el registro:
 
-   \`\`\`sql
+   ```sql
    select script_code, script_name, executed_at
    from public.schema_change_log
    where script_code in ('017','018','019')
    order by script_code;
-   \`\`\`
+   ```
 
-6. Comprobar permisos y flujos con un usuario \`owner\` real en un local
+6. Comprobar permisos y flujos con un usuario `owner` real en un local
    de pruebas: registro de ingreso, gasto, deuda, cobro combinado,
    anulación, devolución en caja nueva y cálculo del resultado.
 
-Para archivos, \`restaurant-expense-docs\` es un bucket privado. Los
-documentos deben asociarse al egreso y al mismo \`organization_id\`.
+Para archivos, `restaurant-expense-docs` es un bucket privado. Los
+documentos deben asociarse al egreso y al mismo `organization_id`.
 
 ## Ejecución local (PowerShell)
 
-\`\`\`powershell
+```powershell
 git fetch origin
 git switch feat/restaurant-pos-finanzas-redesign
 git pull --ff-only origin feat/restaurant-pos-finanzas-redesign
 corepack enable
 pnpm install --frozen-lockfile
 pnpm dev -p 3001
-\`\`\`
+```
 
 Si la rama todavía no existe en tu clon:
-\`git switch -c feat/restaurant-pos-finanzas-redesign --track origin/feat/restaurant-pos-finanzas-redesign\`.
+`git switch -c feat/restaurant-pos-finanzas-redesign --track origin/feat/restaurant-pos-finanzas-redesign`.
 
-En \`.env.local\` reutiliza las credenciales propias de Supabase y
+En `.env.local` reutiliza las credenciales propias de Supabase y
 las de Intifact del proyecto base. Nunca publiques las claves secretas.
 
 ## Modernización frontend
 
 El frontend nuevo utiliza controles nativos (formularios, validación del
-navegador, \`<details>\`, impresión CSS), estados de carga, teclas táctiles
+navegador, `<details>`, impresión CSS), estados de carga, teclas táctiles
 de tamaño suficiente, etiquetas y zonas de alerta accesibles, con layout
 responsive, sin incorporar otra biblioteca de componentes.
 
@@ -112,17 +112,17 @@ https://github.com/GoogleChrome/modern-web-guidance
 
 Ejecutar con acceso a internet en la raíz del repo:
 
-\`\`\`powershell
+```powershell
 npx modern-web-guidance@latest install
 npx -y modern-web-guidance@latest legacy-scan . --json
 npx modern-web-guidance@latest search "accessible interactive forms"
-\`\`\`
+```
 
-**Nota:** \`modern-web-guidance\` no pudo ejecutarse en el entorno de
+**Nota:** `modern-web-guidance` no pudo ejecutarse en el entorno de
 autoría (sin acceso al registro npm). No se inventa ningún resultado de
-\`legacy-scan\`. Hay que ejecutar la auditoría antes de aprobar PR.
-Además hay que ejecutar \`pnpm lint\`, \`pnpm typecheck\`,
-\`pnpm test:unit\` y \`pnpm build\` localmente o por CI.
+`legacy-scan`. Hay que ejecutar la auditoría antes de aprobar PR.
+Además hay que ejecutar `pnpm lint`, `pnpm typecheck`,
+`pnpm test:unit` y `pnpm build` localmente o por CI.
 
 ## Criterios de pruebas
 
