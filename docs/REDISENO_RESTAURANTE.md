@@ -118,11 +118,18 @@ npx -y modern-web-guidance@latest legacy-scan . --json
 npx modern-web-guidance@latest search "accessible interactive forms"
 ```
 
-**Nota:** `modern-web-guidance` no pudo ejecutarse en el entorno de
-autoría (sin acceso al registro npm). No se inventa ningún resultado de
-`legacy-scan`. Hay que ejecutar la auditoría antes de aprobar PR.
-Además hay que ejecutar `pnpm lint`, `pnpm typecheck`,
-`pnpm test:unit` y `pnpm build` localmente o por CI.
+**Escaneo real:** El job CI del PR ejecuta
+`npx --yes modern-web-guidance@latest legacy-scan src --json` con
+telemetría desactivada. El primer escaneo detectó tres patrones en código
+preexistente y fueron corregidos: Enter con composición IME,
+`AbortSignal.timeout(12000)` y `Array.prototype.toSorted()`.
+Se revisará el siguiente escaneo para confirmar la resolución.
+El scanner cubre solo reglas deterministas de una parte de la guía,
+no constituye una auditoría integral de accesibilidad o seguridad.
+En el entorno local de autoría el paquete no estuvo disponible en
+la caché npm, pero GitHub Actions sí pudo ejecutarlo.
+`pnpm lint`, `pnpm typecheck`, `pnpm test:unit`
+y `pnpm build` también se ejecutan automáticamente en CI.
 
 ## Criterios de pruebas
 
