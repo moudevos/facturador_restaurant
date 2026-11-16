@@ -123,7 +123,9 @@ npx modern-web-guidance@latest search "accessible interactive forms"
 telemetría desactivada. El primer escaneo detectó tres patrones en código
 preexistente y fueron corregidos: Enter con composición IME,
 `AbortSignal.timeout(12000)` y `Array.prototype.toSorted()`.
-Se revisará el siguiente escaneo para confirmar la resolución.
+El escaneo posterior (CI) confirmó **0 hallazgos** de las 52 reglas
+deterministas revisadas, y pasaron los 32 tests unitarios, ESLint,
+TypeScript y la compilación de producción.
 El scanner cubre solo reglas deterministas de una parte de la guía,
 no constituye una auditoría integral de accesibilidad o seguridad.
 En el entorno local de autoría el paquete no estuvo disponible en
