@@ -45,16 +45,16 @@ export default async function DashboardPage() {
 
   const cards = [
     {
-      label: "Ventas de hoy",
+      label: "Ingresos de hoy",
       value: formatMoney(data.todayCollected),
-      detail: `Facturado aceptado: ${formatMoney(data.todayInvoiced)}`,
+      detail: "Ventas y otros ingresos registrados",
       highlighted: true,
       icon: CircleDollarSign,
     },
     {
-      label: "Ventas del mes",
+      label: "Ingresos del mes",
       value: formatMoney(data.monthCollected),
-      detail: "Cobrado en el POS",
+      detail: "Ventas y otros ingresos",
       icon: ShoppingBag,
     },
     {
@@ -66,7 +66,7 @@ export default async function DashboardPage() {
     {
       label: "Resultado simple",
       value: formatMoney(data.monthSimpleResult),
-      detail: "Facturado aceptado − egresos",
+      detail: "Ingresos − egresos registrados",
       icon: ReceiptText,
     },
   ];
@@ -144,8 +144,8 @@ export default async function DashboardPage() {
         <section className="rounded-[20px] border border-[#e8e3d7] bg-white p-4 sm:p-5">
           <div className="flex items-baseline justify-between gap-3">
             <div>
-              <h2 className="text-[15px] font-extrabold text-[#14201b]">Ventas · últimos 7 días</h2>
-              <p className="mt-1 text-xs text-[#7b8680]">Cobros registrados en el POS</p>
+              <h2 className="text-[15px] font-extrabold text-[#14201b]">Ingresos · últimos 7 días</h2>
+              <p className="mt-1 text-xs text-[#7b8680]">Ventas y otros ingresos</p>
             </div>
             <p className="erp-mono text-xs font-bold text-[#14201b] sm:text-sm">
               {formatMoney(data.last7Days.reduce((sum, day) => sum + day.amount, 0))}
@@ -260,7 +260,7 @@ export default async function DashboardPage() {
                       {sale.customer_name || "Cliente varios"}
                     </p>
                     <p className="mt-0.5 truncate text-[11px] text-[#7b8680]">
-                      {sale.series}-{String(sale.correlative).padStart(8, "0")}
+                      {sale.internalTicket ? `Ticket ${sale.internalTicket}` : `${sale.series}-${String(sale.correlative).padStart(8, "0")}`}
                       {sale.payment_method ? ` · ${PAYMENT_LABELS[sale.payment_method]}` : ""}
                     </p>
                   </div>
