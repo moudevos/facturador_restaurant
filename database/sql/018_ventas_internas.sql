@@ -433,6 +433,23 @@ end $$;
 revoke all on function public.restaurant_refund_order(uuid,uuid,numeric,uuid,text) from public,anon,authenticated;
 grant execute on function public.restaurant_refund_order(uuid,uuid,numeric,uuid,text) to authenticated;
 
+
+-- Precio calculado de combos para que el POS muestre lo mismo que cobra el servidor.
+create view public.v_restaurant_pos_products with (security_invoker=true) as
+select p.organization_id,p.id,p.name,p.category_id,p.price,
+  case when exists(
+    select 1 from public.restaurant_combo_components c
+    where c.combo_product_id=p.id and c.organization_id=p.organization_id
+      and c.price_mode='sum'
+  ) then (
+    select round(sum(c.quantity*cp.price),2)
+    from public.restaurant_combo_components c
+    join public.products cp on cp.id=c.component_product_id
+    where c.combo_product_id=p.id and c.organization_id=p.organization_id
+  ) else p.price end::numeric(12,2) as sale_price
+from public.products p where p.active=true;
+grant select on public.v_restaurant_pos_products to authenticated;
+
 -- Amplía el resultado con ventas internas y anulaciones, sin sumar otra vez
 -- un comprobante fiscal enlazado a la misma venta comercial.
 create or replace view public.v_restaurant_result_movements
