@@ -98,6 +98,8 @@ create policy restaurant_expense_attachments_add
    public.is_org_owner(organization_id) and created_by=(select auth.uid())
    and exists(select 1 from public.expenses e where e.id=expense_id
      and e.organization_id=organization_id)
+   and split_part(storage_path,'/',1)=organization_id::text
+   and split_part(storage_path,'/',2)=expense_id::text
  );
 
 -- Almacenamiento PRIVADO; los archivos no son públicos.
@@ -110,8 +112,65 @@ create policy restaurant_expense_docs_read on storage.objects
  for select to authenticated
  using(
    bucket_id='restaurant-expense-docs'
+   and case when (storage.foldername(name))[1] ~ '^[0-9a-f-]{36}
+ );
+create policy restaurant_expense_docs_upload on storage.objects
+ for insert to authenticated
+ with check(
+   bucket_id='restaurant-expense-docs'
+   and case when (storage.foldername(name))[1] ~ '^[0-9a-f-]{36}
+ );
+
+
+-- Evitar anular una compra a crédito que ya tiene abonos y dejar deuda inconsistente.
+create or replace function public.restaurant_prevent_void_paid_expense()
+returns trigger language plpgsql set search_path=public as $
+begin
+  if new.is_voided and not old.is_voided and exists(
+    select 1 from public.restaurant_expense_payments p where p.expense_id=old.id
+  ) then
+    raise exception 'La compra ya tiene abonos; requiere regularización de pagos antes de anular';
+  end if;
+  return new;
+end $;
+revoke all on function public.restaurant_prevent_void_paid_expense()
+from public,anon,authenticated;
+create trigger restaurant_prevent_void_paid_expense
+before update on public.expenses for each row
+execute function public.restaurant_prevent_void_paid_expense();
+
+insert into public.schema_change_log(script_code,script_name,description)
+values('019','egresos_credito_adjuntos','Alta de egresos simples, deuda por pagar y adjuntos privados opcionales.');
+
+commit;
+
+     then public.is_org_member(((storage.foldername(name))[1])::uuid)
+     else false end
+ );
+create policy restaurant_expense_docs_upload on storage.objects
+ for insert to authenticated
+ with check(
+   bucket_id='restaurant-expense-docs'
    and (storage.foldername(name))[1] ~ '^[0-9a-f-]{36}$'
-   and public.is_org_member(((storage.foldername(name))[1])::uuid)
+   and public.is_org_owner(((storage.foldername(name))[1])::uuid)
+ );
+
+insert into public.schema_change_log(script_code,script_name,description)
+values('019','egresos_credito_adjuntos','Alta de egresos simples, deuda por pagar y adjuntos privados opcionales.');
+
+commit;
+
+     then public.is_org_owner(((storage.foldername(name))[1])::uuid)
+     else false end
+ );
+
+insert into public.schema_change_log(script_code,script_name,description)
+values('019','egresos_credito_adjuntos','Alta de egresos simples, deuda por pagar y adjuntos privados opcionales.');
+
+commit;
+
+     then public.is_org_member(((storage.foldername(name))[1])::uuid)
+     else false end
  );
 create policy restaurant_expense_docs_upload on storage.objects
  for insert to authenticated
