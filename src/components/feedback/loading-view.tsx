@@ -110,8 +110,7 @@ export function LoadingView({ options }: { options: LoadingOptions }) {
 
   // El aviso vigente es el último cuyo umbral ya pasó.
   const slowText = slowMessages
-    ? [...slowMessages]
-        .sort((a, b) => a.after - b.after)
+    ? slowMessages.toSorted((a, b) => a.after - b.after)
         .reduce<string | undefined>((acc, item) => (elapsed >= item.after ? item.text : acc), undefined)
     : undefined;
 
